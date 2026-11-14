@@ -206,7 +206,7 @@ export function Footer() {
                       className="h-3.5 w-3.5 text-emerald-400/70"
                       aria-hidden="true"
                     />
-                    <span>Katalog Produk</span>
+                    <span>Kategori Produk</span>
                   </Link>
                 </li>
                 <li>
