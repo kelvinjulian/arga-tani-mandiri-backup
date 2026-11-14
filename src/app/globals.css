@@ -1,0 +1,269 @@
+@import "tailwindcss";
+
+:root {
+  --banner-h: 37px;
+  --navbar-h: 72px;
+  --header-h: calc(var(--banner-h) + var(--navbar-h));
+  --page-top: #fbfcfa;
+  --page-bottom: #e4f0e7;
+  --band-mint: #e9f3ec;
+  --bg-canvas: #ffffff;
+  --bg-subtle: #f4f7f4;
+  --bg-forest: #143d29;
+  --bg-forest-hover: #0e2b1d;
+  --bg-forest-mid: #1f5c3e;
+  --bg-mint-tint: #d9f0e3;
+  --bg-disabled: #e4ece7;
+  --text-primary: #0f1f17;
+  --text-secondary: #33473d;
+  --text-muted: #43594d;
+  --border-subtle: #cbd8d0;
+  --border-strong: #5a7566;
+  --accent-shopee: #b83516;
+  --accent-shopee-hover: #992b11;
+  --hero-bg: #fbfcfa;
+  --hero-tint: transparent;
+  --deco-forest: #254735;
+  --deco-olive: #6f8454;
+  --deco-sage: #83a183;
+  --leaf-opacity: 1;
+  --leaf-width: clamp(140px, 16vw, 300px);
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --leaf-opacity: 0.7;
+    --leaf-width: clamp(140px, 16vw, 240px);
+  }
+}
+
+@media (max-width: 639px) {
+  :root {
+    --leaf-opacity: 0.5;
+    --leaf-width: clamp(120px, 20vw, 160px);
+  }
+}
+
+[data-stage-container] {
+  width: 100%;
+  max-width: 1340px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+[data-testid="hero-section"] {
+  position: relative;
+  width: 100%;
+  overflow-x: clip;
+  background-color: transparent;
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+@layer base {
+  html {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-body), system-ui, -apple-system, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
+    font-family: var(--font-display), system-ui, -apple-system, sans-serif;
+  }
+
+  a[href],
+  button:not(:disabled),
+  summary,
+  select,
+  label[for],
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="switch"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
+/* ========================================================
+   BOTANICAL ATMOSPHERE & LEAF ANIMATIONS (CSS Only)
+   - Only transform and opacity. No JS, no blur filters.
+   - will-change: transform only on animated elements.
+   - Budget: <=8 animated elements per page, <=3 visible at once.
+   ======================================================== */
+
+/* ========================================================
+   DECORATION KIT ANIMATIONS (CSS Only)
+   - Slow float animation (<= 12px, 14s ease-in-out)
+   - Turns off under prefers-reduced-motion
+   ======================================================== */
+@keyframes decor-float {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
+}
+
+.decor-float-slow {
+  animation: decor-float 14s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decor-float-slow {
+    animation: none !important;
+  }
+}
+
+@keyframes leaf-sway {
+  0% {
+    transform: rotate(-3deg);
+  }
+  100% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes leaf-drift {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  100% {
+    transform: translateY(10px) rotate(6deg);
+  }
+}
+
+@keyframes swoosh-draw {
+  0% {
+    stroke-dashoffset: 600;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.swoosh-path {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: swoosh-draw 900ms ease-out forwards;
+}
+
+.leaf-sway {
+  animation-name: leaf-sway;
+  animation-duration: var(--leaf-duration, 7.5s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-delay: var(--leaf-delay, 0s);
+  will-change: transform;
+}
+
+.leaf-drift {
+  animation-name: leaf-drift;
+  animation-duration: var(--leaf-duration, 10.5s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-delay: var(--leaf-delay, 0s);
+  will-change: transform;
+}
+
+/* Shimmer animation for loading skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #E8EFEA 25%,
+    #F4F8F5 50%,
+    #E8EFEA 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite ease-in-out;
+}
+
+/* Hero staggered entrance animation (steps ~60ms, duration 500ms, translateY <= 16px) */
+@keyframes hero-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-enter-1,
+.hero-enter-2,
+.hero-enter-3,
+.hero-enter-4,
+.hero-enter-5 {
+  opacity: 1;
+  transform: none;
+}
+
+/* Section scroll reveal: default visible for no-JS, animated when .js is active */
+[data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    animation-name: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton-shimmer {
+    animation: none !important;
+    background: #E8EFEA !important;
+  }
+
+  .hero-enter-1,
+  .hero-enter-2,
+  .hero-enter-3,
+  .hero-enter-4,
+  .hero-enter-5 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+
+  .leaf-sway,
+  .leaf-drift,
+  .swoosh-path {
+    animation: none !important;
+    animation-name: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
+
