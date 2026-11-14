@@ -56,3 +56,6 @@ internal/
 _internal/
 design-reference/
 _trash/
+
+# internal design doc
+DESIGN.md

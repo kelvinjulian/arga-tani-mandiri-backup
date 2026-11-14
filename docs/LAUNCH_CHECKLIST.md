@@ -7,7 +7,7 @@
 
 2. **Preview Banner & Placeholder Verification:**
    - Confirm no preview/draft banners or `[ISI: ...]` placeholders remain on any indexable route.
-   - Confirm all items in `internal/CLAIMS_TO_VERIFY.md` have received client approval before enabling indexing.
+   - Confirm the client has approved all claims on indexable pages (the approval log is kept outside this repository).
 
 3. **Article Publication Workflow:**
    - Publish individual articles in `src/data/articles.ts` by changing `status: "draft"` to `status: "published"` only after client review of the article content.
@@ -22,4 +22,3 @@
 
 6. **Core Web Vitals & Performance Re-Verification:**
    - Re-verify LCP, CLS, and INP targets on the live production URL after deployment.
-
