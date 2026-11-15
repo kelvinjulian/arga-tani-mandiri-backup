@@ -1,6 +1,7 @@
 import { SITE_DATA, type SiteData } from "@/data/site";
 import { productCategories, SHOPEE_STORE_URL } from "@/data/categories";
 import { isValidWhatsAppNumber } from "@/lib/whatsapp";
+import { resolveImageSrc } from "@/lib/media/resolveImageSrc";
 import {
   isSupportedIconName,
   type SupportedIconName,
@@ -226,10 +227,7 @@ function pickHttpsUrl(value: unknown, fallback: string): string {
 }
 
 function pickImageSrc(value: unknown, fallback: string): string {
-  if (typeof value === "string" && isValidImageSrc(value.trim())) {
-    return value.trim();
-  }
-  return fallback;
+  return resolveImageSrc(value, fallback);
 }
 
 function pickOptionalContactStr(
@@ -771,10 +769,7 @@ export function mergeSiteContentWithDefaults(
           : DEFAULT_ARTICLE_HUB.emptyStateText;
 
       const rawBannerImg =
-        typeof articleHubRaw.bannerImageSrc === "string" &&
-        isValidImageSrc(articleHubRaw.bannerImageSrc.trim())
-          ? articleHubRaw.bannerImageSrc.trim()
-          : "";
+        resolveImageSrc(articleHubRaw.bannerImageSrc, null) ?? "";
       const rawBannerAlt =
         rawBannerImg && typeof articleHubRaw.bannerImageAlt === "string"
           ? articleHubRaw.bannerImageAlt.trim()
@@ -869,7 +864,7 @@ export function mergeSiteContentWithDefaults(
           articlePageRaw.metaDescription,
           def.metaDescription
         ),
-        ogImageSrc: isValidImageSrc(rawOg) ? rawOg : "",
+        ogImageSrc: resolveImageSrc(rawOg, null) ?? "",
         ogImageAlt: rawOg ? rawOgAlt : "",
         breadcrumbHomeLabel: pickStr(
           articlePageRaw.breadcrumbHomeLabel,
@@ -1164,7 +1159,7 @@ export function mergeSiteContentWithDefaults(
 
       return {
         highlights,
-        logoSrc: isValidImageSrc(logoSrcRaw) ? logoSrcRaw : "",
+        logoSrc: resolveImageSrc(logoSrcRaw, null) ?? "",
         logoAlt:
           typeof footerRaw.logoAlt === "string"
             ? footerRaw.logoAlt.trim()

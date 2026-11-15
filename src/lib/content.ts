@@ -6,9 +6,9 @@ import {
 } from "@/data/categories";
 import { SITE_DATA, type SiteData } from "@/data/site";
 import { getSupabaseClient } from "@/lib/supabase";
+import { resolveImageSrc } from "@/lib/media/resolveImageSrc";
 import {
   isValidHttpsUrl,
-  isValidImageSrc,
   mergeSiteContentWithDefaults,
 } from "@/lib/site-content/validation";
 import {
@@ -116,7 +116,7 @@ function mapArticleRow(row: ArticleRow): ContentArticleItem {
     metaDescription: row.meta_description,
     ...(row.published_at ? { datePublished: row.published_at } : {}),
     ...(row.updated_at ? { dateModified: row.updated_at } : {}),
-    imageSrc: row.image_src,
+    imageSrc: resolveImageSrc(row.image_src, "/images/hero-agriculture.jpg"),
     imageAlt: row.image_alt,
     excerpt: row.excerpt,
     intro: row.intro,
@@ -207,10 +207,7 @@ export async function getCategories(): Promise<ContentCategoryItem[]> {
         typeof row.description === "string" && row.description.trim()
           ? row.description.trim()
           : def.description;
-      const image =
-        typeof row.image_src === "string" && isValidImageSrc(row.image_src.trim())
-          ? row.image_src.trim()
-          : def.image;
+      const image = resolveImageSrc(row.image_src, def.image);
       const alt =
         typeof row.image_alt === "string" && row.image_alt.trim()
           ? row.image_alt.trim()

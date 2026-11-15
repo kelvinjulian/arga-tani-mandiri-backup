@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import { Sprout, ArrowRight } from "lucide-react";
+import { ResilientImage } from "@/components/ResilientImage";
 import { SHOPEE_STORE_URL } from "@/data/categories";
 import { SITE_DATA, type SiteData } from "@/data/site";
 import { Container } from "@/components/Container";
@@ -207,8 +207,9 @@ export function AboutSection({
           {/* Left Showcase (5 Columns - lg:col-span-5, pinned at top so it never shifts when switching tabs) */}
           <div className="lg:col-span-5 w-full min-w-0">
             <div className="relative w-full pb-6 sm:pb-4">
-              <Image
+              <ResilientImage
                 src={imageSrc}
+                fallbackSrc={SITE_DATA.about.imageSrc}
                 alt={imageAlt}
                 width={2268}
                 height={1987}

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { ResilientImage } from "@/components/ResilientImage";
 import {
   Sprout,
   ArrowRight,
@@ -232,8 +232,9 @@ export function ArticleHubSection({
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Left Column (lg:col-span-7) - Featured Spotlight Article Card */}
           <article className="group relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-tl-[64px] rounded-tr-2xl rounded-br-[64px] rounded-bl-2xl border-4 border-white bg-[#0E2F1D] shadow-xl transition-all duration-300 lg:col-span-7">
-            <Image
+            <ResilientImage
               src={featuredArticle.imageSrc}
+              fallbackSrc="/images/hero-agriculture.jpg"
               alt={featuredArticle.imageAlt}
               fill
               sizes="(max-width: 1024px) 100vw, 58vw"
@@ -294,8 +295,9 @@ export function ArticleHubSection({
                   aria-hidden="true"
                   className="relative h-40 w-full shrink-0 overflow-hidden rounded-xl bg-[#EAF3EE] sm:h-36 sm:w-40"
                 >
-                  <Image
+                  <ResilientImage
                     src={article.imageSrc}
+                    fallbackSrc="/images/hero-agriculture.jpg"
                     alt={article.imageAlt}
                     fill
                     sizes="(max-width: 640px) 100vw, 160px"
@@ -350,8 +352,9 @@ export function ArticleHubSection({
           className="scroll-mt-28 relative mt-8 grid grid-cols-1 items-center gap-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[#0B2E1B] to-[#113B24] p-6 text-white shadow-xl sm:p-7 lg:grid-cols-12"
         >
           {articleHub.bannerImageSrc ? (
-            <Image
+            <ResilientImage
               src={articleHub.bannerImageSrc}
+              fallbackSrc={null}
               alt={articleHub.bannerImageAlt}
               fill
               unoptimized

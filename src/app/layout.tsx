@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { getSiteContent } from "@/lib/content";
 import { getRobotsMetadata, getSiteUrl } from "@/lib/seo";
+import { resolveImageSrc } from "@/lib/media/resolveImageSrc";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -22,7 +23,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteData = await getSiteContent();
   const defaultTitle = `${siteData.companyName} | Sarana Produksi Pertanian`;
   const defaultDescription = siteData.fieldDescription;
-  const heroImageUrl = siteData.hero.imageSrc;
+  const heroImageUrl = resolveImageSrc(
+    siteData.hero.imageSrc,
+    "/images/hero-agriculture.jpg"
+  );
   const heroImageAlt = siteData.hero.imageAlt;
 
   return {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Sprout } from "lucide-react";
 import { getArticleCategories, getArticles, getSiteContent } from "@/lib/content";
 import { getRobotsMetadata, getSiteUrl, serializeJsonLd } from "@/lib/seo";
+import { resolveImageSrc } from "@/lib/media/resolveImageSrc";
 import { Container } from "@/components/Container";
 import { ArticleCatalogClient } from "@/components/ArticleCatalogClient";
 import { WhatsAppConsultationBand } from "@/components/WhatsAppCTA";
@@ -22,7 +23,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const hubTitle = pageData.seoTitle;
   const hubDescription = pageData.metaDescription;
   const hubFullTitle = `${hubTitle} | ${siteData.companyName}`;
-  const ogImg = pageData.ogImageSrc?.trim() || DEFAULT_ARTICLE_PAGE_OG_IMAGE;
+  const ogImg = resolveImageSrc(
+    pageData.ogImageSrc,
+    DEFAULT_ARTICLE_PAGE_OG_IMAGE
+  );
   const ogAlt = pageData.ogImageSrc?.trim()
     ? pageData.ogImageAlt || hubTitle
     : DEFAULT_ARTICLE_PAGE_OG_ALT;

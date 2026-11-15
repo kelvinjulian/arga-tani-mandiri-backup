@@ -47,6 +47,7 @@ ON CONFLICT (email) DO NOTHING;
   - `published`: tampil di situs publik dan masuk ke `sitemap.xml` (nilai `published_at` diisi otomatis saat pertama kali diterbitkan dan dipertahankan pada suntingan berikutnya).
 - **Kategori filter & Artikel Utama (`is_featured`):** Pilihan `filter_category` dibatasi pada nilai yang didukung filter halaman publik (`Panduan Label`, `Manajemen Budidaya`, `Pembenah Tanah`, `Penyimpanan & Gudang`). Hanya satu artikel yang dapat berstatus `is_featured = true` pada satu waktu; mengaktifkannya akan otomatis menonaktifkan status Utama pada artikel lain.
 - **Unggah gambar:** Gambar diunggah langsung ke bucket Storage `media` menggunakan sesi admin (`articles/<uuid>/<timestamp>-<nama>.<ext>`). File berformat JPG/PNG/WebP di atas 2 MB akan diperkecil di browser (maks. sisi panjang 1920 px, WebP kualitas 0,82) sebelum diunggah. File gambar lama tidak dihapus otomatis.
+- **Konfigurasi domain gambar (`next.config.ts`):** `next.config.ts` hanya dibaca saat server dimulai; **restart dev server** (`npm run dev`) setiap kali mengubah `next.config.ts` atau variabel `NEXT_PUBLIC_SUPABASE_URL` di `.env.local`.
 - **Konkurensi & revalidasi cache:** Setiap pembaruan memeriksa `updated_at` asli (optimistic concurrency) agar suntingan di tab berbeda tidak saling menimpa. Setelah simpan atau hapus berhasil, cache Next.js untuk `/`, `/artikel`, `/artikel/<slug>` (termasuk slug lama jika berubah), dan `/sitemap.xml` langsung direvalidasi.
 
 ---

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { ResilientImage } from "@/components/ResilientImage";
 import {
   Search,
   RotateCcw,
@@ -187,8 +187,9 @@ export function ArticleCatalogClient({
       <article className="mt-8 grid grid-cols-1 items-center gap-8 rounded-3xl border border-[#DCE8DF] bg-white p-5 shadow-lg sm:p-7 lg:grid-cols-12">
         {/* Left (lg:col-span-5): Slanted-rounded image container */}
         <div className="relative h-64 overflow-hidden rounded-tl-[48px] rounded-tr-xl rounded-br-[48px] rounded-bl-xl bg-[#0E2F1D] sm:h-80 lg:col-span-5">
-          <Image
+          <ResilientImage
             src={featuredSpotlight.imageSrc}
+            fallbackSrc="/images/hero-agriculture.jpg"
             alt={featuredSpotlight.imageAlt}
             fill
             priority
@@ -338,8 +339,9 @@ export function ArticleCatalogClient({
                       aria-hidden="true"
                       className="relative my-3.5 block h-48 w-full overflow-hidden rounded-xl bg-[#EAF3EE]"
                     >
-                      <Image
+                      <ResilientImage
                         src={article.imageSrc}
+                        fallbackSrc="/images/hero-agriculture.jpg"
                         alt={article.imageAlt}
                         fill
                         sizes="(max-width: 768px) 100vw, 380px"
