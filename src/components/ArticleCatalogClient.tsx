@@ -17,14 +17,20 @@ import {
 import { ARTICLES } from "@/data/articles";
 import { WHATSAPP_NUMBER } from "@/data/site";
 import { SHOPEE_STORE_URL } from "@/data/categories";
-
-const DOCK_CATEGORIES = [
-  { label: "Semua Topik", match: "Semua Topik" },
-  { label: "Panduan Label", match: "Panduan Label" },
-  { label: "Manajemen Budidaya", match: "Manajemen Budidaya" },
-  { label: "Pembenah Tanah", match: "Pembenah Tanah" },
-  { label: "Penyimpanan", match: "Penyimpanan & Gudang" },
-] as const;
+import type { ContentArticleItem } from "@/lib/content";
+import { getWhatsAppHref, WHATSAPP_PLACEHOLDER_TEXT } from "@/lib/whatsapp";
+import {
+  articleMatchesCategory,
+  buildVisibleArticleCategoryFilters,
+  DEFAULT_ARTICLE_CATEGORIES,
+  type ArticleCategoryItem,
+} from "@/lib/article-categories";
+import type { FilterChipsConfig } from "@/lib/site-content/filter-chips";
+import {
+  DEFAULT_ARTICLE_PAGE,
+  type ArticlePageData,
+} from "@/lib/site-content/article-pages-defaults";
+import { CategoryChipsBar } from "@/components/CategoryChipsBar";
 
 const POPULAR_TOPIC_TAGS = [
   "Panduan Label",
@@ -35,19 +41,69 @@ const POPULAR_TOPIC_TAGS = [
   "Dosis Pupuk",
 ] as const;
 
-export function ArticleCatalogClient() {
+interface ArticleCatalogClientProps {
+  articles?: ContentArticleItem[];
+  articleCategories?: ArticleCategoryItem[];
+  whatsappNumber?: string | null;
+  shopeeStoreUrl?: string;
+  filterChips?: FilterChipsConfig;
+  articlePage?: ArticlePageData;
+}
+
+const DEFAULT_ARTICLES: ContentArticleItem[] = ARTICLES.map((item) => ({
+  ...item,
+  status: item.status === "published" ? "published" : "review",
+}));
+
+export function ArticleCatalogClient({
+  articles = DEFAULT_ARTICLES,
+  articleCategories = DEFAULT_ARTICLE_CATEGORIES,
+  whatsappNumber = WHATSAPP_NUMBER,
+  shopeeStoreUrl = SHOPEE_STORE_URL,
+  filterChips,
+  articlePage = DEFAULT_ARTICLE_PAGE,
+}: ArticleCatalogClientProps) {
+  const effectiveChips: FilterChipsConfig = filterChips ?? {
+    maxVisibleChips: articlePage.maxVisibleChips,
+    overflowMode: articlePage.overflowMode,
+    allTopicsLabel: articlePage.allTopicsLabel,
+    moreLabel: articlePage.moreLabel,
+    showArticleCounts: articlePage.showArticleCounts,
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<string>("Semua Topik");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
-  const featuredSpotlight = ARTICLES[0];
+  const activeList = articles.length > 0 ? articles : DEFAULT_ARTICLES;
+  const featuredSpotlight =
+    activeList.find((item) => item.isFeatured) ?? activeList[0];
+
+  const dockChipItems = useMemo(() => {
+    const visible = buildVisibleArticleCategoryFilters(
+      articleCategories,
+      activeList
+    );
+    return visible.map((c) => ({
+      id: c.filterLabel,
+      label: c.filterLabel,
+      count: activeList.filter((a) => articleMatchesCategory(a, c)).length,
+    }));
+  }, [articleCategories, activeList]);
 
   const filteredArticles = useMemo(() => {
-    return ARTICLES.filter((article) => {
+    const selectedCatObj =
+      selectedCategory === "Semua Topik"
+        ? null
+        : articleCategories.find((c) => c.filterLabel === selectedCategory) ??
+          null;
+
+    return activeList.filter((article) => {
       const matchesCategory =
         selectedCategory === "Semua Topik" ||
-        article.filterCategory === selectedCategory;
+        (selectedCatObj
+          ? articleMatchesCategory(article, selectedCatObj)
+          : article.filterCategory === selectedCategory);
 
       const matchesTag =
         !selectedTag ||
@@ -67,7 +123,7 @@ export function ArticleCatalogClient() {
 
       return matchesCategory && matchesTag && matchesQuery;
     });
-  }, [searchQuery, selectedCategory, selectedTag]);
+  }, [activeList, articleCategories, searchQuery, selectedCategory, selectedTag]);
 
   const handleCategorySelect = (categoryMatch: string) => {
     setSelectedCategory(categoryMatch);
@@ -89,9 +145,7 @@ export function ArticleCatalogClient() {
     setSelectedTag(null);
   };
 
-  const whatsappHref = WHATSAPP_NUMBER
-    ? `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}`
-    : "#konsultasi-whatsapp";
+  const whatsappHref = getWhatsAppHref(whatsappNumber);
 
   return (
     <div>
@@ -111,37 +165,22 @@ export function ArticleCatalogClient() {
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari topik budidaya, nutrisi tanaman, atau dosis aplikasi..."
+            placeholder={articlePage.searchPlaceholder}
             className="min-h-11 w-full rounded-xl border border-transparent bg-[#F4F8F5] pl-10 pr-4 py-2 text-sm text-[#0E291B] placeholder:text-[#526458] transition-colors focus:border-[#9BC5AC] focus:bg-white focus:outline-none"
           />
         </div>
 
         {/* Right: Segmented Category Filter Pills */}
-        <div
-          role="group"
-          aria-label="Filter kategori artikel"
-          className="flex flex-wrap items-center gap-1.5 rounded-xl bg-[#F0F6F2] p-1"
-        >
-          {DOCK_CATEGORIES.map((cat) => {
-            const isActive =
-              selectedCategory === cat.match && selectedTag === null;
-            return (
-              <button
-                key={cat.label}
-                type="button"
-                onClick={() => handleCategorySelect(cat.match)}
-                aria-pressed={isActive}
-                className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D] ${
-                  isActive
-                    ? "bg-[#0E2F1D] text-white shadow-xs"
-                    : "text-[#384E40] hover:bg-white/80 hover:text-[#0E2F1D]"
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
+        <CategoryChipsBar
+          items={dockChipItems}
+          activeId={selectedTag === null ? selectedCategory : "__tag__"}
+          allId="Semua Topik"
+          totalCount={activeList.length}
+          onSelect={handleCategorySelect}
+          config={effectiveChips}
+          variant="dock"
+          ariaLabel="Filter kategori artikel"
+        />
       </div>
 
       {/* B. Featured Hero Article Spotlight Card (Full-Width 12-Column Split Card) */}
@@ -161,15 +200,22 @@ export function ArticleCatalogClient() {
             className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#071D11]/60 via-transparent to-transparent"
           />
           <span className="absolute top-4 left-4 rounded-full border border-white/25 bg-[#0E2F1D]/85 px-3.5 py-1.5 text-xs font-semibold text-emerald-300 shadow-md backdrop-blur-md">
-            Artikel Pilihan • {featuredSpotlight.readingTime}
+            {articlePage.featuredBadgeLabel} • {featuredSpotlight.readingTime}
           </span>
         </div>
 
         {/* Right (lg:col-span-7): Content */}
         <div className="lg:col-span-7">
-          <span className="inline-block rounded-lg bg-[#EAF3EE] px-3 py-1 text-xs font-bold text-[#15803D]">
-            {featuredSpotlight.categoryLabel}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-block rounded-lg bg-[#EAF3EE] px-3 py-1 text-xs font-bold text-[#15803D]">
+              {featuredSpotlight.categoryLabel}
+            </span>
+            {featuredSpotlight.status === "review" && (
+              <span className="inline-block rounded-lg border border-[#E8C87A] bg-[#FEF6DF] px-3 py-1 text-xs font-bold text-[#6B4806]">
+                {articlePage.draftBadgeLabel}
+              </span>
+            )}
+          </div>
 
           <h2 className="mt-3 font-display text-2xl font-bold leading-snug text-[#0E291B] sm:text-3xl">
             <Link
@@ -185,20 +231,25 @@ export function ArticleCatalogClient() {
           </p>
 
           {/* 3 Key Takeaway Pills */}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            {featuredSpotlight.takeaways.map((pill) => (
-              <span
-                key={pill}
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#C5E3CE] bg-[#F4F9F6] px-3 py-1 text-xs font-semibold text-[#0E2F1D]"
-              >
-                <Check
-                  className="h-3.5 w-3.5 text-[#15803D]"
-                  aria-hidden="true"
-                />
-                <span>{pill}</span>
-              </span>
-            ))}
-          </div>
+          {featuredSpotlight.takeaways.some((p) => p.trim().length > 0) && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {featuredSpotlight.takeaways
+                .map((p) => p.trim())
+                .filter(Boolean)
+                .map((pill, idx) => (
+                  <span
+                    key={`${idx}-${pill}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#C5E3CE] bg-[#F4F9F6] px-3 py-1 text-xs font-semibold text-[#0E2F1D]"
+                  >
+                    <Check
+                      className="h-3.5 w-3.5 text-[#15803D]"
+                      aria-hidden="true"
+                    />
+                    <span>{pill}</span>
+                  </span>
+                ))}
+            </div>
+          )}
 
           <div className="mt-6">
             <Link
@@ -206,7 +257,7 @@ export function ArticleCatalogClient() {
               aria-label={`Baca panduan: ${featuredSpotlight.title}`}
               className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0E2F1D] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#15803D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D]"
             >
-              <span>Baca Panduan Lengkap</span>
+              <span>{articlePage.featuredReadMoreLabel}</span>
               <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
             </Link>
           </div>
@@ -239,7 +290,7 @@ export function ArticleCatalogClient() {
               className="rounded-2xl border border-[#DCE8DF] bg-white p-8 text-center shadow-sm"
             >
               <h3 className="font-display text-lg font-bold text-[#0E291B]">
-                Belum Ada Panduan yang Sesuai Filter
+                {articlePage.emptyTitle}
               </h3>
               <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[#33473D]">
                 Pencarian &ldquo;{searchQuery || selectedTag}&rdquo; pada
@@ -251,7 +302,7 @@ export function ArticleCatalogClient() {
                 className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0E2F1D] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#15803D]"
               >
                 <RotateCcw className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>Reset Pencarian &amp; Filter</span>
+                <span>{articlePage.emptyResetLabel}</span>
               </button>
             </div>
           ) : (
@@ -263,10 +314,17 @@ export function ArticleCatalogClient() {
                 >
                   <div>
                     {/* Top category pill + reading time */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="rounded-md bg-[#EAF3EE] px-2.5 py-1 text-xs font-semibold text-[#15803D]">
-                        {article.categoryLabel}
-                      </span>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-md bg-[#EAF3EE] px-2.5 py-1 text-xs font-semibold text-[#15803D]">
+                          {article.categoryLabel}
+                        </span>
+                        {article.status === "review" && (
+                          <span className="rounded-md border border-[#E8C87A] bg-[#FEF6DF] px-2.5 py-1 text-xs font-bold text-[#6B4806]">
+                            {articlePage.draftBadgeLabel}
+                          </span>
+                        )}
+                      </div>
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-[#526458]">
                         <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                         <span>{article.readingTime}</span>
@@ -304,17 +362,25 @@ export function ArticleCatalogClient() {
                     </p>
 
                     {/* Key-takeaway bullet list */}
-                    <ul className="mt-4 space-y-1.5 rounded-xl bg-[#F6FAF7] p-3 text-xs text-[#2C4235]">
-                      {article.takeaways.map((point) => (
-                        <li key={point} className="flex items-center gap-2">
-                          <Check
-                            className="h-3.5 w-3.5 shrink-0 text-[#15803D]"
-                            aria-hidden="true"
-                          />
-                          <span className="font-medium">{point}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {article.takeaways.some((p) => p.trim().length > 0) && (
+                      <ul className="mt-4 space-y-1.5 rounded-xl bg-[#F6FAF7] p-3 text-xs text-[#2C4235]">
+                        {article.takeaways
+                          .map((p) => p.trim())
+                          .filter(Boolean)
+                          .map((point, idx) => (
+                            <li
+                              key={`${idx}-${point}`}
+                              className="flex items-center gap-2"
+                            >
+                              <Check
+                                className="h-3.5 w-3.5 shrink-0 text-[#15803D]"
+                                aria-hidden="true"
+                              />
+                              <span className="font-medium">{point}</span>
+                            </li>
+                          ))}
+                      </ul>
+                    )}
                   </div>
 
                   {/* Bottom link */}
@@ -324,7 +390,7 @@ export function ArticleCatalogClient() {
                       aria-label={`Baca panduan: ${article.title}`}
                       className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0E2F1D] transition-colors group-hover:text-[#15803D]"
                     >
-                      <span>Baca Selengkapnya</span>
+                      <span>{articlePage.cardReadMoreLabel}</span>
                       <ArrowRight
                         className="h-4 w-4 transition-transform group-hover:translate-x-1"
                         aria-hidden="true"
@@ -346,50 +412,37 @@ export function ArticleCatalogClient() {
           <div className="rounded-3xl border border-emerald-800/40 bg-gradient-to-b from-[#0E2F1D] to-[#0A2215] p-6 text-white shadow-xl">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-300">
               <Sprout className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Solusi Unggulan</span>
+              <span>{articlePage.sidebarPromoBadge}</span>
             </span>
 
             <h2 className="mt-3.5 font-display text-xl font-bold leading-snug text-white">
-              Tamatric: Asam Humat &amp; Trichoderma
+              {articlePage.sidebarPromoTitle}
             </h2>
 
             <p className="mt-2.5 text-sm leading-relaxed text-[#D9F0E3]">
-              Pembenah tanah organik &amp; agensia hayati untuk mencegah layu
-              Fusarium serta mengoptimalkan serapan nutrisi akar.
+              {articlePage.sidebarPromoDescription}
             </p>
 
             <ul className="mt-4 space-y-2 text-xs sm:text-sm text-[#EAF3EE]">
-              <li className="flex items-center gap-2">
-                <Check
-                  className="h-4 w-4 shrink-0 text-emerald-400"
-                  aria-hidden="true"
-                />
-                <span>Memperbaiki struktur &amp; pH tanah</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check
-                  className="h-4 w-4 shrink-0 text-emerald-400"
-                  aria-hidden="true"
-                />
-                <span>Melindungi akar dari jamur patogen</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check
-                  className="h-4 w-4 shrink-0 text-emerald-400"
-                  aria-hidden="true"
-                />
-                <span>Tersedia kemasan 500gr &amp; 1kg</span>
-              </li>
+              {articlePage.sidebarPromoPoints.map((pt, idx) => (
+                <li key={`${idx}-${pt}`} className="flex items-center gap-2">
+                  <Check
+                    className="h-4 w-4 shrink-0 text-emerald-400"
+                    aria-hidden="true"
+                  />
+                  <span>{pt}</span>
+                </li>
+              ))}
             </ul>
 
             <a
-              href={SHOPEE_STORE_URL}
+              href={shopeeStoreUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#C84B28] py-3 px-4 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#B03E1E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>Beli di Shopee Tani InD®</span>
+              <span>{articlePage.sidebarPromoButtonLabel}</span>
               <ExternalLink
                 className="h-3.5 w-3.5 shrink-0"
                 aria-hidden="true"
@@ -400,11 +453,14 @@ export function ArticleCatalogClient() {
           {/* Card 2: Quick Consultation & Popular Topics */}
           <div className="rounded-3xl border border-[#DCE8DF] bg-white p-6 shadow-sm">
             <h2 className="font-display text-base font-bold text-[#0E291B]">
-              Topik Populer &amp; Konsultasi Cepat
+              {articlePage.sidebarTopicsTitle}
             </h2>
 
             <div className="mt-3.5 flex flex-wrap gap-2">
-              {POPULAR_TOPIC_TAGS.map((tag) => {
+              {(articlePage.sidebarTopics.length > 0
+                ? articlePage.sidebarTopics
+                : POPULAR_TOPIC_TAGS
+              ).map((tag) => {
                 const isTagActive = selectedTag === tag;
                 return (
                   <button
@@ -426,20 +482,30 @@ export function ArticleCatalogClient() {
 
             <div className="mt-5 border-t border-[#EBF2ED] pt-4">
               <p className="text-xs font-medium text-[#526458]">
-                Punya kendala spesifik di lahan Anda?
+                {articlePage.sidebarConsultPrompt}
               </p>
-              <a
-                href={whatsappHref}
-                target={WHATSAPP_NUMBER ? "_blank" : undefined}
-                rel={WHATSAPP_NUMBER ? "noopener noreferrer" : undefined}
-                className="mt-2.5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#C5E3CE] bg-[#EAF3EE] px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#0E2F1D] transition-all hover:bg-[#DCECE2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D]"
-              >
-                <MessageCircle
-                  className="h-4 w-4 shrink-0 text-[#15803D]"
-                  aria-hidden="true"
-                />
-                <span>Konsultasi via WhatsApp</span>
-              </a>
+              {whatsappHref ? (
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2.5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#C5E3CE] bg-[#EAF3EE] px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#0E2F1D] transition-all hover:bg-[#DCECE2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D]"
+                >
+                  <MessageCircle
+                    className="h-4 w-4 shrink-0 text-[#15803D]"
+                    aria-hidden="true"
+                  />
+                  <span>{articlePage.sidebarConsultButtonLabel}</span>
+                </a>
+              ) : (
+                <span className="mt-2.5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#DCE8DF] bg-[#F4F7F4] px-4 py-2.5 text-xs font-semibold text-[#43594D]">
+                  <MessageCircle
+                    className="h-4 w-4 shrink-0 text-[#15803D]"
+                    aria-hidden="true"
+                  />
+                  <span>{WHATSAPP_PLACEHOLDER_TEXT}</span>
+                </span>
+              )}
             </div>
           </div>
         </aside>

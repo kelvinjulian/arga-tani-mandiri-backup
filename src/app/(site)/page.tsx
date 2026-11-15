@@ -15,60 +15,104 @@ import {
   FlaskConical,
   PackageCheck,
 } from "lucide-react";
-import { SITE_DATA } from "@/data/site";
-import { SHOPEE_STORE_URL } from "@/data/categories";
+import {
+  getArticleCategories,
+  getArticles,
+  getCategories,
+  getSiteContent,
+} from "@/lib/content";
 import { getRobotsMetadata, getSiteUrl, serializeJsonLd } from "@/lib/seo";
+import {
+  DEFAULT_PRIMARY_CTA,
+  DEFAULT_SECONDARY_CTA,
+  HOME_SECTION_IDS,
+  resolveHeroCta,
+} from "@/lib/site-content/hero-cta";
 import { Container } from "@/components/Container";
 import { AboutSection } from "@/components/AboutSection";
 import { ArticleHubSection } from "@/components/ArticleHubSection";
 
-const homeTitle = `${SITE_DATA.companyName} | Sarana Produksi Pertanian`;
-const homeDescription = SITE_DATA.fieldDescription;
+// Revalidate every 5 minutes; on-demand revalidation (revalidatePath/revalidateTag) will be added with /admin CMS.
+export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: {
-    absolute: homeTitle,
-  },
-  description: homeDescription,
-  alternates: {
-    canonical: "/",
-  },
-  robots: getRobotsMetadata(),
-  openGraph: {
-    type: "website",
-    title: homeTitle,
+export async function generateMetadata(): Promise<Metadata> {
+  const siteData = await getSiteContent();
+  const homeTitle = `${siteData.companyName} | Sarana Produksi Pertanian`;
+  const homeDescription = siteData.fieldDescription;
+  const heroImageUrl = siteData.hero.imageSrc;
+  const heroImageAlt = siteData.hero.imageAlt;
+
+  return {
+    title: {
+      absolute: homeTitle,
+    },
     description: homeDescription,
-    url: "/",
-    siteName: SITE_DATA.companyName,
-    locale: "id_ID",
-    images: [
-      {
-        url: "/images/hero-agriculture.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Aktivitas pertanian di lahan budidaya",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: homeTitle,
-    description: homeDescription,
-    images: ["/images/hero-agriculture.jpg"],
-  },
-};
+    alternates: {
+      canonical: "/",
+    },
+    robots: getRobotsMetadata(),
+    openGraph: {
+      type: "website",
+      title: homeTitle,
+      description: homeDescription,
+      url: "/",
+      siteName: siteData.companyName,
+      locale: "id_ID",
+      images: [
+        {
+          url: heroImageUrl,
+          width: 1200,
+          height: 630,
+          alt: heroImageAlt,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: homeTitle,
+      description: homeDescription,
+      images: [heroImageUrl],
+    },
+  };
+}
 
 const CATEGORY_ICONS = [Sprout, ShieldCheck, FlaskConical, PackageCheck];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [siteData, categories, articles, articleCategories] = await Promise.all([
+    getSiteContent(),
+    getCategories(),
+    getArticles(),
+    getArticleCategories(),
+  ]);
+
+  const shopeeStoreUrl = siteData.officialStore.url;
+  const primaryCta = siteData.hero.primaryCta ?? {
+    ...DEFAULT_PRIMARY_CTA,
+    label: siteData.hero.primaryCtaLabel,
+  };
+  const secondaryCta = siteData.hero.secondaryCta ?? {
+    ...DEFAULT_SECONDARY_CTA,
+    label: siteData.hero.secondaryCtaLabel,
+  };
+  const resolvedPrimaryCta = resolveHeroCta(
+    primaryCta,
+    { whatsappNumber: siteData.whatsappNumber, shopeeStoreUrl },
+    DEFAULT_PRIMARY_CTA
+  );
+  const resolvedSecondaryCta = resolveHeroCta(
+    secondaryCta,
+    { whatsappNumber: siteData.whatsappNumber, shopeeStoreUrl },
+    DEFAULT_SECONDARY_CTA
+  );
   const siteUrl = getSiteUrl();
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: SITE_DATA.companyName,
+    name: siteData.companyName,
     url: siteUrl,
     logo: `${siteUrl}/brand/logo-mark.png`,
-    sameAs: [SHOPEE_STORE_URL],
+    sameAs: [shopeeStoreUrl],
   };
 
   return (
@@ -81,7 +125,7 @@ export default function HomePage() {
       />
       {/* Section 1: Hero Section (Balanced Left Column, Wider Slanted Photo, Zero Text Collision) */}
       <section
-        id="beranda"
+        id={HOME_SECTION_IDS.BERANDA}
         data-testid="hero-section"
         aria-labelledby="hero-heading"
         style={{ minHeight: "0px", height: "auto" }}
@@ -97,7 +141,7 @@ export default function HomePage() {
                   className="h-3.5 w-3.5 shrink-0 text-[#15803D]"
                   aria-hidden="true"
                 />
-                <span>{SITE_DATA.hero.eyebrow}</span>
+                <span>{siteData.hero.eyebrow}</span>
               </div>
 
               {/* Expressive & Rhythmic H1 Headline (Proportioned so "Budidaya Optimal" sits close to photo with a clean gap and zero collision) */}
@@ -124,7 +168,7 @@ export default function HomePage() {
                   data-testid="h1-line-4"
                   className="relative mt-1 inline-block pb-3 sm:whitespace-nowrap bg-gradient-to-r from-[#15803D] to-[#0D9488] bg-clip-text text-transparent"
                 >
-                  {SITE_DATA.hero.headlineAccent}
+                  {siteData.hero.headlineAccent}
                   {/* Continuous curved emerald underline stroke connected seamlessly to botanical leaf sprout */}
                   <svg
                     aria-hidden="true"
@@ -164,31 +208,82 @@ export default function HomePage() {
 
               {/* Subheadline Description below H1 */}
               <p className="hero-enter-3 mt-2.5 max-w-[460px] text-xs sm:text-[13.5px] leading-relaxed text-[#2C4737]">
-                {SITE_DATA.hero.subheadline}
+                {siteData.hero.subheadline}
               </p>
 
               {/* Two Primary CTA Buttons side-by-side in a single row */}
-              <div className="hero-enter-4 mt-4 flex flex-row flex-wrap sm:flex-nowrap items-center gap-3">
-                <Link
-                  href="/#produk"
-                  className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0E2B1D] active:bg-[#091C13] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-                >
-                  <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{SITE_DATA.hero.primaryCtaLabel}</span>
-                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-                </Link>
+              {(resolvedPrimaryCta.kind !== "disabled" ||
+                resolvedSecondaryCta.kind !== "disabled") && (
+                <div className="hero-enter-4 mt-4 flex flex-row flex-wrap sm:flex-nowrap items-center gap-3">
+                  {resolvedPrimaryCta.kind === "link" &&
+                    (resolvedPrimaryCta.isExternal ? (
+                      <a
+                        href={resolvedPrimaryCta.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0E2B1D] active:bg-[#091C13] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      >
+                        {primaryCta.target.type === "whatsapp" ? (
+                          <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        ) : primaryCta.target.type === "shopee" ? (
+                          <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        ) : (
+                          <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        )}
+                        <span>{primaryCta.label}</span>
+                        <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <Link
+                        href={resolvedPrimaryCta.href}
+                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0E2B1D] active:bg-[#091C13] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      >
+                        <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        <span>{primaryCta.label}</span>
+                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </Link>
+                    ))}
+                  {resolvedPrimaryCta.kind === "whatsapp-placeholder" && (
+                    <span className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#33473D]">
+                      <MessageCircle className="h-4 w-4 shrink-0 text-[#15803D]" aria-hidden="true" />
+                      <span>{resolvedPrimaryCta.text}</span>
+                    </span>
+                  )}
 
-                <a
-                  href={SHOPEE_STORE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#C23B1A] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#992B11] active:bg-[#7F230D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-                >
-                  <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{SITE_DATA.hero.secondaryCtaLabel}</span>
-                  <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
-                </a>
-              </div>
+                  {resolvedSecondaryCta.kind === "link" &&
+                    (resolvedSecondaryCta.isExternal ? (
+                      <a
+                        href={resolvedSecondaryCta.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#C23B1A] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#992B11] active:bg-[#7F230D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      >
+                        {secondaryCta.target.type === "whatsapp" ? (
+                          <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        ) : (
+                          <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        )}
+                        <span>{secondaryCta.label}</span>
+                        <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <Link
+                        href={resolvedSecondaryCta.href}
+                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#C23B1A] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#992B11] active:bg-[#7F230D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      >
+                        <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        <span>{secondaryCta.label}</span>
+                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </Link>
+                    ))}
+                  {resolvedSecondaryCta.kind === "whatsapp-placeholder" && (
+                    <span className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#33473D]">
+                      <MessageCircle className="h-4 w-4 shrink-0 text-[#15803D]" aria-hidden="true" />
+                      <span>{resolvedSecondaryCta.text}</span>
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Compact Horizontal Trust Pill Bar */}
               <div
@@ -244,7 +339,7 @@ export default function HomePage() {
                   </div>
                   <div className="mt-2.5 pl-10">
                     <a
-                      href={SHOPEE_STORE_URL}
+                      href={shopeeStoreUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0E291B] hover:text-[#15803D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
@@ -309,11 +404,11 @@ export default function HomePage() {
               }}
             >
               <Image
-                src="/images/hero-agriculture.jpg"
-                alt="Aktivitas pertanian di lahan budidaya"
+                src={siteData.hero.imageSrc}
+                alt={siteData.hero.imageAlt}
                 fill
                 priority
-                sizes="(max-width: 1024px) 100vw, 56vw"
+                sizes="(min-width: 1536px) 786px, (min-width: 1024px) 52vw, 100vw"
                 className="object-cover"
                 style={{ objectPosition: "54% 38%" }}
               />
@@ -336,10 +431,10 @@ export default function HomePage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <h2 className="font-display text-xs font-bold leading-snug text-white break-words">
-                        {SITE_DATA.hero.overlayBadgeLeft.title}
+                        {siteData.hero.overlayBadgeLeft.title}
                       </h2>
                       <p className="mt-1 text-[11px] leading-relaxed text-[#D9F0E3] break-words">
-                        {SITE_DATA.hero.overlayBadgeLeft.description}
+                        {siteData.hero.overlayBadgeLeft.description}
                       </p>
                     </div>
                   </div>
@@ -351,10 +446,10 @@ export default function HomePage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <h2 className="font-display text-xs font-bold leading-snug text-white break-words">
-                        {SITE_DATA.hero.overlayBadgeRight.title}
+                        {siteData.hero.overlayBadgeRight.title}
                       </h2>
                       <p className="mt-1 text-[11px] leading-relaxed text-[#D9F0E3] break-words">
-                        {SITE_DATA.hero.overlayBadgeRight.description}
+                        {siteData.hero.overlayBadgeRight.description}
                       </p>
                     </div>
                   </div>
@@ -365,11 +460,11 @@ export default function HomePage() {
             {/* ── Mobile/Tablet photo (below 1024px) ── */}
             <div className="relative mt-6 h-[340px] sm:h-[400px] w-full overflow-hidden rounded-2xl lg:hidden">
               <Image
-                src="/images/hero-agriculture.jpg"
-                alt="Aktivitas pertanian di lahan budidaya"
+                src={siteData.hero.imageSrc}
+                alt={siteData.hero.imageAlt}
                 fill
                 priority
-                sizes="100vw"
+                sizes="(min-width: 1024px) 52vw, calc(100vw - 64px)"
                 className="object-cover object-center"
               />
             </div>
@@ -389,10 +484,10 @@ export default function HomePage() {
                       </span>
                       <div className="min-w-0">
                         <h2 className="font-display text-xs sm:text-sm font-bold leading-snug text-white">
-                          {SITE_DATA.hero.overlayBadgeLeft.title}
+                          {siteData.hero.overlayBadgeLeft.title}
                         </h2>
                         <p className="mt-1 text-xs leading-relaxed text-[#D9F0E3]">
-                          {SITE_DATA.hero.overlayBadgeLeft.description}
+                          {siteData.hero.overlayBadgeLeft.description}
                         </p>
                       </div>
                     </div>
@@ -404,10 +499,10 @@ export default function HomePage() {
                       </span>
                       <div className="min-w-0">
                         <h2 className="font-display text-xs sm:text-sm font-bold leading-snug text-white">
-                          {SITE_DATA.hero.overlayBadgeRight.title}
+                          {siteData.hero.overlayBadgeRight.title}
                         </h2>
                         <p className="mt-1 text-xs leading-relaxed text-[#D9F0E3]">
-                          {SITE_DATA.hero.overlayBadgeRight.description}
+                          {siteData.hero.overlayBadgeRight.description}
                         </p>
                       </div>
                     </div>
@@ -423,7 +518,7 @@ export default function HomePage() {
       <div className="relative z-10 w-full overflow-x-clip">
         {/* Section 2: Upgraded "Kategori Produk Kami" Editorial Showcase */}
         <section
-          id="produk"
+          id={HOME_SECTION_IDS.PRODUK}
           aria-labelledby="category-showcase-heading"
           className="scroll-mt-28 relative z-10 bg-transparent pt-4 lg:pt-6 pb-6 lg:pb-8"
         >
@@ -438,27 +533,27 @@ export default function HomePage() {
                         className="h-3.5 w-3.5 text-[#15803D]"
                         aria-hidden="true"
                       />
-                      <span>{SITE_DATA.categoryShowcase.pill}</span>
+                      <span>{siteData.categoryShowcase.pill}</span>
                     </span>
                     <h2
                       id="category-showcase-heading"
                       className="mt-3.5 font-display text-xl font-bold leading-snug text-[#0E291B] sm:text-2xl"
                     >
-                      {SITE_DATA.categoryShowcase.heading}
+                      {siteData.categoryShowcase.heading}
                     </h2>
                     <p className="mt-3 text-xs sm:text-[13px] leading-relaxed text-[#33473D]">
-                      {SITE_DATA.categoryShowcase.description}
+                      {siteData.categoryShowcase.description}
                     </p>
                   </div>
 
                   <div className="mt-5 pt-2">
                     <a
-                      href={SHOPEE_STORE_URL}
+                      href={shopeeStoreUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0E291B] underline decoration-[#84A993] underline-offset-4 transition-colors hover:text-[#15803D] hover:decoration-[#15803D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
                     >
-                      <span>{SITE_DATA.categoryShowcase.ctaLabel}</span>
+                      <span>{siteData.categoryShowcase.ctaLabel}</span>
                       <ArrowUpRight
                         className="h-4 w-4 shrink-0"
                         aria-hidden="true"
@@ -469,24 +564,25 @@ export default function HomePage() {
 
                 {/* 4 Tall Visual Bento Cards (9 cols on lg) */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:col-span-9 lg:grid-cols-4">
-                  {SITE_DATA.categoryShowcase.items.map((cat, idx) => {
+                  {categories.map((cat, idx) => {
                     const IconComponent = CATEGORY_ICONS[idx] ?? Sprout;
                     return (
                       <a
                         key={cat.id}
-                        href={SHOPEE_STORE_URL}
+                        href={cat.href || shopeeStoreUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={`${cat.title} di Shopee`}
+                        aria-label={`${cat.name} di Shopee`}
                         className="group relative flex flex-col overflow-hidden rounded-2xl border border-[#D5E4DA] bg-[#E3EDE7] shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#9BC5AC] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29] min-w-0"
                       >
                         {/* Top Category Photography (solid matching background, zero dark seam) */}
                         <div className="relative h-36 w-full overflow-hidden bg-[#E3EDE7]">
                           <Image
-                            src={cat.imageSrc}
-                            alt={cat.imageAlt}
+                            src={cat.image}
+                            alt={cat.alt}
                             fill
-                            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                            loading={idx === 0 ? "eager" : undefined}
+                            sizes="(max-width: 767px) calc(100vw - 64px), (max-width: 1023px) 44vw, 240px"
                             className="object-cover transition-transform duration-500 group-hover:scale-105 [backface-visibility:hidden] [transform:translateZ(0)]"
                           />
                         </div>
@@ -504,7 +600,7 @@ export default function HomePage() {
 
                             <div className="flex items-start justify-between gap-1.5">
                               <h3 className="font-display text-[15px] font-bold leading-snug text-[#0E291B] group-hover:text-[#15803D]">
-                                {cat.title}
+                                {cat.name}
                               </h3>
                               <ArrowUpRight
                                 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#43594D] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#15803D]"
@@ -553,7 +649,7 @@ export default function HomePage() {
                 </div>
 
                 <a
-                  href={SHOPEE_STORE_URL}
+                  href={shopeeStoreUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-1.5 rounded-xl bg-white px-4 py-1.5 text-xs font-bold text-[#0E2F1D] transition-colors hover:bg-[#D9F0E3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
@@ -575,10 +671,19 @@ export default function HomePage() {
         </section>
 
         {/* Section 3: About ("Tentang Kami" Interactive Editorial Split & Bento Grid) */}
-        <AboutSection />
+        <AboutSection
+          aboutData={siteData.about}
+          shopeeStoreUrl={shopeeStoreUrl}
+        />
 
         {/* Section 4: Article Hub & Conversion Banner */}
-        <ArticleHubSection />
+        <ArticleHubSection
+          articles={articles}
+          articleHub={siteData.articleHub}
+          articleCategories={articleCategories}
+          whatsappNumber={siteData.whatsappNumber}
+          shopeeStoreUrl={shopeeStoreUrl}
+        />
       </div>
     </div>
   );

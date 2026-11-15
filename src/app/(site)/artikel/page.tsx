@@ -2,49 +2,70 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Sprout } from "lucide-react";
-import { SITE_DATA } from "@/data/site";
+import { getArticleCategories, getArticles, getSiteContent } from "@/lib/content";
 import { getRobotsMetadata, getSiteUrl, serializeJsonLd } from "@/lib/seo";
 import { Container } from "@/components/Container";
 import { ArticleCatalogClient } from "@/components/ArticleCatalogClient";
 import { WhatsAppConsultationBand } from "@/components/WhatsAppCTA";
+import {
+  DEFAULT_ARTICLE_PAGE,
+  DEFAULT_ARTICLE_PAGE_OG_ALT,
+  DEFAULT_ARTICLE_PAGE_OG_IMAGE,
+} from "@/lib/site-content/article-pages-defaults";
 
-const hubTitle = "Pusat Edukasi & Panduan Tani";
-const hubFullTitle = `${hubTitle} | ${SITE_DATA.companyName}`;
-const hubDescription =
-  "Panduan praktis pembacaan dosis label kemasan, manajemen nutrisi musim tanam, pemulihan kesuburan tanah, dan penyimpanan sarana produksi pertanian.";
+// Revalidate every 5 minutes; on-demand revalidation (revalidatePath/revalidateTag) will be added with /admin CMS.
+export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: hubTitle,
-  description: hubDescription,
-  alternates: {
-    canonical: "/artikel",
-  },
-  robots: getRobotsMetadata(),
-  openGraph: {
-    type: "website",
-    title: hubFullTitle,
+export async function generateMetadata(): Promise<Metadata> {
+  const siteData = await getSiteContent();
+  const pageData = siteData.articlePage ?? DEFAULT_ARTICLE_PAGE;
+  const hubTitle = pageData.seoTitle;
+  const hubDescription = pageData.metaDescription;
+  const hubFullTitle = `${hubTitle} | ${siteData.companyName}`;
+  const ogImg = pageData.ogImageSrc?.trim() || DEFAULT_ARTICLE_PAGE_OG_IMAGE;
+  const ogAlt = pageData.ogImageSrc?.trim()
+    ? pageData.ogImageAlt || hubTitle
+    : DEFAULT_ARTICLE_PAGE_OG_ALT;
+
+  return {
+    title: hubTitle,
     description: hubDescription,
-    url: "/artikel",
-    siteName: SITE_DATA.companyName,
-    locale: "id_ID",
-    images: [
-      {
-        url: "/images/hero-agriculture.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Aktivitas pertanian di lahan budidaya",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: hubFullTitle,
-    description: hubDescription,
-    images: ["/images/hero-agriculture.jpg"],
-  },
-};
+    alternates: {
+      canonical: "/artikel",
+    },
+    robots: getRobotsMetadata(),
+    openGraph: {
+      type: "website",
+      title: hubFullTitle,
+      description: hubDescription,
+      url: "/artikel",
+      siteName: siteData.companyName,
+      locale: "id_ID",
+      images: [
+        {
+          url: ogImg,
+          width: 1200,
+          height: 630,
+          alt: ogAlt,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: hubFullTitle,
+      description: hubDescription,
+      images: [ogImg],
+    },
+  };
+}
 
-export default function ArtikelIndexPage() {
+export default async function ArtikelIndexPage() {
+  const [articles, siteData, articleCategories] = await Promise.all([
+    getArticles(),
+    getSiteContent(),
+    getArticleCategories(),
+  ]);
+  const pageData = siteData.articlePage ?? DEFAULT_ARTICLE_PAGE;
   const siteUrl = getSiteUrl();
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -53,13 +74,13 @@ export default function ArtikelIndexPage() {
       {
         "@type": "ListItem",
         position: 1,
-        name: "Beranda",
+        name: pageData.breadcrumbHomeLabel,
         item: `${siteUrl}/`,
       },
       {
         "@type": "ListItem",
         position: 2,
-        name: "Artikel Edukasi",
+        name: pageData.breadcrumbCurrentLabel,
         item: `${siteUrl}/artikel`,
       },
     ],
@@ -87,7 +108,7 @@ export default function ArtikelIndexPage() {
                     href="/"
                     className="font-semibold text-[#143D29] transition-colors hover:text-[#15803D] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
                   >
-                    Beranda
+                    {pageData.breadcrumbHomeLabel}
                   </Link>
                 </li>
                 <li aria-hidden="true">/</li>
@@ -95,7 +116,7 @@ export default function ArtikelIndexPage() {
                   aria-current="page"
                   className="font-semibold text-[#0E291B]"
                 >
-                  Artikel Edukasi
+                  {pageData.breadcrumbCurrentLabel}
                 </li>
               </ol>
             </nav>
@@ -107,20 +128,20 @@ export default function ArtikelIndexPage() {
                   className="h-3.5 w-3.5 text-[#15803D]"
                   aria-hidden="true"
                 />
-                <span>Pusat Edukasi &amp; Panduan Tani</span>
+                <span>{pageData.eyebrow}</span>
               </span>
 
               <h1
                 id="artikel-page-heading"
                 className="mt-3.5 font-display text-[clamp(1.85rem,2.7vw+0.6rem,2.65rem)] font-bold leading-[1.2] tracking-tight text-[#0E291B]"
               >
-                <span>Pusat Wawasan Budidaya &amp; </span>
+                <span>{pageData.headingMain} </span>
                 <span className="inline-block rounded-xl border border-[#C5E3CE] bg-[#E3F3E8] px-3 py-0.5 text-[#0E291B]">
-                  Panduan Aplikasi
+                  {pageData.headingPill}
                 </span>
                 <span className="mt-1 block text-[#15803D]">
                   <span className="relative inline-block pb-2">
-                    Sarana Pertanian
+                    {pageData.headingAccent}
                     <svg
                       aria-hidden="true"
                       viewBox="0 0 320 18"
@@ -144,21 +165,28 @@ export default function ArtikelIndexPage() {
               </h1>
 
               <p className="mt-3.5 max-w-2xl text-sm leading-relaxed text-[#33473D] sm:text-base">
-                Temukan panduan praktis seputar pembacaan dosis label kemasan,
-                manajemen nutrisi per musim tanam, pemulihan kesuburan tanah
-                dengan Asam Humat dan Trichoderma, hingga standar penyimpanan
-                sarana produksi pertanian.
+                {pageData.description}
               </p>
             </div>
 
             {/* Interactive Search/Filter Dock, Featured Spotlight Card, and 12-Col Content Area */}
-            <ArticleCatalogClient />
+            <ArticleCatalogClient
+              articles={articles}
+              articleCategories={articleCategories}
+              whatsappNumber={siteData.whatsappNumber}
+              shopeeStoreUrl={siteData.officialStore.url}
+              articlePage={pageData}
+            />
           </Container>
         </section>
       </div>
 
       <div className="relative z-20">
-        <WhatsAppConsultationBand />
+        <WhatsAppConsultationBand
+          whatsappNumber={siteData.whatsappNumber}
+          whatsappBand={siteData.whatsappBand}
+          officialStore={siteData.officialStore}
+        />
       </div>
     </div>
   );

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { SITE_DATA } from "@/data/site";
 import { SHOPEE_STORE_URL, productCategories } from "@/data/categories";
+import type { ContentCategoryItem } from "@/lib/content";
 import { Container } from "@/components/Container";
 
 const NAV_LINKS = [
@@ -31,20 +32,40 @@ const NAV_LINKS = [
   { href: "/#kontak", label: "Kontak", anchorId: "kontak", icon: Phone },
 ];
 
-export function Navbar() {
+interface NavbarProps {
+  companyName?: string;
+  shopeeStoreUrl?: string;
+  categories?: ContentCategoryItem[];
+}
+
+export function Navbar({
+  companyName = SITE_DATA.companyName,
+  shopeeStoreUrl = SHOPEE_STORE_URL,
+  categories,
+}: NavbarProps) {
+  const categoryItems =
+    categories && categories.length > 0
+      ? categories
+      : productCategories.map((c) => ({
+          name: c.name,
+          href: shopeeStoreUrl,
+        }));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const pathname = usePathname();
 
-  const [activeHref, setActiveHref] = useState<string>(() => {
-    if (pathname.startsWith("/artikel")) return "/#artikel-edukasi";
-    if (typeof window !== "undefined" && window.location.hash) {
-      const hashId = window.location.hash.replace("#", "");
-      const match = NAV_LINKS.find((l) => l.anchorId === hashId);
-      if (match) return match.href;
-    }
-    return "/";
-  });
+  // First render (SSR and client hydration) depends strictly on pathname so markup matches.
+  const [activeHref, setActiveHref] = useState<string>(() =>
+    pathname.startsWith("/artikel") ? "/#artikel-edukasi" : "/"
+  );
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      setHasMounted(true);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const isClickScrollingRef = useRef(false);
   const clickScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -332,7 +353,7 @@ export function Navbar() {
                     isScrolled ? "text-[15px] sm:text-base" : "text-base sm:text-lg"
                   }`}
                 >
-                  {SITE_DATA.companyName}
+                  {companyName}
                 </span>
                 <span
                   className={`text-[#526458] text-[11px] font-medium leading-tight overflow-hidden transition-all duration-500 ${
@@ -366,8 +387,12 @@ export function Navbar() {
                         onClick={(e) => handleNavClick(e, item)}
                         className={
                           isActive
-                            ? "bg-[#0E2F1D] text-white font-semibold px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-sm transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29]"
-                            : "text-[#384E40] hover:text-[#0E2F1D] hover:bg-white/70 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29]"
+                            ? `bg-[#0E2F1D] text-white font-semibold px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] ${
+                                hasMounted ? "transition-all duration-300" : "transition-none"
+                              }`
+                            : `text-[#384E40] hover:text-[#0E2F1D] hover:bg-white/70 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] ${
+                                hasMounted ? "transition-all duration-200" : "transition-none"
+                              }`
                         }
                       >
                         {isActive && (
@@ -391,10 +416,10 @@ export function Navbar() {
                           <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#526458]">
                             Katalog Resmi di Shopee
                           </div>
-                          {productCategories.map((cat) => (
+                          {categoryItems.map((cat) => (
                             <a
                               key={cat.name}
-                              href={SHOPEE_STORE_URL}
+                              href={cat.href || shopeeStoreUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold text-[#0E291B] hover:bg-[#EAF3EE] hover:text-[#15803D] transition-colors cursor-pointer"
@@ -417,8 +442,12 @@ export function Navbar() {
                     onClick={(e) => handleNavClick(e, item)}
                     className={
                       isActive
-                        ? "bg-[#0E2F1D] text-white font-semibold px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-sm transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29]"
-                        : "text-[#384E40] hover:text-[#0E2F1D] hover:bg-white/70 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29]"
+                        ? `bg-[#0E2F1D] text-white font-semibold px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] ${
+                            hasMounted ? "transition-all duration-300" : "transition-none"
+                          }`
+                        : `text-[#384E40] hover:text-[#0E2F1D] hover:bg-white/70 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] ${
+                            hasMounted ? "transition-all duration-200" : "transition-none"
+                          }`
                     }
                   >
                     {isActive && (
@@ -447,7 +476,7 @@ export function Navbar() {
               </Link>
 
               <a
-                href={SHOPEE_STORE_URL}
+                href={shopeeStoreUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`bg-[#C84B28] hover:bg-[#B03E1E] text-white text-xs sm:text-sm font-semibold shadow-sm hover:shadow inline-flex items-center gap-1.5 transition-all duration-500 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] ${
@@ -463,7 +492,7 @@ export function Navbar() {
             {/* Mobile & Tablet Closed Right Controls (< lg) */}
             <div className="flex items-center gap-2 lg:hidden">
               <a
-                href={SHOPEE_STORE_URL}
+                href={shopeeStoreUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-[#C84B28] hover:bg-[#B03E1E] text-white text-xs font-semibold px-3 py-1.5 rounded-full inline-flex items-center gap-1 shadow-2xs transition-colors"
@@ -579,7 +608,7 @@ export function Navbar() {
                 </Link>
 
                 <a
-                  href={SHOPEE_STORE_URL}
+                  href={shopeeStoreUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setMobileMenuOpen(false)}
