@@ -185,9 +185,16 @@ export function ArticleCatalogClient({
 
         {/* Right (lg:col-span-7): Content */}
         <div className="lg:col-span-7">
-          <span className="inline-block rounded-lg bg-[#EAF3EE] px-3 py-1 text-xs font-bold text-[#15803D]">
-            {featuredSpotlight.categoryLabel}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-block rounded-lg bg-[#EAF3EE] px-3 py-1 text-xs font-bold text-[#15803D]">
+              {featuredSpotlight.categoryLabel}
+            </span>
+            {featuredSpotlight.status === "review" && (
+              <span className="inline-block rounded-lg border border-[#E8C87A] bg-[#FEF6DF] px-3 py-1 text-xs font-bold text-[#6B4806]">
+                DRAFT: perlu ditinjau
+              </span>
+            )}
+          </div>
 
           <h2 className="mt-3 font-display text-2xl font-bold leading-snug text-[#0E291B] sm:text-3xl">
             <Link
@@ -203,20 +210,25 @@ export function ArticleCatalogClient({
           </p>
 
           {/* 3 Key Takeaway Pills */}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            {featuredSpotlight.takeaways.map((pill) => (
-              <span
-                key={pill}
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#C5E3CE] bg-[#F4F9F6] px-3 py-1 text-xs font-semibold text-[#0E2F1D]"
-              >
-                <Check
-                  className="h-3.5 w-3.5 text-[#15803D]"
-                  aria-hidden="true"
-                />
-                <span>{pill}</span>
-              </span>
-            ))}
-          </div>
+          {featuredSpotlight.takeaways.some((p) => p.trim().length > 0) && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {featuredSpotlight.takeaways
+                .map((p) => p.trim())
+                .filter(Boolean)
+                .map((pill, idx) => (
+                  <span
+                    key={`${idx}-${pill}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#C5E3CE] bg-[#F4F9F6] px-3 py-1 text-xs font-semibold text-[#0E2F1D]"
+                  >
+                    <Check
+                      className="h-3.5 w-3.5 text-[#15803D]"
+                      aria-hidden="true"
+                    />
+                    <span>{pill}</span>
+                  </span>
+                ))}
+            </div>
+          )}
 
           <div className="mt-6">
             <Link
@@ -281,10 +293,17 @@ export function ArticleCatalogClient({
                 >
                   <div>
                     {/* Top category pill + reading time */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="rounded-md bg-[#EAF3EE] px-2.5 py-1 text-xs font-semibold text-[#15803D]">
-                        {article.categoryLabel}
-                      </span>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-md bg-[#EAF3EE] px-2.5 py-1 text-xs font-semibold text-[#15803D]">
+                          {article.categoryLabel}
+                        </span>
+                        {article.status === "review" && (
+                          <span className="rounded-md border border-[#E8C87A] bg-[#FEF6DF] px-2.5 py-1 text-xs font-bold text-[#6B4806]">
+                            DRAFT: perlu ditinjau
+                          </span>
+                        )}
+                      </div>
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-[#526458]">
                         <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                         <span>{article.readingTime}</span>
@@ -322,17 +341,25 @@ export function ArticleCatalogClient({
                     </p>
 
                     {/* Key-takeaway bullet list */}
-                    <ul className="mt-4 space-y-1.5 rounded-xl bg-[#F6FAF7] p-3 text-xs text-[#2C4235]">
-                      {article.takeaways.map((point) => (
-                        <li key={point} className="flex items-center gap-2">
-                          <Check
-                            className="h-3.5 w-3.5 shrink-0 text-[#15803D]"
-                            aria-hidden="true"
-                          />
-                          <span className="font-medium">{point}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {article.takeaways.some((p) => p.trim().length > 0) && (
+                      <ul className="mt-4 space-y-1.5 rounded-xl bg-[#F6FAF7] p-3 text-xs text-[#2C4235]">
+                        {article.takeaways
+                          .map((p) => p.trim())
+                          .filter(Boolean)
+                          .map((point, idx) => (
+                            <li
+                              key={`${idx}-${point}`}
+                              className="flex items-center gap-2"
+                            >
+                              <Check
+                                className="h-3.5 w-3.5 shrink-0 text-[#15803D]"
+                                aria-hidden="true"
+                              />
+                              <span className="font-medium">{point}</span>
+                            </li>
+                          ))}
+                      </ul>
+                    )}
                   </div>
 
                   {/* Bottom link */}

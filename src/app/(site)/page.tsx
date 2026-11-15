@@ -325,7 +325,7 @@ export default async function HomePage() {
                 alt="Aktivitas pertanian di lahan budidaya"
                 fill
                 priority
-                sizes="(max-width: 1024px) 100vw, 56vw"
+                sizes="(min-width: 1536px) 786px, (min-width: 1024px) 52vw, 100vw"
                 className="object-cover"
                 style={{ objectPosition: "54% 38%" }}
               />
@@ -381,7 +381,7 @@ export default async function HomePage() {
                 alt="Aktivitas pertanian di lahan budidaya"
                 fill
                 priority
-                sizes="100vw"
+                sizes="(min-width: 1024px) 52vw, calc(100vw - 64px)"
                 className="object-cover object-center"
               />
             </div>
@@ -498,7 +498,8 @@ export default async function HomePage() {
                             src={cat.image}
                             alt={cat.alt}
                             fill
-                            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                            loading={idx === 0 ? "eager" : undefined}
+                            sizes="(max-width: 767px) calc(100vw - 64px), (max-width: 1023px) 44vw, 240px"
                             className="object-cover transition-transform duration-500 group-hover:scale-105 [backface-visibility:hidden] [transform:translateZ(0)]"
                           />
                         </div>

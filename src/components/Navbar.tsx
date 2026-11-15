@@ -34,17 +34,20 @@ const NAV_LINKS = [
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const pathname = usePathname();
 
-  const [activeHref, setActiveHref] = useState<string>(() => {
-    if (pathname.startsWith("/artikel")) return "/#artikel-edukasi";
-    if (typeof window !== "undefined" && window.location.hash) {
-      const hashId = window.location.hash.replace("#", "");
-      const match = NAV_LINKS.find((l) => l.anchorId === hashId);
-      if (match) return match.href;
-    }
-    return "/";
-  });
+  // First render (SSR and client hydration) depends strictly on pathname so markup matches.
+  const [activeHref, setActiveHref] = useState<string>(() =>
+    pathname.startsWith("/artikel") ? "/#artikel-edukasi" : "/"
+  );
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      setHasMounted(true);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const isClickScrollingRef = useRef(false);
   const clickScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -366,8 +369,12 @@ export function Navbar() {
                         onClick={(e) => handleNavClick(e, item)}
                         className={
                           isActive
-                            ? "bg-[#0E2F1D] text-white font-semibold px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-sm transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29]"
-                            : "text-[#384E40] hover:text-[#0E2F1D] hover:bg-white/70 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29]"
+                            ? `bg-[#0E2F1D] text-white font-semibold px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] ${
+                                hasMounted ? "transition-all duration-300" : "transition-none"
+                              }`
+                            : `text-[#384E40] hover:text-[#0E2F1D] hover:bg-white/70 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] ${
+                                hasMounted ? "transition-all duration-200" : "transition-none"
+                              }`
                         }
                       >
                         {isActive && (
@@ -417,8 +424,12 @@ export function Navbar() {
                     onClick={(e) => handleNavClick(e, item)}
                     className={
                       isActive
-                        ? "bg-[#0E2F1D] text-white font-semibold px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-sm transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29]"
-                        : "text-[#384E40] hover:text-[#0E2F1D] hover:bg-white/70 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29]"
+                        ? `bg-[#0E2F1D] text-white font-semibold px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] ${
+                            hasMounted ? "transition-all duration-300" : "transition-none"
+                          }`
+                        : `text-[#384E40] hover:text-[#0E2F1D] hover:bg-white/70 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] ${
+                            hasMounted ? "transition-all duration-200" : "transition-none"
+                          }`
                     }
                   >
                     {isActive && (
