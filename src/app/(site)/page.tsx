@@ -1,6 +1,5 @@
 import React from "react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import {
   Sprout,
@@ -31,6 +30,9 @@ import {
 import { Container } from "@/components/Container";
 import { AboutSection } from "@/components/AboutSection";
 import { ArticleHubSection } from "@/components/ArticleHubSection";
+import { ResilientImage } from "@/components/ResilientImage";
+import { resolveImageSrc } from "@/lib/media/resolveImageSrc";
+import { productCategories } from "@/data/categories";
 
 // Revalidate every 5 minutes; on-demand revalidation (revalidatePath/revalidateTag) will be added with /admin CMS.
 export const revalidate = 300;
@@ -39,7 +41,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteData = await getSiteContent();
   const homeTitle = `${siteData.companyName} | Sarana Produksi Pertanian`;
   const homeDescription = siteData.fieldDescription;
-  const heroImageUrl = siteData.hero.imageSrc;
+  const heroImageUrl = resolveImageSrc(
+    siteData.hero.imageSrc,
+    "/images/hero-agriculture.jpg"
+  );
   const heroImageAlt = siteData.hero.imageAlt;
 
   return {
@@ -403,8 +408,9 @@ export default async function HomePage() {
                 WebkitClipPath: "url(#hero-slanted-rounded-clip)",
               }}
             >
-              <Image
+              <ResilientImage
                 src={siteData.hero.imageSrc}
+                fallbackSrc="/images/hero-agriculture.jpg"
                 alt={siteData.hero.imageAlt}
                 fill
                 priority
@@ -459,8 +465,9 @@ export default async function HomePage() {
 
             {/* ── Mobile/Tablet photo (below 1024px) ── */}
             <div className="relative mt-6 h-[340px] sm:h-[400px] w-full overflow-hidden rounded-2xl lg:hidden">
-              <Image
+              <ResilientImage
                 src={siteData.hero.imageSrc}
+                fallbackSrc="/images/hero-agriculture.jpg"
                 alt={siteData.hero.imageAlt}
                 fill
                 priority
@@ -577,8 +584,12 @@ export default async function HomePage() {
                       >
                         {/* Top Category Photography (solid matching background, zero dark seam) */}
                         <div className="relative h-36 w-full overflow-hidden bg-[#E3EDE7]">
-                          <Image
+                          <ResilientImage
                             src={cat.image}
+                            fallbackSrc={
+                              productCategories[idx]?.image ??
+                              "/images/hero-agriculture.jpg"
+                            }
                             alt={cat.alt}
                             fill
                             loading={idx === 0 ? "eager" : undefined}

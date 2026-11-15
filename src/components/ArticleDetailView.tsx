@@ -1,6 +1,6 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { ResilientImage } from "@/components/ResilientImage";
 import {
   ShoppingBag,
   ExternalLink,
@@ -142,8 +142,9 @@ export function ArticleDetailView({
 
           {/* Large Slanted-Rounded Hero Image */}
           <div className="relative mt-8 h-[280px] w-full overflow-hidden rounded-tl-[56px] rounded-tr-2xl rounded-br-[56px] rounded-bl-2xl border-4 border-white bg-[#0E2F1D] shadow-xl sm:h-[400px] lg:h-[440px]">
-            <Image
+            <ResilientImage
               src={article.imageSrc}
+              fallbackSrc="/images/hero-agriculture.jpg"
               alt={article.imageAlt}
               fill
               priority

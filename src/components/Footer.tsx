@@ -1,6 +1,6 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { ResilientImage } from "@/components/ResilientImage";
 import {
   ShoppingBag,
   ExternalLink,
@@ -184,8 +184,9 @@ export function Footer({
                   className="inline-flex items-center gap-3 rounded-xl text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
                 >
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-400/25 bg-[#143D29] p-2 shadow-inner">
-                    <Image
+                    <ResilientImage
                       src={logoSrc}
+                      fallbackSrc="/brand/logo-mark.png"
                       alt={logoAlt}
                       width={40}
                       height={40}
