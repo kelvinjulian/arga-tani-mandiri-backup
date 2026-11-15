@@ -2,49 +2,60 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Sprout } from "lucide-react";
-import { SITE_DATA } from "@/data/site";
+import { getArticles, getSiteContent } from "@/lib/content";
 import { getRobotsMetadata, getSiteUrl, serializeJsonLd } from "@/lib/seo";
 import { Container } from "@/components/Container";
 import { ArticleCatalogClient } from "@/components/ArticleCatalogClient";
 import { WhatsAppConsultationBand } from "@/components/WhatsAppCTA";
 
+// Revalidate every 5 minutes; on-demand revalidation (revalidatePath/revalidateTag) will be added with /admin CMS.
+export const revalidate = 300;
+
 const hubTitle = "Pusat Edukasi & Panduan Tani";
-const hubFullTitle = `${hubTitle} | ${SITE_DATA.companyName}`;
 const hubDescription =
   "Panduan praktis pembacaan dosis label kemasan, manajemen nutrisi musim tanam, pemulihan kesuburan tanah, dan penyimpanan sarana produksi pertanian.";
 
-export const metadata: Metadata = {
-  title: hubTitle,
-  description: hubDescription,
-  alternates: {
-    canonical: "/artikel",
-  },
-  robots: getRobotsMetadata(),
-  openGraph: {
-    type: "website",
-    title: hubFullTitle,
-    description: hubDescription,
-    url: "/artikel",
-    siteName: SITE_DATA.companyName,
-    locale: "id_ID",
-    images: [
-      {
-        url: "/images/hero-agriculture.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Aktivitas pertanian di lahan budidaya",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: hubFullTitle,
-    description: hubDescription,
-    images: ["/images/hero-agriculture.jpg"],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const siteData = await getSiteContent();
+  const hubFullTitle = `${hubTitle} | ${siteData.companyName}`;
 
-export default function ArtikelIndexPage() {
+  return {
+    title: hubTitle,
+    description: hubDescription,
+    alternates: {
+      canonical: "/artikel",
+    },
+    robots: getRobotsMetadata(),
+    openGraph: {
+      type: "website",
+      title: hubFullTitle,
+      description: hubDescription,
+      url: "/artikel",
+      siteName: siteData.companyName,
+      locale: "id_ID",
+      images: [
+        {
+          url: "/images/hero-agriculture.jpg",
+          width: 1200,
+          height: 630,
+          alt: "Aktivitas pertanian di lahan budidaya",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: hubFullTitle,
+      description: hubDescription,
+      images: ["/images/hero-agriculture.jpg"],
+    },
+  };
+}
+
+export default async function ArtikelIndexPage() {
+  const [articles, siteData] = await Promise.all([
+    getArticles(),
+    getSiteContent(),
+  ]);
   const siteUrl = getSiteUrl();
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -152,7 +163,11 @@ export default function ArtikelIndexPage() {
             </div>
 
             {/* Interactive Search/Filter Dock, Featured Spotlight Card, and 12-Col Content Area */}
-            <ArticleCatalogClient />
+            <ArticleCatalogClient
+              articles={articles}
+              whatsappNumber={siteData.whatsappNumber}
+              shopeeStoreUrl={siteData.officialStore.url}
+            />
           </Container>
         </section>
       </div>

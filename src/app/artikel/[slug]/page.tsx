@@ -14,18 +14,24 @@ import {
   MessageCircle,
   BookOpen,
 } from "lucide-react";
-import { ARTICLES, getArticleBySlug } from "@/data/articles";
-import { SITE_DATA, WHATSAPP_NUMBER } from "@/data/site";
-import { SHOPEE_STORE_URL } from "@/data/categories";
+import {
+  getArticleBySlug,
+  getArticles,
+  getSiteContent,
+} from "@/lib/content";
 import { getRobotsMetadata, getSiteUrl, serializeJsonLd } from "@/lib/seo";
 import { Container } from "@/components/Container";
+
+// Revalidate every 5 minutes; on-demand revalidation (revalidatePath/revalidateTag) will be added with /admin CMS.
+export const revalidate = 300;
 
 interface ArticleDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export function generateStaticParams() {
-  return ARTICLES.map((article) => ({
+export async function generateStaticParams() {
+  const articles = await getArticles();
+  return articles.map((article) => ({
     slug: article.slug,
   }));
 }
@@ -34,17 +40,20 @@ export async function generateMetadata({
   params,
 }: ArticleDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const [article, siteData] = await Promise.all([
+    getArticleBySlug(slug),
+    getSiteContent(),
+  ]);
 
-  if (!article) {
+  if (!article || article.status === "draft") {
     return {
       title: "Artikel Tidak Ditemukan",
       robots: getRobotsMetadata(true),
     };
   }
 
-  const isDraft = article.status === "draft";
-  const fullTitle = `${article.seoTitle} | ${SITE_DATA.companyName}`;
+  const isNoIndex = article.status !== "published";
+  const fullTitle = `${article.seoTitle} | ${siteData.companyName}`;
   const canonicalPath = `/artikel/${article.slug}`;
 
   return {
@@ -53,13 +62,13 @@ export async function generateMetadata({
     alternates: {
       canonical: canonicalPath,
     },
-    robots: getRobotsMetadata(isDraft),
+    robots: getRobotsMetadata(isNoIndex),
     openGraph: {
       type: "article",
       title: fullTitle,
       description: article.metaDescription,
       url: canonicalPath,
-      siteName: SITE_DATA.companyName,
+      siteName: siteData.companyName,
       locale: "id_ID",
       images: [
         {
@@ -83,16 +92,22 @@ export default async function ArticleDetailPage({
   params,
 }: ArticleDetailPageProps) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const [article, allArticles, siteData] = await Promise.all([
+    getArticleBySlug(slug),
+    getArticles(),
+    getSiteContent(),
+  ]);
 
-  if (!article) {
+  if (!article || article.status === "draft") {
     notFound();
   }
 
-  const relatedArticles = ARTICLES.filter((item) => item.id !== article.id);
+  const relatedArticles = allArticles.filter((item) => item.id !== article.id);
+  const shopeeStoreUrl = siteData.officialStore.url;
+  const whatsappNumber = siteData.whatsappNumber;
 
-  const whatsappHref = WHATSAPP_NUMBER
-    ? `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}`
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber.replace(/\D/g, "")}`
     : "#konsultasi-whatsapp";
 
   const siteUrl = getSiteUrl();
@@ -138,7 +153,7 @@ export default async function ArticleDetailPage({
             : {}),
           publisher: {
             "@type": "Organization",
-            name: SITE_DATA.companyName,
+            name: siteData.companyName,
             url: siteUrl,
             logo: {
               "@type": "ImageObject",
@@ -347,7 +362,7 @@ export default async function ArticleDetailPage({
                   </span>
 
                   <h2 className="mt-3 font-display text-xl font-bold text-white sm:text-2xl">
-                    Dapatkan Produk Resmi Melalui {SITE_DATA.officialStore.name}
+                    Dapatkan Produk Resmi Melalui {siteData.officialStore.name}
                   </h2>
 
                   <p className="mt-2 text-sm leading-relaxed text-[#D9F0E3] sm:text-base">
@@ -358,7 +373,7 @@ export default async function ArticleDetailPage({
 
                   <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                     <a
-                      href={SHOPEE_STORE_URL}
+                      href={shopeeStoreUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#C84B28] px-5 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#B03E1E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
@@ -376,8 +391,8 @@ export default async function ArticleDetailPage({
 
                     <a
                       href={whatsappHref}
-                      target={WHATSAPP_NUMBER ? "_blank" : undefined}
-                      rel={WHATSAPP_NUMBER ? "noopener noreferrer" : undefined}
+                      target={whatsappNumber ? "_blank" : undefined}
+                      rel={whatsappNumber ? "noopener noreferrer" : undefined}
                       className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                     >
                       <MessageCircle
@@ -492,7 +507,7 @@ export default async function ArticleDetailPage({
                   </ul>
 
                   <a
-                    href={SHOPEE_STORE_URL}
+                    href={shopeeStoreUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#C84B28] py-3 px-4 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#B03E1E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"

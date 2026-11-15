@@ -15,6 +15,7 @@ import {
 import { ARTICLES } from "@/data/articles";
 import { WHATSAPP_NUMBER } from "@/data/site";
 import { SHOPEE_STORE_URL } from "@/data/categories";
+import type { ContentArticleItem } from "@/lib/content";
 import { Container } from "@/components/Container";
 
 const TOPIC_FILTERS = [
@@ -25,42 +26,55 @@ const TOPIC_FILTERS = [
   "Penyimpanan & Gudang",
 ] as const;
 
-export function ArticleHubSection() {
+interface ArticleHubSectionProps {
+  articles?: ContentArticleItem[];
+  whatsappNumber?: string | null;
+  shopeeStoreUrl?: string;
+}
+
+const DEFAULT_ARTICLES: ContentArticleItem[] = ARTICLES.map((item) => ({
+  ...item,
+  status: item.status === "published" ? "published" : "review",
+}));
+
+export function ArticleHubSection({
+  articles = DEFAULT_ARTICLES,
+  whatsappNumber = WHATSAPP_NUMBER,
+  shopeeStoreUrl = SHOPEE_STORE_URL,
+}: ArticleHubSectionProps) {
   const [activeTopic, setActiveTopic] = useState<string>("Semua Topik");
 
   const { featuredArticle, secondaryArticles } = useMemo(() => {
+    const list = articles.length > 0 ? articles : DEFAULT_ARTICLES;
     if (activeTopic === "Semua Topik") {
       return {
-        featuredArticle: ARTICLES[0],
-        secondaryArticles: ARTICLES.slice(1, 4),
+        featuredArticle: list[0],
+        secondaryArticles: list.slice(1, 4),
       };
     }
 
-    const matchedIndex = ARTICLES.findIndex(
+    const matchedIndex = list.findIndex(
       (item) => item.filterCategory === activeTopic
     );
 
     if (matchedIndex === -1) {
       return {
-        featuredArticle: ARTICLES[0],
-        secondaryArticles: ARTICLES.slice(1, 4),
+        featuredArticle: list[0],
+        secondaryArticles: list.slice(1, 4),
       };
     }
 
-    const featured = ARTICLES[matchedIndex];
-    const others = ARTICLES.filter((_, idx) => idx !== matchedIndex).slice(
-      0,
-      3
-    );
+    const featured = list[matchedIndex];
+    const others = list.filter((_, idx) => idx !== matchedIndex).slice(0, 3);
 
     return {
       featuredArticle: featured,
       secondaryArticles: others,
     };
-  }, [activeTopic]);
+  }, [activeTopic, articles]);
 
-  const whatsappHref = WHATSAPP_NUMBER
-    ? `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}`
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber.replace(/\D/g, "")}`
     : "#konsultasi-whatsapp";
 
   return (
@@ -307,8 +321,8 @@ export function ArticleHubSection() {
           <div className="relative z-10 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:col-span-6">
             <a
               href={whatsappHref}
-              target={WHATSAPP_NUMBER ? "_blank" : undefined}
-              rel={WHATSAPP_NUMBER ? "noopener noreferrer" : undefined}
+              target={whatsappNumber ? "_blank" : undefined}
+              rel={whatsappNumber ? "noopener noreferrer" : undefined}
               className="group flex items-center gap-3.5 rounded-2xl bg-white p-4 text-[#0E291B] shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#EAF4EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E3F3E8] text-[#15803D] transition-colors group-hover:bg-[#15803D] group-hover:text-white">
@@ -329,7 +343,7 @@ export function ArticleHubSection() {
             </a>
 
             <a
-              href={SHOPEE_STORE_URL}
+              href={shopeeStoreUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center gap-3.5 rounded-2xl bg-[#C84B28] p-4 text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#B03E1E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"

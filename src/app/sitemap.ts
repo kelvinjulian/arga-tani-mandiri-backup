@@ -1,13 +1,17 @@
 import type { MetadataRoute } from "next";
-import { ARTICLES } from "@/data/articles";
+import { getArticles } from "@/lib/content";
 import { getSiteUrl, isSiteIndexingEnabled } from "@/lib/seo";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Revalidate every 5 minutes; on-demand revalidation (revalidatePath/revalidateTag) will be added with /admin CMS.
+export const revalidate = 300;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!isSiteIndexingEnabled()) {
     return [];
   }
 
   const baseUrl = getSiteUrl();
+  const articles = await getArticles();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -22,17 +26,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const publishedArticleRoutes: MetadataRoute.Sitemap = ARTICLES.filter(
-    (article) => article.status === "published"
-  ).map((article) => {
-    const lastModified = article.dateModified ?? article.datePublished;
-    return {
-      url: `${baseUrl}/artikel/${article.slug}`,
-      ...(lastModified ? { lastModified } : {}),
-      changeFrequency: "monthly",
-      priority: 0.7,
-    };
-  });
+  const publishedArticleRoutes: MetadataRoute.Sitemap = articles
+    .filter((article) => article.status === "published")
+    .map((article) => {
+      const lastModified = article.dateModified ?? article.datePublished;
+      return {
+        url: `${baseUrl}/artikel/${article.slug}`,
+        ...(lastModified ? { lastModified } : {}),
+        changeFrequency: "monthly",
+        priority: 0.7,
+      };
+    });
 
   return [...staticRoutes, ...publishedArticleRoutes];
 }

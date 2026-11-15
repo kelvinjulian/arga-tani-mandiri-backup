@@ -17,6 +17,7 @@ import {
 import { ARTICLES } from "@/data/articles";
 import { WHATSAPP_NUMBER } from "@/data/site";
 import { SHOPEE_STORE_URL } from "@/data/categories";
+import type { ContentArticleItem } from "@/lib/content";
 
 const DOCK_CATEGORIES = [
   { label: "Semua Topik", match: "Semua Topik" },
@@ -35,16 +36,33 @@ const POPULAR_TOPIC_TAGS = [
   "Dosis Pupuk",
 ] as const;
 
-export function ArticleCatalogClient() {
+interface ArticleCatalogClientProps {
+  articles?: ContentArticleItem[];
+  whatsappNumber?: string | null;
+  shopeeStoreUrl?: string;
+}
+
+const DEFAULT_ARTICLES: ContentArticleItem[] = ARTICLES.map((item) => ({
+  ...item,
+  status: item.status === "published" ? "published" : "review",
+}));
+
+export function ArticleCatalogClient({
+  articles = DEFAULT_ARTICLES,
+  whatsappNumber = WHATSAPP_NUMBER,
+  shopeeStoreUrl = SHOPEE_STORE_URL,
+}: ArticleCatalogClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<string>("Semua Topik");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
-  const featuredSpotlight = ARTICLES[0];
+  const activeList = articles.length > 0 ? articles : DEFAULT_ARTICLES;
+  const featuredSpotlight =
+    activeList.find((item) => item.isFeatured) ?? activeList[0];
 
   const filteredArticles = useMemo(() => {
-    return ARTICLES.filter((article) => {
+    return activeList.filter((article) => {
       const matchesCategory =
         selectedCategory === "Semua Topik" ||
         article.filterCategory === selectedCategory;
@@ -67,7 +85,7 @@ export function ArticleCatalogClient() {
 
       return matchesCategory && matchesTag && matchesQuery;
     });
-  }, [searchQuery, selectedCategory, selectedTag]);
+  }, [activeList, searchQuery, selectedCategory, selectedTag]);
 
   const handleCategorySelect = (categoryMatch: string) => {
     setSelectedCategory(categoryMatch);
@@ -89,8 +107,8 @@ export function ArticleCatalogClient() {
     setSelectedTag(null);
   };
 
-  const whatsappHref = WHATSAPP_NUMBER
-    ? `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}`
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber.replace(/\D/g, "")}`
     : "#konsultasi-whatsapp";
 
   return (
@@ -383,7 +401,7 @@ export function ArticleCatalogClient() {
             </ul>
 
             <a
-              href={SHOPEE_STORE_URL}
+              href={shopeeStoreUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#C84B28] py-3 px-4 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#B03E1E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
@@ -430,8 +448,8 @@ export function ArticleCatalogClient() {
               </p>
               <a
                 href={whatsappHref}
-                target={WHATSAPP_NUMBER ? "_blank" : undefined}
-                rel={WHATSAPP_NUMBER ? "noopener noreferrer" : undefined}
+                target={whatsappNumber ? "_blank" : undefined}
+                rel={whatsappNumber ? "noopener noreferrer" : undefined}
                 className="mt-2.5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#C5E3CE] bg-[#EAF3EE] px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#0E2F1D] transition-all hover:bg-[#DCECE2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D]"
               >
                 <MessageCircle
