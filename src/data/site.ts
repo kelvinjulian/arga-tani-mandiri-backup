@@ -1,4 +1,43 @@
 import { SHOPEE_STORE_URL, productCategories } from "@/data/categories";
+import {
+  DEFAULT_PRIMARY_CTA,
+  DEFAULT_SECONDARY_CTA,
+  type HeroCtaButton,
+} from "@/lib/site-content/hero-cta";
+import {
+  DEFAULT_ARTICLE_HUB,
+  type ArticleHubData,
+} from "@/lib/site-content/article-hub-defaults";
+import {
+  type ArticleDetailData,
+  type ArticlePageData,
+} from "@/lib/site-content/article-pages-defaults";
+import {
+  cloneFooterDefaults,
+  type FooterData,
+} from "@/lib/site-content/footer-defaults";
+import {
+  DEFAULT_ABOUT_COMMITMENT_CARDS,
+  DEFAULT_ABOUT_COMMITMENT_PARAGRAPHS,
+  DEFAULT_ABOUT_EYEBROW,
+  DEFAULT_ABOUT_HEADING_ACCENT,
+  DEFAULT_ABOUT_HEADING_MAIN,
+  DEFAULT_ABOUT_HISTORY_STEPS,
+  DEFAULT_ABOUT_HISTORY_TAB_LABEL,
+  DEFAULT_ABOUT_IMAGE_ALT,
+  DEFAULT_ABOUT_IMAGE_BADGE,
+  DEFAULT_ABOUT_IMAGE_SRC,
+  DEFAULT_ABOUT_MISI_HEADING,
+  DEFAULT_ABOUT_PROFILE_TAB_LABEL,
+  DEFAULT_ABOUT_SUBHEADING,
+  DEFAULT_ABOUT_VISION_MISSION_TAB_LABEL,
+  DEFAULT_ABOUT_VISI_HEADING,
+  DEFAULT_ABOUT_WHY_CTA_LABEL,
+  DEFAULT_ABOUT_WHY_EYEBROW,
+  type AboutCommitmentCard,
+  type AboutHistoryStep,
+  type AboutImageBadge,
+} from "@/lib/site-content/about-defaults";
 
 export interface HeroTrustItem {
   id: string;
@@ -63,6 +102,8 @@ export interface SiteData {
     subheadline: string;
     primaryCtaLabel: string;
     secondaryCtaLabel: string;
+    primaryCta?: HeroCtaButton;
+    secondaryCta?: HeroCtaButton;
     imageSrc: string;
     imageAlt: string;
     trustItems: [HeroTrustItem, HeroTrustItem, HeroTrustItem, HeroTrustItem];
@@ -93,10 +134,27 @@ export interface SiteData {
     heading: string;
     introParagraphs: string[];
     imagePlaceholderLabel: string;
+    eyebrow?: string;
+    headingMain?: string;
+    headingAccent?: string;
+    subheading?: string;
+    imageSrc?: string;
+    imageAlt?: string;
+    imageBadge?: AboutImageBadge;
+    profileTabLabel?: string;
+    commitmentParagraphs?: string[];
+    commitmentCards?: AboutCommitmentCard[];
+    visionMissionTabLabel?: string;
+    visiHeading?: string;
     visi: string | null;
     visiPlaceholder: string;
+    misiHeading?: string;
     misi: string[];
+    historyTabLabel?: string;
+    historySteps?: AboutHistoryStep[];
+    whyChooseUsEyebrow?: string;
     whyChooseUsTitle: string;
+    whyChooseUsCtaLabel?: string;
     whyChooseUs: [
       WhyChooseUsItem,
       WhyChooseUsItem,
@@ -104,18 +162,16 @@ export interface SiteData {
       WhyChooseUsItem,
     ];
   };
+  articleHub?: ArticleHubData;
+  articlePage?: ArticlePageData;
+  articleDetail?: ArticleDetailData;
   whatsappBand: {
     heading: string;
     description: string;
     buttonLabel: string;
     disabledHint: string;
   };
-  footer: {
-    blurb: string;
-    storeCardTitle: string;
-    storeCardDescription: string;
-    storeButtonLabel: string;
-  };
+  footer: FooterData;
 }
 
 export const WHATSAPP_NUMBER: string | null = "6281234567890";
@@ -159,6 +215,8 @@ export const SITE_DATA: SiteData = {
       "Arga Tani Mandiri menyediakan produk pupuk, pestisida, dan nutrisi tanaman berkualitas untuk mendukung produktivitas dan keberlanjutan pertanian Indonesia.",
     primaryCtaLabel: "Lihat Katalog Produk",
     secondaryCtaLabel: "Kunjungi Tani InD® di Shopee",
+    primaryCta: DEFAULT_PRIMARY_CTA,
+    secondaryCta: DEFAULT_SECONDARY_CTA,
     imageSrc: "/images/hero-agriculture.jpg",
     imageAlt:
       "Petani merawat barisan tanaman pertanian hijau bersama sarana produksi Arga Tani Mandiri",
@@ -290,15 +348,32 @@ export const SITE_DATA: SiteData = {
     ],
     imagePlaceholderLabel:
       "Dokumentasi budidaya dan sarana produksi Arga Tani Mandiri",
+    eyebrow: DEFAULT_ABOUT_EYEBROW,
+    headingMain: DEFAULT_ABOUT_HEADING_MAIN,
+    headingAccent: DEFAULT_ABOUT_HEADING_ACCENT,
+    subheading: DEFAULT_ABOUT_SUBHEADING,
+    imageSrc: DEFAULT_ABOUT_IMAGE_SRC,
+    imageAlt: DEFAULT_ABOUT_IMAGE_ALT,
+    imageBadge: DEFAULT_ABOUT_IMAGE_BADGE,
+    profileTabLabel: DEFAULT_ABOUT_PROFILE_TAB_LABEL,
+    commitmentParagraphs: DEFAULT_ABOUT_COMMITMENT_PARAGRAPHS,
+    commitmentCards: DEFAULT_ABOUT_COMMITMENT_CARDS,
+    visionMissionTabLabel: DEFAULT_ABOUT_VISION_MISSION_TAB_LABEL,
+    visiHeading: DEFAULT_ABOUT_VISI_HEADING,
     visi: "Menjadi mitra penyedia sarana produksi pertanian yang andal, inovatif, dan berkontribusi nyata terhadap peningkatan kualitas tanah serta hasil panen petani Indonesia.",
     visiPlaceholder:
       "Menjadi mitra penyedia sarana produksi pertanian yang andal, inovatif, dan berkontribusi nyata terhadap peningkatan kualitas tanah serta hasil panen petani Indonesia.",
+    misiHeading: DEFAULT_ABOUT_MISI_HEADING,
     misi: [
       "Menyediakan produk pupuk, pembenah tanah, dan nutrisi tanaman dengan komposisi terukur.",
       "Memudahkan akses produk resmi bagi petani di berbagai daerah melalui jaringan distribusi digital dan toko Shopee Tani InD®.",
       "Menghadirkan edukasi budidaya dan panduan pemakaian yang tepat guna.",
     ],
+    historyTabLabel: DEFAULT_ABOUT_HISTORY_TAB_LABEL,
+    historySteps: DEFAULT_ABOUT_HISTORY_STEPS,
+    whyChooseUsEyebrow: DEFAULT_ABOUT_WHY_EYEBROW,
     whyChooseUsTitle: "Alasan Memilih Produk Kami",
+    whyChooseUsCtaLabel: DEFAULT_ABOUT_WHY_CTA_LABEL,
     whyChooseUs: [
       {
         id: "why-1",
@@ -330,6 +405,7 @@ export const SITE_DATA: SiteData = {
       },
     ],
   },
+  articleHub: DEFAULT_ARTICLE_HUB,
   whatsappBand: {
     heading: "Chat Tim Konsultasi Budidaya Arga Tani Mandiri",
     description:
@@ -337,12 +413,5 @@ export const SITE_DATA: SiteData = {
     buttonLabel: "Chat Tim Konsultasi Budidaya",
     disabledHint: "Layanan konsultasi aktif melalui WhatsApp resmi",
   },
-  footer: {
-    blurb:
-      "Mitra penyedia sarana produksi pertanian, pupuk, pembenah tanah, dan nutrisi tanaman. Pemesanan daring resmi dilayani melalui toko Tani InD® Indonesia di Shopee.",
-    storeCardTitle: "Toko Resmi Marketplace",
-    storeCardDescription:
-      "Kunjungi toko resmi Tani InD® Indonesia di Shopee untuk melihat etalase produk yang tersedia.",
-    storeButtonLabel: "Kunjungi Tani InD® di Shopee",
-  },
+  footer: cloneFooterDefaults(),
 };

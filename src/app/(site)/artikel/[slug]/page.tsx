@@ -171,6 +171,7 @@ export default async function ArticleDetailPage({
         officialStoreName={siteData.officialStore.name}
         shopeeStoreUrl={shopeeStoreUrl}
         whatsappNumber={whatsappNumber}
+        articleDetail={siteData.articleDetail}
       />
     </div>
   );

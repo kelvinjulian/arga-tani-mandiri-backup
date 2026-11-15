@@ -10,6 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { requireAdminPage } from "@/lib/supabase/admin";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import type { ContentArticleStatus } from "@/lib/content";
 
@@ -123,13 +124,15 @@ export default async function AdminArtikelListPage({
 
   return (
     <div className="min-h-dvh w-full">
-      <AdminHeader
-        userEmail={user.email ?? "Admin"}
-        backHref="/admin"
-        backLabel="Dasbor"
-      />
+      <AdminHeader userEmail={user.email ?? "Admin"} />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+        <AdminBreadcrumb
+          crumbs={[
+            { label: "Dashboard", href: "/admin" },
+            { label: "Daftar Artikel" },
+          ]}
+        />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold text-[#0F1F17]">
@@ -139,13 +142,21 @@ export default async function AdminArtikelListPage({
               Kelola artikel edukasi, status tinjauan, dan publikasi ke situs.
             </p>
           </div>
-          <Link
-            href="/admin/artikel/baru"
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#0E2B1D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-          >
-            <FilePlus2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>Buat Artikel</span>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/admin/kategori-artikel"
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-sm font-semibold text-[#143D29] shadow-xs transition-colors hover:bg-[#EAF3EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+            >
+              <span>Kelola kategori</span>
+            </Link>
+            <Link
+              href="/admin/artikel/baru"
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#0E2B1D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+            >
+              <FilePlus2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>Buat Artikel</span>
+            </Link>
+          </div>
         </div>
 
         {params.deleted === "1" && (

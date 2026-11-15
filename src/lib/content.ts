@@ -6,6 +6,15 @@ import {
 } from "@/data/categories";
 import { SITE_DATA, type SiteData } from "@/data/site";
 import { getSupabaseClient } from "@/lib/supabase";
+import {
+  isValidHttpsUrl,
+  isValidImageSrc,
+  mergeSiteContentWithDefaults,
+} from "@/lib/site-content/validation";
+import {
+  DEFAULT_ARTICLE_CATEGORIES,
+  type ArticleCategoryItem,
+} from "@/lib/article-categories";
 
 export type ContentArticleStatus = "draft" | "review" | "published";
 
@@ -188,15 +197,39 @@ export async function getCategories(): Promise<ContentCategoryItem[]> {
       return FALLBACK_CATEGORIES;
     }
 
-    return (data as CategoryRow[]).map((row) => ({
-      id: row.id,
-      slug: row.slug,
-      name: row.name,
-      description: row.description,
-      image: row.image_src,
-      alt: row.image_alt,
-      href: row.external_url,
-    }));
+    return (data as CategoryRow[]).map((row, idx) => {
+      const def = FALLBACK_CATEGORIES[idx] ?? FALLBACK_CATEGORIES[0];
+      const name =
+        typeof row.name === "string" && row.name.trim()
+          ? row.name.trim()
+          : def.name;
+      const description =
+        typeof row.description === "string" && row.description.trim()
+          ? row.description.trim()
+          : def.description;
+      const image =
+        typeof row.image_src === "string" && isValidImageSrc(row.image_src.trim())
+          ? row.image_src.trim()
+          : def.image;
+      const alt =
+        typeof row.image_alt === "string" && row.image_alt.trim()
+          ? row.image_alt.trim()
+          : def.alt;
+      const href =
+        typeof row.external_url === "string" &&
+        isValidHttpsUrl(row.external_url.trim())
+          ? row.external_url.trim()
+          : def.href;
+      return {
+        id: row.id,
+        slug: row.slug,
+        name,
+        description,
+        image,
+        alt,
+        href,
+      };
+    });
   } catch (err) {
     warnDev("Terjadi kesalahan saat query categories; menggunakan fallback statis.", err);
     return FALLBACK_CATEGORIES;
@@ -234,51 +267,59 @@ export async function getSiteContent(): Promise<SiteData> {
       }
     }
 
-    const company = byKey.get("company") as Partial<SiteData> | undefined;
-    const hero = byKey.get("hero") as Partial<SiteData["hero"]> | undefined;
-    const categoryShowcase = byKey.get("category_showcase") as
-      | Partial<SiteData["categoryShowcase"]>
-      | undefined;
-    const about = byKey.get("about") as Partial<SiteData["about"]> | undefined;
-    const whatsappBand = byKey.get("whatsapp_band") as
-      | Partial<SiteData["whatsappBand"]>
-      | undefined;
-    const footer = byKey.get("footer") as Partial<SiteData["footer"]> | undefined;
-
-    return {
-      ...SITE_DATA,
-      ...(company ?? {}),
-      officialStore: {
-        ...SITE_DATA.officialStore,
-        ...(company?.officialStore ?? {}),
-      },
-      contact: {
-        ...SITE_DATA.contact,
-        ...(company?.contact ?? {}),
-      },
-      hero: {
-        ...SITE_DATA.hero,
-        ...(hero ?? {}),
-      },
-      categoryShowcase: {
-        ...SITE_DATA.categoryShowcase,
-        ...(categoryShowcase ?? {}),
-      },
-      about: {
-        ...SITE_DATA.about,
-        ...(about ?? {}),
-      },
-      whatsappBand: {
-        ...SITE_DATA.whatsappBand,
-        ...(whatsappBand ?? {}),
-      },
-      footer: {
-        ...SITE_DATA.footer,
-        ...(footer ?? {}),
-      },
-    };
+    return mergeSiteContentWithDefaults(byKey);
   } catch (err) {
     warnDev("Terjadi kesalahan saat query site_content; menggunakan fallback statis.", err);
     return SITE_DATA;
+  }
+}
+
+interface ArticleCategoryRow {
+  id: string;
+  slug: string;
+  name: string;
+  filter_label: string;
+  sort_order: number;
+  updated_at?: string;
+}
+
+/**
+ * Fetches article categories ordered by sort_order.
+ * Falls back to static defaults if the table is missing, empty, or unreachable.
+ */
+export async function getArticleCategories(): Promise<ArticleCategoryItem[]> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return DEFAULT_ARTICLE_CATEGORIES;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("article_categories")
+      .select("id, slug, name, filter_label, sort_order, updated_at")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (error || !data || data.length === 0) {
+      if (error) {
+        warnDev("Gagal mengambil article_categories; menggunakan fallback statis.", error);
+      }
+      return DEFAULT_ARTICLE_CATEGORIES;
+    }
+
+    return (data as ArticleCategoryRow[]).map((row, idx) => ({
+      id: row.id,
+      slug: row.slug,
+      name: row.name,
+      filterLabel:
+        typeof row.filter_label === "string" && row.filter_label.trim()
+          ? row.filter_label.trim()
+          : row.name,
+      sortOrder: typeof row.sort_order === "number" ? row.sort_order : idx,
+      updatedAt: row.updated_at,
+    }));
+  } catch (err) {
+    warnDev("Terjadi kesalahan saat query article_categories; menggunakan fallback statis.", err);
+    return DEFAULT_ARTICLE_CATEGORIES;
   }
 }

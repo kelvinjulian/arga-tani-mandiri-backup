@@ -16,7 +16,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="min-h-dvh w-full">
-      <AdminHeader userEmail={userEmail} />
+      <AdminHeader userEmail={userEmail} isDashboard />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="rounded-2xl border border-[#CBD8D0] bg-white p-6 shadow-xs">
@@ -60,27 +60,32 @@ export default async function AdminDashboardPage() {
             </div>
           </Link>
 
-          <div
-            aria-disabled="true"
-            className="flex flex-col justify-between rounded-2xl border border-dashed border-[#5A7566] bg-white/70 p-6 opacity-80"
+          <Link
+            href="/admin/konten"
+            className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-6 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
           >
             <div>
               <div className="flex items-center justify-between gap-2">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E4ECE7] text-[#33473D]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D9F0E3] text-[#143D29]">
                   <LayoutTemplate className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <span className="rounded-full bg-[#D9F0E3] px-3 py-1 text-xs font-bold text-[#143D29]">
-                  Segera hadir
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#143D29] px-3 py-1 text-xs font-bold text-white">
+                  <span>Kelola</span>
+                  <ArrowRight
+                    className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden="true"
+                  />
                 </span>
               </div>
               <h2 className="mt-4 font-display text-lg font-bold text-[#0F1F17]">
-                Konten Beranda
+                Konten Situs
               </h2>
               <p className="mt-1.5 text-sm leading-relaxed text-[#33473D]">
-                Pengelolaan teks Hero, Kategori Produk, Tentang Kami, dan kontak.
+                Kelola bagian Beranda, Halaman Artikel, dan Seluruh Situs
+                (Identitas Perusahaan &amp; Footer).
               </p>
             </div>
-          </div>
+          </Link>
         </section>
       </main>
     </div>

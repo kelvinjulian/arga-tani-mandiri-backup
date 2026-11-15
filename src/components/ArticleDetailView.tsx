@@ -14,6 +14,11 @@ import {
 } from "lucide-react";
 import type { ContentArticleItem } from "@/lib/content";
 import { Container } from "@/components/Container";
+import { getWhatsAppHref, WHATSAPP_PLACEHOLDER_TEXT } from "@/lib/whatsapp";
+import {
+  DEFAULT_ARTICLE_DETAIL,
+  type ArticleDetailData,
+} from "@/lib/site-content/article-pages-defaults";
 
 interface ArticleDetailViewProps {
   article: ContentArticleItem;
@@ -21,6 +26,7 @@ interface ArticleDetailViewProps {
   officialStoreName: string;
   shopeeStoreUrl: string;
   whatsappNumber?: string | null;
+  articleDetail?: ArticleDetailData;
 }
 
 export function ArticleDetailView({
@@ -29,10 +35,13 @@ export function ArticleDetailView({
   officialStoreName,
   shopeeStoreUrl,
   whatsappNumber,
+  articleDetail = DEFAULT_ARTICLE_DETAIL,
 }: ArticleDetailViewProps) {
-  const whatsappHref = whatsappNumber
-    ? `https://wa.me/${whatsappNumber.replace(/\D/g, "")}`
-    : "#konsultasi-whatsapp";
+  const whatsappHref = getWhatsAppHref(whatsappNumber);
+  const bottomCtaHeading = articleDetail.bottomCtaHeadingTemplate.replace(
+    /\{toko\}|\{store\}/gi,
+    officialStoreName
+  );
 
   const takeaways = article.takeaways.filter((item) => item.trim().length > 0);
 
@@ -48,7 +57,7 @@ export function ArticleDetailView({
                   href="/"
                   className="font-semibold text-[#143D29] transition-colors hover:text-[#15803D] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
                 >
-                  Beranda
+                  {articleDetail.breadcrumbHomeLabel}
                 </Link>
               </li>
               <li aria-hidden="true">/</li>
@@ -57,7 +66,7 @@ export function ArticleDetailView({
                   href="/artikel"
                   className="font-semibold text-[#143D29] transition-colors hover:text-[#15803D] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
                 >
-                  Artikel Edukasi
+                  {articleDetail.breadcrumbHubLabel}
                 </Link>
               </li>
               <li aria-hidden="true">/</li>
@@ -76,7 +85,7 @@ export function ArticleDetailView({
               className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#DCE8DF] bg-white px-3.5 py-2 text-xs sm:text-sm font-semibold text-[#0E2F1D] shadow-xs transition-all hover:border-[#9BC5AC] hover:bg-[#EAF3EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D]"
             >
               <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>Kembali ke Pusat Artikel</span>
+              <span>{articleDetail.backToHubLabel}</span>
             </Link>
           </div>
 
@@ -99,7 +108,7 @@ export function ArticleDetailView({
               </span>
               {article.status === "review" && (
                 <span className="inline-flex items-center rounded-full border border-[#E8C87A] bg-[#FEF6DF] px-3.5 py-1 text-xs font-bold text-[#6B4806]">
-                  DRAFT: perlu ditinjau
+                  {articleDetail.draftBadgeLabel}
                 </span>
               )}
             </div>
@@ -163,7 +172,7 @@ export function ArticleDetailView({
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     <span className="text-xs font-bold uppercase tracking-wider text-[#15803D]">
-                      Pembahasan Utama
+                      {articleDetail.sectionEyebrow}
                     </span>
                   </div>
 
@@ -187,7 +196,7 @@ export function ArticleDetailView({
                     section.bullets.some((b) => b.trim().length > 0) && (
                       <div className="mt-5 rounded-2xl border border-[#DCE8DF] bg-[#F6FAF7] p-4 sm:p-5">
                         <p className="text-xs font-bold uppercase tracking-wide text-[#0E2F1D]">
-                          Langkah &amp; Poin Penting di Lapangan:
+                          {articleDetail.sectionBulletsHeading}
                         </p>
                         <ul className="mt-3 space-y-2.5 text-sm text-[#2C4235]">
                           {section.bullets
@@ -234,17 +243,15 @@ export function ArticleDetailView({
               >
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-300">
                   <Sprout className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Solusi Sarana Pertanian Resmi</span>
+                  <span>{articleDetail.bottomCtaBadge}</span>
                 </span>
 
                 <h2 className="mt-3 font-display text-xl font-bold text-white sm:text-2xl">
-                  Dapatkan Produk Resmi Melalui {officialStoreName}
+                  {bottomCtaHeading}
                 </h2>
 
                 <p className="mt-2 text-sm leading-relaxed text-[#D9F0E3] sm:text-base">
-                  Temukan lini produk pupuk, pembenah tanah Tamatric (Asam Humat
-                  &amp; Trichoderma), dan nutrisi tanaman dalam kemasan 500 gr
-                  maupun 1 kg di toko resmi Shopee kami.
+                  {articleDetail.bottomCtaDescription}
                 </p>
 
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -258,25 +265,35 @@ export function ArticleDetailView({
                       className="h-4 w-4 shrink-0"
                       aria-hidden="true"
                     />
-                    <span>Kunjungi Tani InD® di Shopee</span>
+                    <span>{articleDetail.bottomCtaShopeeLabel}</span>
                     <ExternalLink
                       className="h-3.5 w-3.5 shrink-0"
                       aria-hidden="true"
                     />
                   </a>
 
-                  <a
-                    href={whatsappHref}
-                    target={whatsappNumber ? "_blank" : undefined}
-                    rel={whatsappNumber ? "noopener noreferrer" : undefined}
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                  >
-                    <MessageCircle
-                      className="h-4 w-4 shrink-0"
-                      aria-hidden="true"
-                    />
-                    <span>Konsultasi via WhatsApp</span>
-                  </a>
+                  {whatsappHref ? (
+                    <a
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    >
+                      <MessageCircle
+                        className="h-4 w-4 shrink-0"
+                        aria-hidden="true"
+                      />
+                      <span>{articleDetail.bottomCtaWhatsappLabel}</span>
+                    </a>
+                  ) : (
+                    <span className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white/90">
+                      <MessageCircle
+                        className="h-4 w-4 shrink-0"
+                        aria-hidden="true"
+                      />
+                      <span>{WHATSAPP_PLACEHOLDER_TEXT}</span>
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -297,7 +314,7 @@ export function ArticleDetailView({
                     id="toc-heading"
                     className="font-display text-sm font-bold uppercase tracking-wide text-[#0E291B]"
                   >
-                    Daftar Isi Panduan
+                    {articleDetail.tocHeading}
                   </h2>
                 </div>
 
@@ -326,7 +343,7 @@ export function ArticleDetailView({
                   <div className="mt-5 border-t border-[#EBF2ED] pt-4">
                     <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[#526458]">
                       <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Panduan Terkait Lainnya</span>
+                      <span>{articleDetail.relatedHeading}</span>
                     </p>
                     <ul className="mt-2.5 space-y-2 text-xs">
                       {relatedArticles.map((rel) => (
@@ -348,40 +365,27 @@ export function ArticleDetailView({
               <div className="rounded-3xl border border-emerald-800/40 bg-gradient-to-b from-[#0E2F1D] to-[#0A2215] p-6 text-white shadow-xl">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-300">
                   <Sprout className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Solusi Unggulan</span>
+                  <span>{articleDetail.sidebarPromoBadge}</span>
                 </span>
 
                 <h3 className="mt-3.5 font-display text-xl font-bold leading-snug text-white">
-                  Tamatric: Asam Humat &amp; Trichoderma
+                  {articleDetail.sidebarPromoTitle}
                 </h3>
 
                 <p className="mt-2 text-sm leading-relaxed text-[#D9F0E3]">
-                  Pembenah tanah organik &amp; agensia hayati untuk mencegah
-                  layu Fusarium serta mengoptimalkan serapan nutrisi akar.
+                  {articleDetail.sidebarPromoDescription}
                 </p>
 
                 <ul className="mt-4 space-y-2 text-xs sm:text-sm text-[#EAF3EE]">
-                  <li className="flex items-center gap-2">
-                    <Check
-                      className="h-4 w-4 shrink-0 text-emerald-400"
-                      aria-hidden="true"
-                    />
-                    <span>Memperbaiki struktur &amp; pH tanah</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check
-                      className="h-4 w-4 shrink-0 text-emerald-400"
-                      aria-hidden="true"
-                    />
-                    <span>Melindungi akar dari jamur patogen</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check
-                      className="h-4 w-4 shrink-0 text-emerald-400"
-                      aria-hidden="true"
-                    />
-                    <span>Tersedia kemasan 500gr &amp; 1kg</span>
-                  </li>
+                  {articleDetail.sidebarPromoPoints.map((pt, idx) => (
+                    <li key={`${idx}-${pt}`} className="flex items-center gap-2">
+                      <Check
+                        className="h-4 w-4 shrink-0 text-emerald-400"
+                        aria-hidden="true"
+                      />
+                      <span>{pt}</span>
+                    </li>
+                  ))}
                 </ul>
 
                 <a
@@ -394,7 +398,7 @@ export function ArticleDetailView({
                     className="h-4 w-4 shrink-0"
                     aria-hidden="true"
                   />
-                  <span>Beli di Shopee Tani InD®</span>
+                  <span>{articleDetail.sidebarPromoButtonLabel}</span>
                   <ExternalLink
                     className="h-3.5 w-3.5 shrink-0"
                     aria-hidden="true"

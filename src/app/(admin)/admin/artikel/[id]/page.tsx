@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdminPage } from "@/lib/supabase/admin";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import {
   ArticleEditorForm,
   type ArticleEditorInitialData,
 } from "@/components/admin/ArticleEditorForm";
-import {
-  ARTICLE_CATEGORY_OPTIONS,
-  ARTICLE_FILTER_CATEGORIES,
-  isValidUuid,
-} from "@/lib/articles/admin-validation";
+import { isValidUuid } from "@/lib/articles/admin-validation";
 import type { ArticleSection } from "@/data/articles";
-import type { ContentArticleStatus } from "@/lib/content";
+import { getArticleCategories, type ContentArticleStatus } from "@/lib/content";
 
 export const dynamic = "force-dynamic";
 
@@ -37,22 +34,18 @@ export default async function AdminArtikelEditPage({
     notFound();
   }
 
-  const { data: row, error } = await supabase
-    .from("articles")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data: row, error }, articleCategories] = await Promise.all([
+    supabase.from("articles").select("*").eq("id", id).maybeSingle(),
+    getArticleCategories(),
+  ]);
 
   if (error || !row) {
     notFound();
   }
 
-  const category = ARTICLE_CATEGORY_OPTIONS.includes(row.category)
-    ? row.category
-    : ARTICLE_CATEGORY_OPTIONS[0];
-  const filterCategory = ARTICLE_FILTER_CATEGORIES.includes(row.filter_category)
-    ? row.filter_category
-    : ARTICLE_FILTER_CATEGORIES[0];
+  const category = typeof row.category === "string" ? row.category : "";
+  const filterCategory =
+    typeof row.filter_category === "string" ? row.filter_category : "";
 
   const initialData: ArticleEditorInitialData = {
     id: row.id,
@@ -78,14 +71,18 @@ export default async function AdminArtikelEditPage({
 
   return (
     <div className="min-h-dvh w-full">
-      <AdminHeader
-        userEmail={user.email ?? "Admin"}
-        backHref="/admin/artikel"
-        backLabel="Daftar Artikel"
-      />
+      <AdminHeader userEmail={user.email ?? "Admin"} />
       <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+        <AdminBreadcrumb
+          crumbs={[
+            { label: "Dashboard", href: "/admin" },
+            { label: "Daftar Artikel", href: "/admin/artikel" },
+            { label: initialData.title || "Ubah Artikel" },
+          ]}
+        />
         <ArticleEditorForm
           initialData={initialData}
+          articleCategories={articleCategories}
           justSaved={sp.saved === "1"}
         />
       </main>

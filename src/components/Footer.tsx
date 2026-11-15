@@ -6,43 +6,102 @@ import {
   ExternalLink,
   MessageCircle,
   MapPin,
-  ShieldCheck,
-  Package,
+  Phone,
+  Mail,
+  Clock,
   Sprout,
   ArrowUpRight,
   ChevronRight,
 } from "lucide-react";
-import { SITE_DATA, WHATSAPP_NUMBER } from "@/data/site";
-import { SHOPEE_STORE_URL, productCategories } from "@/data/categories";
+import { SITE_DATA, type SiteData } from "@/data/site";
+import { productCategories } from "@/data/categories";
 import { ARTICLES } from "@/data/articles";
+import type { ContentArticleItem, ContentCategoryItem } from "@/lib/content";
+import { getWhatsAppHref, WHATSAPP_PLACEHOLDER_TEXT } from "@/lib/whatsapp";
+import {
+  HOME_SECTION_IDS,
+  resolveHeroCta,
+} from "@/lib/site-content/hero-cta";
+import {
+  DEFAULT_FOOTER_DATA,
+  DEFAULT_FOOTER_LOGO_SRC,
+} from "@/lib/site-content/footer-defaults";
+import { SupportedIcon } from "@/lib/site-content/icons";
 import { Container } from "@/components/Container";
 
-const FOOTER_HIGHLIGHTS = [
-  {
-    icon: ShieldCheck,
-    title: "Standar Mutu Terjaga",
-    subtitle: "Spesifikasi komposisi & takaran jelas pada label kemasan resmi",
-  },
-  {
-    icon: Package,
-    title: "Kemasan 500 gr & 1 kg",
-    subtitle: "Ukuran praktis untuk uji lahan maupun pemakaian rutin musim tanam",
-  },
-  {
-    icon: MapPin,
-    title: "Distribusi Nasional",
-    subtitle: "Pengiriman ke berbagai wilayah via mitra & marketplace resmi",
-  },
-] as const;
+interface FooterProps {
+  siteData?: SiteData;
+  categories?: ContentCategoryItem[];
+  articles?: ContentArticleItem[];
+}
 
-export function Footer() {
+export function Footer({
+  siteData = SITE_DATA,
+  categories,
+  articles,
+}: FooterProps) {
   const currentYear = new Date().getFullYear();
-  const rawNumber = WHATSAPP_NUMBER || "6281234567890";
-  const whatsappHref = `https://wa.me/${rawNumber.replace(/\D/g, "")}`;
+  const footer = siteData.footer ?? DEFAULT_FOOTER_DATA;
+  const whatsappHref = getWhatsAppHref(siteData.whatsappNumber);
+  const companyCtx = {
+    whatsappNumber: siteData.whatsappNumber,
+    shopeeStoreUrl: siteData.officialStore.url,
+  };
+  const categoryList =
+    categories && categories.length > 0
+      ? categories
+      : productCategories.map((c) => ({
+          name: c.name,
+          href: siteData.officialStore.url,
+        }));
+  const articleList =
+    articles && articles.length > 0 ? articles.slice(0, 4) : ARTICLES.slice(0, 4);
+
+  const logoSrc = footer.logoSrc?.trim() || DEFAULT_FOOTER_LOGO_SRC;
+  const logoAlt = footer.logoAlt?.trim() || "";
+  const copyrightResolved = footer.copyrightText
+    .replace(/\{tahun\}|\{year\}/gi, String(currentYear))
+    .replace(/\{perusahaan\}|\{company\}/gi, siteData.companyName);
+
+  const flagshipCta = resolveHeroCta(
+    {
+      enabled: footer.flagshipCard.enabled,
+      label: footer.flagshipCard.linkLabel,
+      target: footer.flagshipCard.target,
+    },
+    companyCtx,
+    {
+      enabled: true,
+      label: DEFAULT_FOOTER_DATA.flagshipCard.linkLabel,
+      target: DEFAULT_FOOTER_DATA.flagshipCard.target,
+    }
+  );
+
+  const contactItems = [
+    siteData.contact.address?.trim()
+      ? { key: "address", icon: MapPin, text: siteData.contact.address.trim() }
+      : null,
+    siteData.contact.phone?.trim()
+      ? { key: "phone", icon: Phone, text: siteData.contact.phone.trim() }
+      : null,
+    siteData.contact.email?.trim()
+      ? { key: "email", icon: Mail, text: siteData.contact.email.trim() }
+      : null,
+    siteData.contact.operatingHours?.trim()
+      ? {
+          key: "operatingHours",
+          icon: Clock,
+          text: siteData.contact.operatingHours.trim(),
+        }
+      : null,
+  ].filter(
+    (item): item is { key: string; icon: typeof MapPin; text: string } =>
+      item !== null
+  );
 
   return (
     <footer
-      id="kontak"
+      id={HOME_SECTION_IDS.KONTAK}
       aria-label="Informasi perusahaan dan navigasi situs"
       className="scroll-mt-28 relative w-full text-white"
     >
@@ -91,27 +150,28 @@ export function Footer() {
         <Container className="relative z-10">
           {/* TIER 1: 3-Column Corporate & Operational Assurance Bento Strip */}
           <div className="grid grid-cols-1 gap-4 border-b border-white/10 pb-8 md:grid-cols-3">
-            {FOOTER_HIGHLIGHTS.map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <div
-                  key={item.title}
-                  className="flex items-start gap-3.5 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xs transition-colors hover:border-emerald-400/25 hover:bg-white/[0.06]"
-                >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-400/20 bg-[#143D29] text-emerald-300">
-                    <IconComponent className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0">
-                    <h2 className="font-display text-sm font-bold leading-snug text-white">
-                      {item.title}
-                    </h2>
-                    <p className="mt-1 text-xs leading-relaxed text-[#B8D8C5]">
-                      {item.subtitle}
-                    </p>
-                  </div>
+            {footer.highlights.map((item, idx) => (
+              <div
+                key={`${idx}-${item.title}`}
+                className="flex items-start gap-3.5 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xs transition-colors hover:border-emerald-400/25 hover:bg-white/[0.06]"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-400/20 bg-[#143D29] text-emerald-300">
+                  <SupportedIcon
+                    name={item.icon}
+                    className="h-5 w-5"
+                    aria-hidden="true"
+                  />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="font-display text-sm font-bold leading-snug text-white">
+                    {item.title}
+                  </h2>
+                  <p className="mt-1 text-xs leading-relaxed text-[#B8D8C5]">
+                    {item.subtitle}
+                  </p>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
 
           {/* TIER 2: Main 12-Column Footer Directory */}
@@ -125,8 +185,8 @@ export function Footer() {
                 >
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-400/25 bg-[#143D29] p-2 shadow-inner">
                     <Image
-                      src="/brand/logo-mark-light.png"
-                      alt=""
+                      src={logoSrc}
+                      alt={logoAlt}
                       width={40}
                       height={40}
                       className="h-full w-full object-contain"
@@ -134,118 +194,122 @@ export function Footer() {
                   </span>
                   <div>
                     <span className="block font-display text-lg font-bold tracking-tight text-white">
-                      {SITE_DATA.companyName}
+                      {siteData.companyName}
                     </span>
                     <span className="block text-xs font-medium text-emerald-300">
-                      Sarana Produksi Pertanian
+                      {footer.brandSubtitle}
                     </span>
                   </div>
                 </Link>
 
                 <p className="mt-4 text-sm leading-relaxed text-[#C6E2D1]">
-                  Mitra penyedia sarana produksi pertanian, pupuk, pembenah
-                  tanah, dan nutrisi tanaman berkualitas untuk mendukung
-                  produktivitas serta keberlanjutan lahan petani Indonesia.
+                  {footer.blurb}
                 </p>
               </div>
 
               {/* Compact Flagship Solution Highlight Card */}
-              <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-[#133A26] to-[#0E2B1C] p-4">
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-300">
-                  <Sprout className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>Lini Unggulan Arga Tani Mandiri</span>
+              {footer.flagshipCard.enabled && (
+                <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-[#133A26] to-[#0E2B1C] p-4">
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-300">
+                    <Sprout className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>{footer.flagshipCard.eyebrow}</span>
+                  </div>
+                  <p className="mt-1.5 font-display text-sm font-bold text-white">
+                    {footer.flagshipCard.title}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-[#B8D8C5]">
+                    {footer.flagshipCard.description}
+                  </p>
+                  {flagshipCta.kind === "link" &&
+                    (flagshipCta.isExternal ? (
+                      <a
+                        href={flagshipCta.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2.5 inline-flex items-center gap-1 text-xs font-bold text-emerald-300 transition-colors hover:text-white"
+                      >
+                        <span>{footer.flagshipCard.linkLabel}</span>
+                        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <Link
+                        href={flagshipCta.href}
+                        className="mt-2.5 inline-flex items-center gap-1 text-xs font-bold text-emerald-300 transition-colors hover:text-white"
+                      >
+                        <span>{footer.flagshipCard.linkLabel}</span>
+                        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Link>
+                    ))}
                 </div>
-                <p className="mt-1.5 font-display text-sm font-bold text-white">
-                  Tamatric: Asam Humat &amp; Trichoderma
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-[#B8D8C5]">
-                  Sinergi pembenah tanah organik dan agensia hayati pelindung
-                  perakaran tanaman.
-                </p>
-                <Link
-                  href="/artikel/manfaat-trichoderma-dan-asam-humat-dalam-mengembalikan-kesuburan-tanah"
-                  className="mt-2.5 inline-flex items-center gap-1 text-xs font-bold text-emerald-300 transition-colors hover:text-white"
-                >
-                  <span>Pelajari Cara Kerja &amp; Manfaat</span>
-                  <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-                </Link>
-              </div>
+              )}
             </div>
 
             {/* Column 2 (lg:col-span-2): Navigasi & Kategori */}
             <div className="lg:col-span-2">
-              <div className="flex items-center gap-2">
-                <span
-                  className="h-4 w-1 rounded-full bg-emerald-400"
-                  aria-hidden="true"
-                />
-                <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
-                  Menu Utama
-                </h2>
-              </div>
+              {footer.linkColumns.map((col, colIdx) => (
+                <div
+                  key={`${colIdx}-${col.heading}`}
+                  className={colIdx > 0 ? "mt-6" : undefined}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-4 w-1 rounded-full bg-emerald-400"
+                      aria-hidden="true"
+                    />
+                    <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
+                      {col.heading}
+                    </h2>
+                  </div>
 
-              <ul className="mt-4 space-y-2.5 text-sm">
-                <li>
-                  <Link
-                    href="/"
-                    className="inline-flex items-center gap-1.5 text-[#C6E2D1] transition-colors hover:text-white"
-                  >
-                    <ChevronRight
-                      className="h-3.5 w-3.5 text-emerald-400/70"
-                      aria-hidden="true"
-                    />
-                    <span>Beranda</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/#produk"
-                    className="inline-flex items-center gap-1.5 text-[#C6E2D1] transition-colors hover:text-white"
-                  >
-                    <ChevronRight
-                      className="h-3.5 w-3.5 text-emerald-400/70"
-                      aria-hidden="true"
-                    />
-                    <span>Kategori Produk</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/#tentang-kami"
-                    className="inline-flex items-center gap-1.5 text-[#C6E2D1] transition-colors hover:text-white"
-                  >
-                    <ChevronRight
-                      className="h-3.5 w-3.5 text-emerald-400/70"
-                      aria-hidden="true"
-                    />
-                    <span>Tentang Kami</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/#artikel-edukasi"
-                    className="inline-flex items-center gap-1.5 text-[#C6E2D1] transition-colors hover:text-white"
-                  >
-                    <ChevronRight
-                      className="h-3.5 w-3.5 text-emerald-400/70"
-                      aria-hidden="true"
-                    />
-                    <span>Artikel Edukasi</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/artikel"
-                    className="inline-flex items-center gap-1.5 text-[#C6E2D1] transition-colors hover:text-white"
-                  >
-                    <ChevronRight
-                      className="h-3.5 w-3.5 text-emerald-400/70"
-                      aria-hidden="true"
-                    />
-                    <span>Pusat Panduan Tani</span>
-                  </Link>
-                </li>
-              </ul>
+                  <ul className="mt-4 space-y-2.5 text-sm">
+                    {col.links.map((lnk, lnkIdx) => {
+                      const resolved = resolveHeroCta(
+                        {
+                          enabled: true,
+                          label: lnk.label,
+                          target: lnk.target,
+                        },
+                        companyCtx,
+                        {
+                          enabled: true,
+                          label: lnk.label,
+                          target: { type: "page", value: "/" },
+                        }
+                      );
+                      if (resolved.kind !== "link") return null;
+                      return (
+                        <li key={`${lnkIdx}-${lnk.label}`}>
+                          {resolved.isExternal ? (
+                            <a
+                              href={resolved.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-[#C6E2D1] transition-colors hover:text-white"
+                            >
+                              <ChevronRight
+                                className="h-3.5 w-3.5 text-emerald-400/70"
+                                aria-hidden="true"
+                              />
+                              <span>{lnk.label}</span>
+                            </a>
+                          ) : (
+                            <Link
+                              href={resolved.href}
+                              className="inline-flex items-center gap-1.5 text-[#C6E2D1] transition-colors hover:text-white"
+                            >
+                              <ChevronRight
+                                className="h-3.5 w-3.5 text-emerald-400/70"
+                                aria-hidden="true"
+                              />
+                              <span>{lnk.label}</span>
+                            </Link>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
 
               <div className="mt-6 flex items-center gap-2">
                 <span
@@ -253,15 +317,15 @@ export function Footer() {
                   aria-hidden="true"
                 />
                 <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
-                  Lini Produk
+                  {footer.productCategoriesHeading}
                 </h2>
               </div>
 
               <ul className="mt-3 space-y-2 text-xs">
-                {productCategories.map((cat) => (
+                {categoryList.map((cat) => (
                   <li key={cat.name}>
                     <a
-                      href={SHOPEE_STORE_URL}
+                      href={cat.href || siteData.officialStore.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-[#B8D8C5] transition-colors hover:text-emerald-300"
@@ -285,12 +349,12 @@ export function Footer() {
                   aria-hidden="true"
                 />
                 <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
-                  Panduan Budidaya Pilihan
+                  {footer.featuredArticlesHeading}
                 </h2>
               </div>
 
               <ul className="mt-4 space-y-3">
-                {ARTICLES.map((article) => (
+                {articleList.map((article) => (
                   <li key={article.id}>
                     <Link
                       href={`/artikel/${article.slug}`}
@@ -316,7 +380,7 @@ export function Footer() {
                   aria-hidden="true"
                 />
                 <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
-                  Akses &amp; Saluran Resmi
+                  {footer.channelsHeading}
                 </h2>
               </div>
 
@@ -325,21 +389,20 @@ export function Footer() {
                 <div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
-                      Marketplace Resmi
+                      {footer.storeCardBadge}
                     </span>
                     <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                      Shopee Official
+                      {footer.storeCardBadgeRight}
                     </span>
                   </div>
                   <p className="mt-1 font-display text-base font-bold text-white">
-                    {SITE_DATA.officialStore.name}
+                    {footer.storeCardTitle}
                   </p>
                   <p className="mt-1 text-xs leading-relaxed text-[#B8D8C5]">
-                    Pemesanan produk eceran maupun rutin dilayani melalui
-                    etalase resmi kami di Shopee.
+                    {footer.storeCardDescription}
                   </p>
                   <a
-                    href={SITE_DATA.officialStore.url}
+                    href={siteData.officialStore.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-3 inline-flex w-full items-center justify-between rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-xs font-bold text-white transition-all hover:border-[#C84B28] hover:bg-[#C84B28]"
@@ -349,7 +412,7 @@ export function Footer() {
                         className="h-4 w-4 text-emerald-300"
                         aria-hidden="true"
                       />
-                      <span>Buka Etalase Tani InD®</span>
+                      <span>{footer.storeButtonLabel}</span>
                     </span>
                     <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                   </a>
@@ -358,44 +421,101 @@ export function Footer() {
                 {/* Channel 2: WhatsApp Technical Support Row */}
                 <div className="border-t border-white/10 pt-4">
                   <span className="block text-[11px] font-bold uppercase tracking-wider text-emerald-300">
-                    Pendampingan Petani &amp; Mitra
+                    {footer.whatsappCardTitle}
                   </span>
                   <p className="mt-1 text-xs leading-relaxed text-[#B8D8C5]">
-                    Hubungi tim kami untuk informasi dosis pemakaian dan
-                    ketersediaan stok kemasan.
+                    {footer.whatsappCardDescription}
                   </p>
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 inline-flex w-full items-center justify-between rounded-xl border border-emerald-400/30 bg-[#143D29]/80 px-3.5 py-2.5 text-xs font-bold text-emerald-200 transition-all hover:bg-emerald-600 hover:text-white"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                      <span>WhatsApp Layanan Resmi</span>
+                  {whatsappHref ? (
+                    <a
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex w-full items-center justify-between rounded-xl border border-emerald-400/30 bg-[#143D29]/80 px-3.5 py-2.5 text-xs font-bold text-emerald-200 transition-all hover:bg-emerald-600 hover:text-white"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                        <span>{footer.whatsappButtonLabel}</span>
+                      </span>
+                      <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                    </a>
+                  ) : (
+                    <span className="mt-3 inline-flex w-full items-center justify-between rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-xs font-semibold text-emerald-200">
+                      <span className="inline-flex items-center gap-2">
+                        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                        <span>{WHATSAPP_PLACEHOLDER_TEXT}</span>
+                      </span>
                     </span>
-                    <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-                  </a>
+                  )}
                 </div>
+
+                {contactItems.length > 0 && (
+                  <div className="border-t border-white/10 pt-4">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+                      {footer.contactHeading}
+                    </span>
+                    <ul className="mt-2.5 space-y-2 text-xs leading-relaxed text-[#B8D8C5]">
+                      {contactItems.map((item) => {
+                        const ContactIcon = item.icon;
+                        return (
+                          <li key={item.key} className="flex items-start gap-2">
+                            <ContactIcon
+                              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300"
+                              aria-hidden="true"
+                            />
+                            <span className="min-w-0 break-words">
+                              {item.text}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+
+                {footer.socialLinks.length > 0 && (
+                  <div className="border-t border-white/10 pt-4">
+                    <div className="flex flex-wrap gap-2">
+                      {footer.socialLinks.map((soc, idx) => (
+                        <a
+                          key={`${idx}-${soc.platform}`}
+                          href={soc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-emerald-200 transition-colors hover:border-emerald-400/40 hover:text-white"
+                        >
+                          <span>{soc.platform}</span>
+                          <ExternalLink
+                            className="h-3 w-3 shrink-0"
+                            aria-hidden="true"
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* TIER 3: Bottom Copyright & Legal Bar */}
           <div className="flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-xs text-[#A7D7B9] sm:flex-row sm:items-center">
-            <p>
-              Hak Cipta &copy; {currentYear} {SITE_DATA.companyName}. Seluruh
-              hak cipta dilindungi.
-            </p>
+            <p>{copyrightResolved}</p>
 
-            <div className="flex flex-wrap items-center gap-2 text-[11px]">
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 font-medium text-[#D9F0E3]">
-                Sarana Produksi Pertanian Indonesia
-              </span>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 font-medium text-emerald-300">
-                Tani InD® Official Store
-              </span>
-            </div>
+            {footer.legalBadges.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                {footer.legalBadges.map((badge, idx) => (
+                  <span
+                    key={`${idx}-${badge}`}
+                    className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 font-medium ${
+                      idx === 1 ? "text-emerald-300" : "text-[#D9F0E3]"
+                    }`}
+                  >
+                    {badge}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </Container>
       </div>

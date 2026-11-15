@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Eye, Pencil } from "lucide-react";
+import { Eye, Pencil } from "lucide-react";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { requireAdminPage } from "@/lib/supabase/admin";
 import { isValidUuid } from "@/lib/articles/admin-validation";
 import {
@@ -102,13 +103,6 @@ export default async function AdminArtikelPreviewPage({
 
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              href="/admin/artikel"
-              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/20"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Daftar Artikel</span>
-            </Link>
-            <Link
               href={`/admin/artikel/${article.id}`}
               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg bg-[#D9F0E3] px-3 py-1.5 text-xs font-bold text-[#0F1F17] hover:bg-white"
             >
@@ -117,6 +111,17 @@ export default async function AdminArtikelPreviewPage({
             </Link>
           </div>
         </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6">
+        <AdminBreadcrumb
+          crumbs={[
+            { label: "Dashboard", href: "/admin" },
+            { label: "Daftar Artikel", href: "/admin/artikel" },
+            { label: "Pratinjau Artikel" },
+          ]}
+          className="mb-0"
+        />
       </div>
 
       {/* Reused Public Article Rendering Component */}

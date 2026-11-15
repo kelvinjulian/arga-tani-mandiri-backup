@@ -20,8 +20,6 @@ import {
 import type { ArticleSection } from "@/data/articles";
 import type { ContentArticleStatus } from "@/lib/content";
 import {
-  ARTICLE_CATEGORY_OPTIONS,
-  ARTICLE_FILTER_CATEGORIES,
   ARTICLE_STATUS_OPTIONS,
   META_DESCRIPTION_MAX,
   SEO_TITLE_MAX,
@@ -31,6 +29,12 @@ import {
   slugifyText,
   type ArticleFieldErrors,
 } from "@/lib/articles/admin-validation";
+import {
+  DEFAULT_ARTICLE_CATEGORIES,
+  slugifyCategoryName,
+  type ArticleCategoryItem,
+} from "@/lib/article-categories";
+import { createArticleCategoryAction } from "@/app/(admin)/admin/kategori-artikel/actions";
 import { uploadArticleImage } from "@/lib/supabase/media-upload";
 import {
   deleteArticleAction,
@@ -61,6 +65,7 @@ export interface ArticleEditorInitialData {
 
 interface ArticleEditorFormProps {
   initialData: ArticleEditorInitialData;
+  articleCategories?: ArticleCategoryItem[];
   justSaved?: boolean;
 }
 
@@ -79,11 +84,23 @@ function createEmptySection(): ArticleSection {
 
 export function ArticleEditorForm({
   initialData,
+  articleCategories = DEFAULT_ARTICLE_CATEGORIES,
   justSaved = false,
 }: ArticleEditorFormProps) {
   const router = useRouter();
   const formErrorId = useId();
   const isEdit = Boolean(initialData.id);
+
+  const [categories, setCategories] =
+    useState<ArticleCategoryItem[]>(articleCategories);
+  const [showNewCatModal, setShowNewCatModal] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatFilterLabel, setNewCatFilterLabel] = useState("");
+  const [newCatFilterEdited, setNewCatFilterEdited] = useState(false);
+  const [newCatSlug, setNewCatSlug] = useState("");
+  const [newCatSlugEdited, setNewCatSlugEdited] = useState(false);
+  const [newCatError, setNewCatError] = useState<string | null>(null);
+  const [isCreatingCat, setIsCreatingCat] = useState(false);
 
   const [originalUpdatedAt, setOriginalUpdatedAt] = useState(
     initialData.updatedAt ?? ""
@@ -148,13 +165,20 @@ export function ArticleEditorForm({
     : computedReadingTime;
 
   useEffect(() => {
-    if (!isDirty) return;
+    if (!isDirty) {
+      window.__adminIsDirty = false;
+      return;
+    }
+    window.__adminIsDirty = true;
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = "";
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.__adminIsDirty = false;
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
   }, [isDirty]);
 
   const markDirty = () => {
@@ -483,63 +507,80 @@ export function ArticleEditorForm({
               )}
             </div>
 
-            <div>
-              <label
-                htmlFor="field-category"
-                className="block text-sm font-semibold text-[#143D29]"
-              >
-                Label Kategori Tampilan <span className="text-[#B91C1C]">*</span>
-              </label>
-              <select
-                id="field-category"
-                value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value);
-                  markDirty();
-                }}
-                className="mt-1.5 min-h-[44px] w-full rounded-xl border border-[#CBD8D0] bg-white px-3 text-sm text-[#0F1F17] focus:border-[#143D29] focus:outline-2 focus:outline-[#143D29]"
-              >
-                {ARTICLE_CATEGORY_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-              {fieldErrors.category && (
-                <p role="alert" className="mt-1 text-xs font-medium text-[#B91C1C]">
-                  {fieldErrors.category}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="field-filter-category"
-                className="block text-sm font-semibold text-[#143D29]"
-              >
-                Kategori Filter Halaman Publik{" "}
-                <span className="text-[#B91C1C]">*</span>
-              </label>
-              <select
-                id="field-filter-category"
-                value={filterCategory}
-                onChange={(e) => {
-                  setFilterCategory(e.target.value);
-                  markDirty();
-                }}
-                className="mt-1.5 min-h-[44px] w-full rounded-xl border border-[#CBD8D0] bg-white px-3 text-sm text-[#0F1F17] focus:border-[#143D29] focus:outline-2 focus:outline-[#143D29]"
-              >
-                {ARTICLE_FILTER_CATEGORIES.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-              {fieldErrors.filter_category && (
-                <p role="alert" className="mt-1 text-xs font-medium text-[#B91C1C]">
-                  {fieldErrors.filter_category}
-                </p>
-              )}
+            <div className="sm:col-span-2">
+              {(() => {
+                const matchedCat = categories.find(
+                  (c) => c.name === category || c.filterLabel === filterCategory
+                );
+                const selectVal = matchedCat ? matchedCat.slug : "__unregistered__";
+                return (
+                  <>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <label
+                        htmlFor="field-category"
+                        className="block text-sm font-semibold text-[#143D29]"
+                      >
+                        Kategori Artikel <span className="text-[#B91C1C]">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewCatName("");
+                          setNewCatFilterLabel("");
+                          setNewCatFilterEdited(false);
+                          setNewCatSlug("");
+                          setNewCatSlugEdited(false);
+                          setNewCatError(null);
+                          setShowNewCatModal(true);
+                        }}
+                        className="cursor-pointer text-xs font-semibold text-[#15803D] hover:underline"
+                      >
+                        + Kategori baru
+                      </button>
+                    </div>
+                    <select
+                      id="field-category"
+                      value={selectVal}
+                      onChange={(e) => {
+                        const chosen = categories.find(
+                          (c) => c.slug === e.target.value
+                        );
+                        if (chosen) {
+                          setCategory(chosen.name);
+                          setFilterCategory(chosen.filterLabel);
+                          markDirty();
+                        }
+                      }}
+                      className="mt-1.5 min-h-[44px] w-full rounded-xl border border-[#CBD8D0] bg-white px-3 text-sm text-[#0F1F17] focus:border-[#143D29] focus:outline-2 focus:outline-[#143D29]"
+                    >
+                      {!matchedCat && (
+                        <option value="__unregistered__">
+                          {(category || filterCategory || "Kategori lama") +
+                            " (tidak terdaftar)"}
+                        </option>
+                      )}
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.slug}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-[#43594D]">
+                      {matchedCat
+                        ? `Label filter publik: ${matchedCat.filterLabel}`
+                        : "Kategori artikel ini belum terdaftar di daftar kategori. Pilih kategori terdaftar atau buat kategori baru."}
+                    </p>
+                    {(fieldErrors.category || fieldErrors.filter_category) && (
+                      <p
+                        role="alert"
+                        className="mt-1 text-xs font-medium text-[#B91C1C]"
+                      >
+                        {fieldErrors.category ?? fieldErrors.filter_category}
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             <div>
@@ -1430,6 +1471,142 @@ export function ArticleEditorForm({
                 className="inline-flex min-h-[42px] cursor-pointer items-center rounded-xl bg-[#991B1B] px-4 py-2 text-xs font-semibold text-white hover:bg-[#7F1D1D] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isDeleting ? "Menghapus..." : "Hapus Artikel"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+      {showNewCatModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="inline-new-cat-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        >
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (isCreatingCat) return;
+              setNewCatError(null);
+              setIsCreatingCat(true);
+              const res = await createArticleCategoryAction(
+                newCatName,
+                newCatFilterLabel,
+                newCatSlug
+              );
+              setIsCreatingCat(false);
+              if (!res.ok || !res.category) {
+                setNewCatError(res.error ?? "Gagal menambah kategori baru.");
+                return;
+              }
+              setCategories((prev) => [...prev, res.category!]);
+              setCategory(res.category.name);
+              setFilterCategory(res.category.filterLabel);
+              markDirty();
+              setShowNewCatModal(false);
+            }}
+            className="w-full max-w-md rounded-2xl border border-[#CBD8D0] bg-white p-6 shadow-xl space-y-4"
+          >
+            <h3
+              id="inline-new-cat-title"
+              className="font-display text-lg font-bold text-[#0F1F17]"
+            >
+              Tambah Kategori Artikel Baru
+            </h3>
+            <div>
+              <label
+                htmlFor="inline-cat-name"
+                className="block text-sm font-semibold text-[#143D29]"
+              >
+                Nama Kategori (2–40 karakter){" "}
+                <span className="text-[#B91C1C]">*</span>
+              </label>
+              <input
+                id="inline-cat-name"
+                type="text"
+                required
+                minLength={2}
+                maxLength={40}
+                value={newCatName}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setNewCatName(val);
+                  if (!newCatFilterEdited) {
+                    setNewCatFilterLabel(val);
+                  }
+                  if (!newCatSlugEdited) {
+                    setNewCatSlug(slugifyCategoryName(val));
+                  }
+                }}
+                placeholder="Contoh: Pemupukan Organik"
+                className="mt-1.5 min-h-[44px] w-full rounded-xl border border-[#CBD8D0] px-3.5 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="inline-cat-filter-label"
+                className="block text-sm font-semibold text-[#143D29]"
+              >
+                Label Filter Publik (2–40 karakter){" "}
+                <span className="text-[#B91C1C]">*</span>
+              </label>
+              <input
+                id="inline-cat-filter-label"
+                type="text"
+                required
+                minLength={2}
+                maxLength={40}
+                value={newCatFilterLabel}
+                onChange={(e) => {
+                  setNewCatFilterEdited(true);
+                  setNewCatFilterLabel(e.target.value);
+                }}
+                placeholder="Pemupukan Organik"
+                className="mt-1.5 min-h-[44px] w-full rounded-xl border border-[#CBD8D0] px-3.5 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="inline-cat-slug"
+                className="block text-sm font-semibold text-[#143D29]"
+              >
+                Slug Internal <span className="text-[#B91C1C]">*</span>
+              </label>
+              <input
+                id="inline-cat-slug"
+                type="text"
+                required
+                minLength={2}
+                maxLength={60}
+                value={newCatSlug}
+                onChange={(e) => {
+                  setNewCatSlugEdited(true);
+                  setNewCatSlug(e.target.value.toLowerCase());
+                }}
+                placeholder="pemupukan-organik"
+                className="mt-1.5 min-h-[44px] w-full rounded-xl border border-[#CBD8D0] px-3.5 py-2 font-mono text-xs sm:text-sm"
+              />
+            </div>
+            {newCatError && (
+              <p role="alert" className="text-xs font-medium text-[#B91C1C]">
+                {newCatError}
+              </p>
+            )}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowNewCatModal(false)}
+                disabled={isCreatingCat}
+                className="inline-flex min-h-[42px] cursor-pointer items-center rounded-xl border border-[#CBD8D0] bg-white px-4 py-2 text-xs font-semibold text-[#143D29]"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={isCreatingCat}
+                className="inline-flex min-h-[42px] cursor-pointer items-center rounded-xl bg-[#15803D] px-4 py-2 text-xs font-semibold text-white hover:bg-[#14532D] disabled:opacity-60"
+              >
+                {isCreatingCat ? "Menyimpan..." : "Simpan & Pilih"}
               </button>
             </div>
           </form>

@@ -15,8 +15,19 @@ import {
   FlaskConical,
   PackageCheck,
 } from "lucide-react";
-import { getArticles, getCategories, getSiteContent } from "@/lib/content";
+import {
+  getArticleCategories,
+  getArticles,
+  getCategories,
+  getSiteContent,
+} from "@/lib/content";
 import { getRobotsMetadata, getSiteUrl, serializeJsonLd } from "@/lib/seo";
+import {
+  DEFAULT_PRIMARY_CTA,
+  DEFAULT_SECONDARY_CTA,
+  HOME_SECTION_IDS,
+  resolveHeroCta,
+} from "@/lib/site-content/hero-cta";
 import { Container } from "@/components/Container";
 import { AboutSection } from "@/components/AboutSection";
 import { ArticleHubSection } from "@/components/ArticleHubSection";
@@ -28,6 +39,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteData = await getSiteContent();
   const homeTitle = `${siteData.companyName} | Sarana Produksi Pertanian`;
   const homeDescription = siteData.fieldDescription;
+  const heroImageUrl = siteData.hero.imageSrc;
+  const heroImageAlt = siteData.hero.imageAlt;
 
   return {
     title: {
@@ -47,10 +60,10 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "id_ID",
       images: [
         {
-          url: "/images/hero-agriculture.jpg",
+          url: heroImageUrl,
           width: 1200,
           height: 630,
-          alt: "Aktivitas pertanian di lahan budidaya",
+          alt: heroImageAlt,
         },
       ],
     },
@@ -58,7 +71,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: homeTitle,
       description: homeDescription,
-      images: ["/images/hero-agriculture.jpg"],
+      images: [heroImageUrl],
     },
   };
 }
@@ -66,13 +79,32 @@ export async function generateMetadata(): Promise<Metadata> {
 const CATEGORY_ICONS = [Sprout, ShieldCheck, FlaskConical, PackageCheck];
 
 export default async function HomePage() {
-  const [siteData, categories, articles] = await Promise.all([
+  const [siteData, categories, articles, articleCategories] = await Promise.all([
     getSiteContent(),
     getCategories(),
     getArticles(),
+    getArticleCategories(),
   ]);
 
   const shopeeStoreUrl = siteData.officialStore.url;
+  const primaryCta = siteData.hero.primaryCta ?? {
+    ...DEFAULT_PRIMARY_CTA,
+    label: siteData.hero.primaryCtaLabel,
+  };
+  const secondaryCta = siteData.hero.secondaryCta ?? {
+    ...DEFAULT_SECONDARY_CTA,
+    label: siteData.hero.secondaryCtaLabel,
+  };
+  const resolvedPrimaryCta = resolveHeroCta(
+    primaryCta,
+    { whatsappNumber: siteData.whatsappNumber, shopeeStoreUrl },
+    DEFAULT_PRIMARY_CTA
+  );
+  const resolvedSecondaryCta = resolveHeroCta(
+    secondaryCta,
+    { whatsappNumber: siteData.whatsappNumber, shopeeStoreUrl },
+    DEFAULT_SECONDARY_CTA
+  );
   const siteUrl = getSiteUrl();
   const organizationJsonLd = {
     "@context": "https://schema.org",
@@ -93,7 +125,7 @@ export default async function HomePage() {
       />
       {/* Section 1: Hero Section (Balanced Left Column, Wider Slanted Photo, Zero Text Collision) */}
       <section
-        id="beranda"
+        id={HOME_SECTION_IDS.BERANDA}
         data-testid="hero-section"
         aria-labelledby="hero-heading"
         style={{ minHeight: "0px", height: "auto" }}
@@ -180,27 +212,78 @@ export default async function HomePage() {
               </p>
 
               {/* Two Primary CTA Buttons side-by-side in a single row */}
-              <div className="hero-enter-4 mt-4 flex flex-row flex-wrap sm:flex-nowrap items-center gap-3">
-                <Link
-                  href="/#produk"
-                  className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0E2B1D] active:bg-[#091C13] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-                >
-                  <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{siteData.hero.primaryCtaLabel}</span>
-                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-                </Link>
+              {(resolvedPrimaryCta.kind !== "disabled" ||
+                resolvedSecondaryCta.kind !== "disabled") && (
+                <div className="hero-enter-4 mt-4 flex flex-row flex-wrap sm:flex-nowrap items-center gap-3">
+                  {resolvedPrimaryCta.kind === "link" &&
+                    (resolvedPrimaryCta.isExternal ? (
+                      <a
+                        href={resolvedPrimaryCta.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0E2B1D] active:bg-[#091C13] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      >
+                        {primaryCta.target.type === "whatsapp" ? (
+                          <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        ) : primaryCta.target.type === "shopee" ? (
+                          <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        ) : (
+                          <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        )}
+                        <span>{primaryCta.label}</span>
+                        <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <Link
+                        href={resolvedPrimaryCta.href}
+                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0E2B1D] active:bg-[#091C13] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      >
+                        <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        <span>{primaryCta.label}</span>
+                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </Link>
+                    ))}
+                  {resolvedPrimaryCta.kind === "whatsapp-placeholder" && (
+                    <span className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#33473D]">
+                      <MessageCircle className="h-4 w-4 shrink-0 text-[#15803D]" aria-hidden="true" />
+                      <span>{resolvedPrimaryCta.text}</span>
+                    </span>
+                  )}
 
-                <a
-                  href={shopeeStoreUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#C23B1A] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#992B11] active:bg-[#7F230D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-                >
-                  <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{siteData.hero.secondaryCtaLabel}</span>
-                  <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
-                </a>
-              </div>
+                  {resolvedSecondaryCta.kind === "link" &&
+                    (resolvedSecondaryCta.isExternal ? (
+                      <a
+                        href={resolvedSecondaryCta.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#C23B1A] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#992B11] active:bg-[#7F230D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      >
+                        {secondaryCta.target.type === "whatsapp" ? (
+                          <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        ) : (
+                          <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        )}
+                        <span>{secondaryCta.label}</span>
+                        <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <Link
+                        href={resolvedSecondaryCta.href}
+                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#C23B1A] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#992B11] active:bg-[#7F230D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      >
+                        <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        <span>{secondaryCta.label}</span>
+                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </Link>
+                    ))}
+                  {resolvedSecondaryCta.kind === "whatsapp-placeholder" && (
+                    <span className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#33473D]">
+                      <MessageCircle className="h-4 w-4 shrink-0 text-[#15803D]" aria-hidden="true" />
+                      <span>{resolvedSecondaryCta.text}</span>
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Compact Horizontal Trust Pill Bar */}
               <div
@@ -321,8 +404,8 @@ export default async function HomePage() {
               }}
             >
               <Image
-                src="/images/hero-agriculture.jpg"
-                alt="Aktivitas pertanian di lahan budidaya"
+                src={siteData.hero.imageSrc}
+                alt={siteData.hero.imageAlt}
                 fill
                 priority
                 sizes="(min-width: 1536px) 786px, (min-width: 1024px) 52vw, 100vw"
@@ -377,8 +460,8 @@ export default async function HomePage() {
             {/* ── Mobile/Tablet photo (below 1024px) ── */}
             <div className="relative mt-6 h-[340px] sm:h-[400px] w-full overflow-hidden rounded-2xl lg:hidden">
               <Image
-                src="/images/hero-agriculture.jpg"
-                alt="Aktivitas pertanian di lahan budidaya"
+                src={siteData.hero.imageSrc}
+                alt={siteData.hero.imageAlt}
                 fill
                 priority
                 sizes="(min-width: 1024px) 52vw, calc(100vw - 64px)"
@@ -435,7 +518,7 @@ export default async function HomePage() {
       <div className="relative z-10 w-full overflow-x-clip">
         {/* Section 2: Upgraded "Kategori Produk Kami" Editorial Showcase */}
         <section
-          id="produk"
+          id={HOME_SECTION_IDS.PRODUK}
           aria-labelledby="category-showcase-heading"
           className="scroll-mt-28 relative z-10 bg-transparent pt-4 lg:pt-6 pb-6 lg:pb-8"
         >
@@ -588,11 +671,16 @@ export default async function HomePage() {
         </section>
 
         {/* Section 3: About ("Tentang Kami" Interactive Editorial Split & Bento Grid) */}
-        <AboutSection />
+        <AboutSection
+          aboutData={siteData.about}
+          shopeeStoreUrl={shopeeStoreUrl}
+        />
 
         {/* Section 4: Article Hub & Conversion Banner */}
         <ArticleHubSection
           articles={articles}
+          articleHub={siteData.articleHub}
+          articleCategories={articleCategories}
           whatsappNumber={siteData.whatsappNumber}
           shopeeStoreUrl={shopeeStoreUrl}
         />

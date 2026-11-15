@@ -4,12 +4,19 @@ import { Footer } from "@/components/Footer";
 import { FloatingWhatsAppButton } from "@/components/WhatsAppCTA";
 import { Decor } from "@/components/Decor";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { getArticles, getCategories, getSiteContent } from "@/lib/content";
 
-export default function SiteLayout({
+export default async function SiteLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const [siteData, categories, articles] = await Promise.all([
+    getSiteContent(),
+    getCategories(),
+    getArticles(),
+  ]);
+
   return (
     <div className="relative flex min-h-dvh w-full flex-col [background:linear-gradient(180deg,var(--page-top)_0%,var(--page-bottom)_100%)]">
       <a
@@ -21,13 +28,21 @@ export default function SiteLayout({
       <Decor />
       <ScrollReveal />
       <div className="relative z-[1] flex w-full flex-1 flex-col">
-        <Navbar />
+        <Navbar
+          companyName={siteData.companyName}
+          shopeeStoreUrl={siteData.officialStore.url}
+          categories={categories}
+        />
         <main id="konten-utama" className="w-full min-w-0 flex-1">
           {children}
         </main>
-        <Footer />
+        <Footer
+          siteData={siteData}
+          categories={categories}
+          articles={articles}
+        />
       </div>
-      <FloatingWhatsAppButton />
+      <FloatingWhatsAppButton whatsappNumber={siteData.whatsappNumber} />
     </div>
   );
 }

@@ -70,7 +70,7 @@ export interface ValidatedArticleData {
   title: string;
   slug: string;
   category: string;
-  filter_category: ArticleFilterCategory;
+  filter_category: string;
   reading_time: string;
   is_featured: boolean;
   seo_title: string;
@@ -313,20 +313,12 @@ export function validateArticlePayload(raw: unknown): {
   }
 
   const category = str("category");
-  if (
-    !ARTICLE_CATEGORY_OPTIONS.includes(
-      category as (typeof ARTICLE_CATEGORY_OPTIONS)[number]
-    )
-  ) {
-    fieldErrors.category = "Pilih kategori tampilan yang valid.";
+  if (!category || category.length < 2 || category.length > 40) {
+    fieldErrors.category = "Pilih kategori artikel yang valid (2–40 karakter).";
   }
 
   const filterCategory = str("filter_category");
-  if (
-    !ARTICLE_FILTER_CATEGORIES.includes(
-      filterCategory as ArticleFilterCategory
-    )
-  ) {
+  if (!filterCategory || filterCategory.length < 2 || filterCategory.length > 80) {
     fieldErrors.filter_category =
       "Pilih kategori filter yang didukung halaman publik.";
   }
@@ -416,7 +408,7 @@ export function validateArticlePayload(raw: unknown): {
       title,
       slug,
       category,
-      filter_category: filterCategory as ArticleFilterCategory,
+      filter_category: filterCategory,
       reading_time: readingTime,
       is_featured: Boolean(input.is_featured),
       seo_title: seoTitle,

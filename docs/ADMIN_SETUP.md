@@ -48,3 +48,22 @@ ON CONFLICT (email) DO NOTHING;
 - **Kategori filter & Artikel Utama (`is_featured`):** Pilihan `filter_category` dibatasi pada nilai yang didukung filter halaman publik (`Panduan Label`, `Manajemen Budidaya`, `Pembenah Tanah`, `Penyimpanan & Gudang`). Hanya satu artikel yang dapat berstatus `is_featured = true` pada satu waktu; mengaktifkannya akan otomatis menonaktifkan status Utama pada artikel lain.
 - **Unggah gambar:** Gambar diunggah langsung ke bucket Storage `media` menggunakan sesi admin (`articles/<uuid>/<timestamp>-<nama>.<ext>`). File berformat JPG/PNG/WebP di atas 2 MB akan diperkecil di browser (maks. sisi panjang 1920 px, WebP kualitas 0,82) sebelum diunggah. File gambar lama tidak dihapus otomatis.
 - **Konkurensi & revalidasi cache:** Setiap pembaruan memeriksa `updated_at` asli (optimistic concurrency) agar suntingan di tab berbeda tidak saling menimpa. Setelah simpan atau hapus berhasil, cache Next.js untuk `/`, `/artikel`, `/artikel/<slug>` (termasuk slug lama jika berubah), dan `/sitemap.xml` langsung direvalidasi.
+
+---
+
+## 5. Mengelola konten beranda dan kategori
+
+- **Blok `site_content` (`/admin/konten` & `/admin/konten/[key]`):** Mengelola 6 kunci JSONB (`company`, `hero`, `category_showcase`, `about`, `whatsapp_band`, `footer`). Saat membaca (`getSiteContent()`), setiap field digabung per-field (*deep-merge*) terhadap nilai bawaan di `src/data/site.ts` sehingga data yang kosong atau tidak valid otomatis memakai nilai bawaan.
+- **Kategori produk (`/admin/kategori`):** Mengelola 1–8 baris tabel `categories` dengan pengurutan `sort_order`, validasi URL `https://` (peringatan lunak jika bukan domain Shopee), dan unggah gambar ke bucket `media`.
+- **Nomor WhatsApp:** Divalidasi harus 9–15 digit angka tanpa `+`. Jika kosong atau tidak valid, komponen publik merender placeholder non-tautan `[ISI: nomor WhatsApp]` dan tidak pernah membentuk tautan `wa.me/` yang rusak. Editor menampilkan peringatan khusus selama nilai masih memakai angka contoh `6281234567890`.
+- **Konkurensi, reset, & revalidasi:** Setiap pembaruan dan pengurutan ulang memeriksa `updated_at` asli (*optimistic concurrency*). Tombol **Kembalikan ke teks awal** menulis ulang nilai bawaan `SITE_DATA` / `productCategories`. Setiap simpan/hapus/reset memanggil `revalidateAllSitePaths()` (`revalidatePath("/", "layout")`, `/`, `/artikel`, `/artikel/[slug]`, dan `/sitemap.xml`).
+
+
+## Migrasi Kategori Artikel (`0004_article_categories.sql`)
+
+Jalankan `supabase/migrations/0004_article_categories.sql` di **Supabase SQL Editor** setelah `0003_hardening.sql`:
+- Membuat tabel `public.article_categories` (`id`, `slug` URL-safe unik, `name`, `sort_order`, `created_at`, `updated_at`) beserta trigger `trg_article_categories_updated_at`.
+- Mengaktifkan RLS (`SELECT` publik; `INSERT`/`UPDATE`/`DELETE` khusus `authenticated` dengan `public.is_admin()`) dan menerapkan privilege hardening yang sama dengan `0003_hardening.sql`.
+- Mengisi data awal idempoten untuk 4 kategori artikel bawaan (`panduan-label`, `manajemen-budidaya`, `pembenah-tanah`, `penyimpanan-gudang`).
+- Membuat fungsi RPC atomik `public.rename_article_category(p_id, p_name, p_slug)` (`SECURITY DEFINER`, `search_path = ''`, validasi `public.is_admin()`) agar pengubahan nama/slug kategori ikut memperbarui `articles.category` dan `articles.filter_category` dalam satu transaksi.
+- Menambahkan blok `site_content` baru dengan key `article_hub` (otomatis dibuat/upsert saat pertama kali disimpan dari `/admin/konten/article_hub`).
