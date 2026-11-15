@@ -15,19 +15,26 @@ Jalankan file berikut **secara berurutan** melalui menu **SQL Editor** di dasbor
 
 2. **`supabase/migrations/0002_rls.sql`**
    - Mengaktifkan RLS pada keempat tabel (`articles`, `categories`, `site_content`, `admin_users`).
-   - Membuat fungsi `public.is_admin()` (`SECURITY DEFINER`, `SET search_path = ''`) yang memeriksa apakah email dari JWT pengguna terdaftar di `public.admin_users`.
-   - Menerapkan kebijakan baca publik dan tulis khusus admin.
+   - Membuat fungsi `public.is_admin()` dan menerapkan kebijakan baca publik serta tulis khusus admin.
    - Membuat *Storage bucket* publik bernama `media` (batas ukuran 2 MB, hanya `image/webp`, `image/jpeg`, `image/png`) dan kebijakan tulis khusus admin pada `storage.objects`.
 
-3. **`supabase/seed.sql`**
+3. **`supabase/migrations/0003_hardening.sql`**
+   - Mengunci `search_path = ''` pada `public.set_updated_at()`.
+   - Memperketat `public.is_admin()` agar mencocokkan `auth.uid()` dengan `auth.users` dan mewajibkan `email_confirmed_at IS NOT NULL`, serta mencabut eksekusi fungsi dari `PUBLIC` dan `anon`.
+   - Mencabut hak akses tabel yang tidak diperlukan pada `anon` dan `authenticated` (*defense in depth*, di mana `admin_users` dicabut seluruh haknya).
+   - Menghapus kebijakan daftar objek anonim pada `storage.objects` (bucket `media` tetap publik sehingga URL gambar tetap berfungsi, sementara daftar objek hanya untuk admin).
+
+4. **`supabase/seed.sql`**
    - Mengisi data awal secara idempoten (`ON CONFLICT ... DO UPDATE`) dari file statis proyek (`src/data/site.ts`, `categories.ts`, `articles.ts`).
    - Seluruh artikel awal di-seed dengan status `'review'`.
-   - **Langkah manual:** Sebelum atau sesudah menjalankan `seed.sql`, daftarkan email admin pertama (huruf kecil) ke `public.admin_users`:
-     ```sql
-     INSERT INTO public.admin_users (email)
-     VALUES ('admin@domain-anda.com')
-     ON CONFLICT (email) DO NOTHING;
-     ```
+
+> **⚠️ Catatan Akun Admin (Penting):** Sebelum halaman login admin dibangun, **nonaktifkan pendaftaran pengguna baru (*Disable new user sign-ups*)** di menu **Supabase Authentication**, lalu buat akun admin melalui fitur **Invite User (undangan)**. Masukkan email admin ke tabel `public.admin_users` **hanya setelah akun tersebut selesai dibuat dan dikonfirmasi**:
+> ```sql
+> INSERT INTO public.admin_users (email)
+> VALUES ('admin@domain-anda.com')
+> ON CONFLICT (email) DO NOTHING;
+> ```
+> Fungsi `public.is_admin()` membaca tabel `auth.users` secara langsung dan wajib diuji/diverifikasi menggunakan akun admin yang sebenarnya.
 
 ---
 
@@ -45,62 +52,15 @@ Tabel `public.site_content` menyimpan blok konfigurasi beranda dengan kunci beri
 
 ## 3. Pengujian Keamanan (Test Section)
 
-Jalankan blok SQL berikut di **Supabase SQL Editor** untuk memverifikasi bahwa peran `anon` hanya dapat membaca data publik yang diizinkan dan **gagal** melakukan perubahan apa pun. Setiap blok uji dibungkus `BEGIN; ... ROLLBACK;` agar tidak meninggalkan data uji.
-
-### A. Uji Baca Publik (`SET LOCAL ROLE anon`) — Harus Berhasil
-```sql
-BEGIN;
-SET LOCAL ROLE anon;
-
--- 1. Harus berhasil dan hanya menampilkan artikel berstatus 'review' atau 'published'
-SELECT slug, status FROM public.articles;
-
--- 2. Harus berhasil menampilkan kategori & konten beranda
-SELECT id, name FROM public.categories ORDER BY sort_order;
-SELECT key FROM public.site_content;
-
--- 3. Harus mengembalikan 0 baris (admin_users terkunci oleh RLS tanpa policy publik)
-SELECT * FROM public.admin_users;
-
-ROLLBACK;
-```
-
-### B. Uji Tulis Publik (`SET LOCAL ROLE anon`) — Semua Harus GAGAL
-Jalankan satu per satu (atau pisahkan per transaksi); setiap perintah di bawah ini **wajib** ditolak dengan galat RLS (`new row violates row-level security policy` atau `permission denied`):
+Supabase SQL Editor secara bawaan berjalan dengan peran superuser/postgres yang **melewati (bypass) RLS**. Oleh karena itu, pengujian wajib menggunakan `set role anon;` dan diakhiri `reset role;`:
 
 ```sql
--- 1. INSERT ke articles harus GAGAL
-BEGIN;
-SET LOCAL ROLE anon;
-INSERT INTO public.articles (
-  slug, title, seo_title, meta_description, excerpt, intro,
-  category, filter_category, reading_time, image_src, image_alt
-) VALUES (
-  'uji-anon', 'Uji', 'Uji', 'Uji', 'Uji', 'Uji',
-  'Uji', 'Uji', '1 Menit', '/images/hero-agriculture.jpg', 'Uji'
-);
-ROLLBACK;
-
--- 2. UPDATE ke categories harus GAGAL
-BEGIN;
-SET LOCAL ROLE anon;
-UPDATE public.categories SET name = 'Diubah Anon' WHERE id = 'cat-1';
-ROLLBACK;
-
--- 3. DELETE dari site_content harus GAGAL
-BEGIN;
-SET LOCAL ROLE anon;
-DELETE FROM public.site_content WHERE key = 'hero';
-ROLLBACK;
-
--- 4. INSERT ke admin_users harus GAGAL
-BEGIN;
-SET LOCAL ROLE anon;
-INSERT INTO public.admin_users (email) VALUES ('hacker@example.com');
-ROLLBACK;
+set role anon;
+select count(*) from public.articles;   -- must succeed, only review/published rows
+select * from public.admin_users;       -- must FAIL (permission denied)
+insert into public.categories (id, slug, name, description, image_src, image_alt, external_url) values ('x','x','x','x','x','x','x');  -- must FAIL
+reset role;
 ```
-
-*(Catatan: Untuk `UPDATE` dan `DELETE` tanpa policy `UPDATE`/`DELETE` bagi `anon`, PostgreSQL/RLS dapat mengembalikan `0 rows affected` tanpa error eksplisit karena baris tidak terlihat/tidak diizinkan untuk dimodifikasi — pastikan data asli tidak berubah setelah `ROLLBACK`.)*
 
 ---
 
