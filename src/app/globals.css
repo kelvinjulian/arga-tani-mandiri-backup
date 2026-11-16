@@ -28,7 +28,7 @@
   --deco-sage: #83a183;
   --leaf-opacity: 1;
   --leaf-width: clamp(140px, 16vw, 300px);
-  --section-gap: 3rem;
+  --section-gap: 3.5rem;
   --brand-youtube: #ff0000;
   --brand-youtube-text: #b91c1c;
   --brand-tiktok-bg: #111111;
@@ -39,7 +39,7 @@
 
 @media (min-width: 1024px) {
   :root {
-    --section-gap: 5 rem;
+    --section-gap: 6rem;
   }
 }
 
