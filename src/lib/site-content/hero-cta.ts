@@ -5,6 +5,7 @@ export const HOME_SECTION_IDS = {
   PRODUK: "produk",
   TENTANG_KAMI: "tentang-kami",
   TESTIMONI: "testimoni",
+  VIDEO: "video",
   ARTIKEL_EDUKASI: "artikel-edukasi",
   KONSULTASI_WHATSAPP: "konsultasi-whatsapp",
   KONTAK: "kontak",
@@ -21,6 +22,7 @@ export const HOME_SECTION_OPTIONS: ReadonlyArray<{
   { id: HOME_SECTION_IDS.PRODUK, label: "Kategori Produk (#produk)" },
   { id: HOME_SECTION_IDS.TENTANG_KAMI, label: "Tentang Kami (#tentang-kami)" },
   { id: HOME_SECTION_IDS.TESTIMONI, label: "Testimoni (#testimoni)" },
+  { id: HOME_SECTION_IDS.VIDEO, label: "Video Edukasi (#video)" },
   {
     id: HOME_SECTION_IDS.ARTIKEL_EDUKASI,
     label: "Artikel Edukasi (#artikel-edukasi)",

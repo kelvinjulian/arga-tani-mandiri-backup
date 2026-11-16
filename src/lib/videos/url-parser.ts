@@ -5,8 +5,10 @@ export const MAX_VIDEOS_TOTAL = 300;
 export const MAX_BULK_URLS = 50;
 
 const YOUTUBE_ID_REGEX = /^[A-Za-z0-9_-]{11}$/;
-const TIKTOK_DIGITS_REGEX = /^\d+$/;
+const TIKTOK_DIGITS_REGEX = /^\d{8,25}$/;
 const SHORT_CODE_REGEX = /^[A-Za-z0-9_-]+$/;
+const IFRAME_SRC_REGEX =
+  /^<iframe\b[^>]{0,2000}\bsrc\s*=\s*(?:"([^"]{1,1000})"|'([^']{1,1000})')/i;
 
 const YOUTUBE_MAIN_HOSTS = new Set([
   "youtube.com",
@@ -34,10 +36,106 @@ export type ParseVideoUrlResult =
       error: string;
     };
 
+function parseTikTokIframeSnippet(raw: string): ParseVideoUrlResult {
+  if (raw.length > 2500) {
+    return {
+      ok: false,
+      error: "Kode embed iframe terlalu panjang.",
+    };
+  }
+
+  const match = raw.match(IFRAME_SRC_REGEX);
+  const extractedSrc = (match?.[1] ?? match?.[2] ?? "").trim();
+  if (!extractedSrc) {
+    return {
+      ok: false,
+      error: "Atribut src pada kode embed iframe TikTok tidak ditemukan.",
+    };
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(extractedSrc);
+  } catch {
+    return {
+      ok: false,
+      error: "URL src pada kode embed iframe tidak valid.",
+    };
+  }
+
+  if (parsed.protocol !== "https:") {
+    return {
+      ok: false,
+      error: "URL src pada kode embed iframe harus menggunakan https://.",
+    };
+  }
+
+  if (parsed.username || parsed.password) {
+    return {
+      ok: false,
+      error: "URL src pada kode embed tidak boleh mengandung kredensial.",
+    };
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  if (host !== "www.tiktok.com") {
+    return {
+      ok: false,
+      error:
+        "Host src pada kode embed iframe harus persis www.tiktok.com.",
+    };
+  }
+
+  const segments = parsed.pathname.split("/").filter(Boolean);
+
+  // https://www.tiktok.com/player/v1/<digits>
+  if (
+    segments[0] === "player" &&
+    segments[1] === "v1" &&
+    TIKTOK_DIGITS_REGEX.test(segments[2] ?? "")
+  ) {
+    const id = segments[2];
+    return {
+      ok: true,
+      platform: "tiktok",
+      videoId: id,
+      normalizedUrl: `https://www.tiktok.com/player/v1/${id}`,
+    };
+  }
+
+  // https://www.tiktok.com/@user/video/<digits>
+  if (
+    segments.length >= 3 &&
+    segments[0].startsWith("@") &&
+    segments[0].length > 1 &&
+    segments[1] === "video" &&
+    TIKTOK_DIGITS_REGEX.test(segments[2] ?? "")
+  ) {
+    const user = segments[0];
+    const id = segments[2];
+    return {
+      ok: true,
+      platform: "tiktok",
+      videoId: id,
+      normalizedUrl: `https://www.tiktok.com/${user}/video/${id}`,
+    };
+  }
+
+  return {
+    ok: false,
+    error:
+      "URL src iframe TikTok harus berbentuk /player/v1/<id> atau /@user/video/<id>.",
+  };
+}
+
 export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
   const trimmed = rawInput.trim();
   if (!trimmed) {
     return { ok: false, error: "URL video wajib diisi." };
+  }
+
+  if (/^<iframe\b/i.test(trimmed)) {
+    return parseTikTokIframeSnippet(trimmed);
   }
 
   let parsed: URL;
@@ -85,7 +183,8 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
       if (!YOUTUBE_ID_REGEX.test(id)) {
         return {
           ok: false,
-          error: "Parameter ?v= pada URL YouTube harus berisi 11 karakter ID yang valid.",
+          error:
+            "Parameter ?v= pada URL YouTube harus berisi 11 karakter ID yang valid.",
         };
       }
       return {
@@ -171,13 +270,28 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
       };
     }
 
+    // www.tiktok.com/player/v1/<digits>
+    if (
+      segments[0] === "player" &&
+      segments[1] === "v1" &&
+      TIKTOK_DIGITS_REGEX.test(segments[2] ?? "")
+    ) {
+      const id = segments[2];
+      return {
+        ok: true,
+        platform: "tiktok",
+        videoId: id,
+        normalizedUrl: `https://www.tiktok.com/player/v1/${id}`,
+      };
+    }
+
     // tiktok.com/@user/video/<digits>
     if (
       segments.length >= 3 &&
       segments[0].startsWith("@") &&
       segments[0].length > 1 &&
       segments[1] === "video" &&
-      TIKTOK_DIGITS_REGEX.test(segments[2])
+      TIKTOK_DIGITS_REGEX.test(segments[2] ?? "")
     ) {
       const user = segments[0];
       const videoId = segments[2];
@@ -192,13 +306,14 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
     return {
       ok: false,
       error:
-        "Gunakan tautan video TikTok (/@username/video/123..., /t/..., vm.tiktok.com/..., atau vt.tiktok.com/...).",
+        "Gunakan tautan video TikTok (/@username/video/123..., /player/v1/123..., /t/..., vm.tiktok.com/..., atau vt.tiktok.com/...).",
     };
   }
 
   return {
     ok: false,
-    error: "Domain tidak didukung. Hanya tautan YouTube dan TikTok yang diizinkan.",
+    error:
+      "Domain tidak didukung. Hanya tautan YouTube dan TikTok yang diizinkan.",
   };
 }
 
@@ -218,21 +333,3 @@ export function getEffectiveVideoThumbnail(
   }
   return null;
 }
-
-/*
- * URL parser sanity cases (12+ valid & malicious cases):
- * 1.  https://www.youtube.com/watch?v=dQw4w9WgXcQ -> ok, youtube, id=dQw4w9WgXcQ
- * 2.  https://youtu.be/dQw4w9WgXcQ -> ok, youtube, id=dQw4w9WgXcQ, normalized watch?v=
- * 3.  https://m.youtube.com/shorts/dQw4w9WgXcQ -> ok, youtube, id=dQw4w9WgXcQ, normalized /shorts/
- * 4.  https://youtube.com/embed/dQw4w9WgXcQ -> ok, youtube, id=dQw4w9WgXcQ, normalized watch?v=
- * 5.  https://www.tiktok.com/@petani.id/video/7345678901234567890 -> ok, tiktok, id=7345678901234567890
- * 6.  https://vm.tiktok.com/ZSYabc123/ -> ok, tiktok, id=null
- * 7.  https://vt.tiktok.com/ZSYabc123/ -> ok, tiktok, id=null
- * 8.  https://www.tiktok.com/t/ZSYabc123/ -> ok, tiktok, id=null
- * 9.  http://www.youtube.com/watch?v=dQw4w9WgXcQ -> error (http not https)
- * 10. javascript:alert(1) -> error (protocol)
- * 11. https://youtube.com@evil.com/watch?v=dQw4w9WgXcQ -> error (userinfo trick)
- * 12. https://notyoutube.com/watch?v=dQw4w9WgXcQ -> error (lookalike host)
- * 13. https://www.youtube.com/watch?v=short -> error (invalid 11-char ID)
- * 14. https://www.tiktok.com/@user/video/notdigits -> error (non-digit TikTok ID)
- */

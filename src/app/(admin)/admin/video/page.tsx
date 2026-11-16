@@ -293,6 +293,11 @@ export default async function AdminVideoListPage({
                           >
                             {row.title}
                           </Link>
+                          {row.platform === "tiktok" && !row.thumbnail_src ? (
+                            <span className="mt-1 inline-block rounded-full border border-[#F59E0B]/40 bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-medium text-[#92400E]">
+                              Belum ada sampul
+                            </span>
+                          ) : null}
                         </td>
                         <td className="px-4 py-3">
                           <span

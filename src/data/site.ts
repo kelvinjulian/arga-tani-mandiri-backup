@@ -21,6 +21,12 @@ import {
   type TestimonialsData,
 } from "@/lib/site-content/testimonials-defaults";
 import {
+  cloneVideoPageDefaults,
+  cloneVideoSectionDefaults,
+  type VideoPageData,
+  type VideoSectionData,
+} from "@/lib/site-content/video-defaults";
+import {
   DEFAULT_ABOUT_COMMITMENT_CARDS,
   DEFAULT_ABOUT_COMMITMENT_PARAGRAPHS,
   DEFAULT_ABOUT_EYEBROW,
@@ -168,6 +174,8 @@ export interface SiteData {
   };
   articleHub?: ArticleHubData;
   testimonials?: TestimonialsData;
+  videoSection?: VideoSectionData;
+  videoPage?: VideoPageData;
   articlePage?: ArticlePageData;
   articleDetail?: ArticleDetailData;
   whatsappBand: {
@@ -412,6 +420,8 @@ export const SITE_DATA: SiteData = {
   },
   articleHub: DEFAULT_ARTICLE_HUB,
   testimonials: cloneTestimonialsDefaults(),
+  videoSection: cloneVideoSectionDefaults(),
+  videoPage: cloneVideoPageDefaults(),
   whatsappBand: {
     heading: "Chat Tim Konsultasi Budidaya Arga Tani Mandiri",
     description:

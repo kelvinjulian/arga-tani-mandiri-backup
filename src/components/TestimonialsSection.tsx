@@ -2,14 +2,13 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft,
-  ArrowRight,
   Quote,
   Sprout,
   Star,
   ThumbsUp,
   Users,
 } from "lucide-react";
+import { CarouselControls } from "@/components/CarouselControls";
 import { HOME_SECTION_IDS } from "@/lib/site-content/hero-cta";
 import {
   cloneTestimonialsDefaults,
@@ -453,14 +452,11 @@ export function TestimonialsSection({
     }
   };
 
-  const counterLabel = `${String(safeIndex + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
-  const progressPercent = ((safeIndex + 1) / total) * 100;
-
   return (
     <section
       id={HOME_SECTION_IDS.TESTIMONI}
       aria-labelledby="testimonials-heading"
-      className="scroll-mt-28 relative z-10 bg-transparent py-10 md:py-14"
+      className="scroll-mt-28 relative z-10 bg-transparent pt-[var(--section-gap)] pb-0"
     >
       <Container>
         {/* Section Header */}
@@ -565,42 +561,14 @@ export function TestimonialsSection({
             </article>
 
             {/* Control Row (Prev / Counter + Progress / Next) - Fixed 3.75rem height */}
-            {total > 1 ? (
-              <div className="flex h-[3.75rem] shrink-0 items-center gap-3 rounded-2xl border border-[#D5E4DA] bg-white px-3.5 shadow-2xs">
-                <button
-                  type="button"
-                  onClick={goPrev}
-                  aria-label="Testimoni sebelumnya"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#CBD8D0] bg-[#F8FBF9] text-[#143D29] transition-colors hover:bg-[#EAF3EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29]"
-                >
-                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                </button>
-
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <span className="shrink-0 font-display text-xs font-bold tabular-nums text-[#0E291B]">
-                    {counterLabel}
-                  </span>
-                  <div
-                    aria-hidden="true"
-                    className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#DCE8DF]"
-                  >
-                    <div
-                      className="h-full rounded-full bg-[#15803D] transition-all duration-200 motion-reduce:transition-none"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={goNext}
-                  aria-label="Testimoni berikutnya"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#CBD8D0] bg-[#F8FBF9] text-[#143D29] transition-colors hover:bg-[#EAF3EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29]"
-                >
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-            ) : null}
+            <CarouselControls
+              currentIndex={safeIndex}
+              total={total}
+              onPrev={goPrev}
+              onNext={goNext}
+              prevLabel="Testimoni sebelumnya"
+              nextLabel="Testimoni berikutnya"
+            />
           </div>
 
           {/* Right Column Desktop (>=768px): Fixed 2x2 grid matched to left column height (29rem + 1rem + 3.75rem = 33.75rem) */}

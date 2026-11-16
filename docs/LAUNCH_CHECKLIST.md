@@ -27,3 +27,6 @@
    - Pastikan seluruh testimoni berasal dari pelanggan asli dengan izin publikasi yang tercatat.
    - Pastikan seluruh angka ringkasan (*stats*) dan rating bintang mencerminkan data asli yang dapat dipertanggungjawabkan, atau matikan opsi tampilannya (`Tampilkan strip ringkasan` / `Tampilkan rating`) sebelum rilis.
    - Tidak boleh ada item contoh (`isSample: true`, `statsAreSample: true`) atau label contoh yang tersisa sebelum situs diluncurkan.
+
+8. **Video Edukasi (`/admin/video` & `/admin/konten/video_section`):**
+   - Tambahkan video asli yang sudah terbit, atau matikan opsi **Tampilkan kartu contoh saat video kosong** (`showSamples: false`) di `/admin/konten/video_section` sebelum situs diluncurkan.

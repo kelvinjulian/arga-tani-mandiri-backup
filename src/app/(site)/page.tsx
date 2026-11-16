@@ -33,6 +33,8 @@ import { Container } from "@/components/Container";
 import { AboutSection } from "@/components/AboutSection";
 import { ArticleHubSection } from "@/components/ArticleHubSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
+import { VideoSection } from "@/components/VideoSection";
+import { getHomeVideos } from "@/lib/videos/content";
 import { ResilientImage } from "@/components/ResilientImage";
 import { resolveImageSrc } from "@/lib/media/resolveImageSrc";
 import { productCategories } from "@/data/categories";
@@ -93,6 +95,9 @@ export default async function HomePage() {
     getArticles(),
     getArticleCategories(),
   ]);
+  const homeVideos = await getHomeVideos(
+    siteData.videoSection?.homeCount ?? 5
+  );
 
   const shopeeStoreUrl = siteData.officialStore.url;
   const primaryCta = siteData.hero.primaryCta ?? {
@@ -538,7 +543,7 @@ export default async function HomePage() {
         <section
           id={HOME_SECTION_IDS.PRODUK}
           aria-labelledby="category-showcase-heading"
-          className="scroll-mt-28 relative z-10 bg-transparent pt-4 lg:pt-6 pb-6 lg:pb-8"
+          className="scroll-mt-28 relative z-10 bg-transparent pt-4 lg:pt-6 pb-0"
         >
           <Container>
             <div className="rounded-3xl border border-[#CEDFD4] bg-[#F5F9F6]/90 backdrop-blur-sm p-6 sm:p-7 lg:p-8 shadow-sm">
@@ -701,7 +706,13 @@ export default async function HomePage() {
         {/* Section 4: Testimonials ("Testimoni Pelanggan") */}
         <TestimonialsSection testimonials={siteData.testimonials} />
 
-        {/* Section 5: Article Hub & Conversion Banner */}
+        {/* Section 5: Video Edukasi */}
+        <VideoSection
+          videos={homeVideos}
+          videoSection={siteData.videoSection}
+        />
+
+        {/* Section 6: Article Hub & Conversion Banner */}
         <ArticleHubSection
           articles={articles}
           articleHub={siteData.articleHub}

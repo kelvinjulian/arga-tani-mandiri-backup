@@ -38,6 +38,10 @@ import {
 } from "@/lib/site-content/hero-cta";
 import { TestimonialsEditor } from "@/components/admin/TestimonialsEditor";
 import {
+  VideoPageEditor,
+  VideoSectionEditor,
+} from "@/components/admin/VideoContentEditors";
+import {
   DEFAULT_ABOUT_IMAGE_ALT,
   DEFAULT_ABOUT_IMAGE_BADGE,
   DEFAULT_ABOUT_IMAGE_SRC,
@@ -2280,6 +2284,24 @@ export function SiteContentEditorForm({
         {/* TESTIMONIALS BLOCK */}
         {blockKey === "testimonials" && (
           <TestimonialsEditor
+            formVal={formVal}
+            updateField={updateField}
+            fieldErrors={fieldErrors}
+          />
+        )}
+
+        {/* VIDEO SECTION BLOCK */}
+        {blockKey === "video_section" && (
+          <VideoSectionEditor
+            formVal={formVal}
+            updateField={updateField}
+            fieldErrors={fieldErrors}
+          />
+        )}
+
+        {/* VIDEO PAGE BLOCK */}
+        {blockKey === "video_page" && (
+          <VideoPageEditor
             formVal={formVal}
             updateField={updateField}
             fieldErrors={fieldErrors}

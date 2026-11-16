@@ -75,6 +75,12 @@ import {
   type TestimonialStat,
   type TestimonialsData,
 } from "@/lib/site-content/testimonials-defaults";
+import {
+  cloneVideoPageDefaults,
+  cloneVideoSectionDefaults,
+  type VideoPageData,
+  type VideoSectionData,
+} from "@/lib/site-content/video-defaults";
 
 export const SITE_CONTENT_KEYS = [
   "company",
@@ -82,16 +88,22 @@ export const SITE_CONTENT_KEYS = [
   "category_showcase",
   "about",
   "testimonials",
+  "video_section",
   "article_hub",
   "article_page",
   "article_detail",
+  "video_page",
   "whatsapp_band",
   "footer",
 ] as const;
 
 export type SiteContentKey = (typeof SITE_CONTENT_KEYS)[number];
 
-export type SiteContentGroup = "Beranda" | "Halaman Artikel" | "Seluruh Situs";
+export type SiteContentGroup =
+  | "Beranda"
+  | "Halaman Artikel"
+  | "Halaman Video"
+  | "Seluruh Situs";
 
 export interface SiteContentBlockMeta {
   key: SiteContentKey;
@@ -143,6 +155,14 @@ export const SITE_CONTENT_BLOCKS: ReadonlyArray<SiteContentBlockMeta> = [
     publicHref: "/#testimoni",
   },
   {
+    key: "video_section",
+    group: "Beranda",
+    title: "Bagian Video (Beranda)",
+    description:
+      "Judul bagian video di beranda, jumlah video tampil (3–9), tombol lihat semua, dan contoh tampilan.",
+    publicHref: "/#video",
+  },
+  {
     key: "article_hub",
     group: "Beranda",
     title: "Artikel Edukasi (Beranda)",
@@ -165,6 +185,14 @@ export const SITE_CONTENT_BLOCKS: ReadonlyArray<SiteContentBlockMeta> = [
     description:
       "Breadcrumb, tombol kembali, daftar isi, banner CTA toko & WhatsApp, serta kartu promo di halaman baca artikel.",
     publicHref: "/artikel",
+  },
+  {
+    key: "video_page",
+    group: "Halaman Video",
+    title: "Halaman Galeri Video (/video)",
+    description:
+      "Metadata SEO, tajuk halaman, placeholder pencarian, filter platform, dan teks saat video kosong.",
+    publicHref: "/video",
   },
   {
     key: "whatsapp_band",
@@ -1010,6 +1038,77 @@ export function mergeSiteContentWithDefaults(
         items,
       };
     })(),
+    videoSection: ((): VideoSectionData => {
+      const def = cloneVideoSectionDefaults();
+      const vsRaw = asObj(byKey.get("video_section"));
+      if (Object.keys(vsRaw).length === 0) return def;
+
+      const rawCount = vsRaw.homeCount;
+      const homeCount =
+        typeof rawCount === "number" &&
+        Number.isInteger(rawCount) &&
+        rawCount >= 3 &&
+        rawCount <= 12
+          ? rawCount
+          : def.homeCount;
+
+      return {
+        enabled:
+          typeof vsRaw.enabled === "boolean" ? vsRaw.enabled : def.enabled,
+        eyebrow: pickStr(vsRaw.eyebrow, def.eyebrow),
+        heading: pickStr(vsRaw.heading, def.heading),
+        headingAccent:
+          typeof vsRaw.headingAccent === "string"
+            ? vsRaw.headingAccent.trim()
+            : def.headingAccent,
+        description:
+          typeof vsRaw.description === "string"
+            ? vsRaw.description.trim()
+            : def.description,
+        homeCount,
+        ctaLabel: pickStr(vsRaw.ctaLabel, def.ctaLabel),
+        showSamples:
+          typeof vsRaw.showSamples === "boolean"
+            ? vsRaw.showSamples
+            : def.showSamples,
+      };
+    })(),
+    videoPage: ((): VideoPageData => {
+      const def = cloneVideoPageDefaults();
+      const vpRaw = asObj(byKey.get("video_page"));
+      if (Object.keys(vpRaw).length === 0) return def;
+
+      const rawOg = resolveImageSrc(vpRaw.ogImageSrc, null) ?? "";
+      const rawOgAlt =
+        rawOg && typeof vpRaw.ogImageAlt === "string"
+          ? vpRaw.ogImageAlt.trim()
+          : "";
+
+      return {
+        eyebrow: pickStr(vpRaw.eyebrow, def.eyebrow),
+        heading: pickStr(vpRaw.heading, def.heading),
+        headingAccent:
+          typeof vpRaw.headingAccent === "string"
+            ? vpRaw.headingAccent.trim()
+            : def.headingAccent,
+        description:
+          typeof vpRaw.description === "string"
+            ? vpRaw.description.trim()
+            : def.description,
+        searchPlaceholder: pickStr(
+          vpRaw.searchPlaceholder,
+          def.searchPlaceholder
+        ),
+        allLabel: pickStr(vpRaw.allLabel, def.allLabel),
+        emptyTitle: pickStr(vpRaw.emptyTitle, def.emptyTitle),
+        emptyText: pickStr(vpRaw.emptyText, def.emptyText),
+        loadMoreLabel: pickStr(vpRaw.loadMoreLabel, def.loadMoreLabel),
+        seoTitle: pickStr(vpRaw.seoTitle, def.seoTitle),
+        metaDescription: pickStr(vpRaw.metaDescription, def.metaDescription),
+        ogImageSrc: rawOg,
+        ogImageAlt: rawOg ? rawOgAlt : "",
+      };
+    })(),
     articlePage: ((): ArticlePageData => {
       const def = cloneArticlePageDefaults();
       const rawOg =
@@ -1590,6 +1689,10 @@ export function getDefaultBlockValue(key: SiteContentKey): Record<string, unknow
       };
     case "testimonials":
       return cloneTestimonialsDefaults() as unknown as Record<string, unknown>;
+    case "video_section":
+      return cloneVideoSectionDefaults() as unknown as Record<string, unknown>;
+    case "video_page":
+      return cloneVideoPageDefaults() as unknown as Record<string, unknown>;
     case "article_hub":
       return {
         ...DEFAULT_ARTICLE_HUB,
@@ -3196,6 +3299,192 @@ export function validateSiteContentBlock(
         stats,
         featuredId,
         items,
+      },
+    };
+  }
+
+  if (key === "video_section") {
+    const enabled =
+      typeof input.enabled === "boolean" ? input.enabled : true;
+    const showSamples =
+      typeof input.showSamples === "boolean" ? input.showSamples : true;
+
+    const eyebrow = checkRequiredStr(input.eyebrow, "Label kecil bagian", 60);
+    if (eyebrow.error) fieldErrors.eyebrow = eyebrow.error;
+
+    const heading = checkRequiredStr(input.heading, "Judul utama", 80);
+    if (heading.error) fieldErrors.heading = heading.error;
+
+    const headingAccent = checkOptionalStr(
+      input.headingAccent,
+      "Aksen judul",
+      80
+    );
+    if (headingAccent.error) fieldErrors.headingAccent = headingAccent.error;
+
+    const description = checkOptionalStr(
+      input.description,
+      "Deskripsi bagian",
+      280
+    );
+    if (description.error) fieldErrors.description = description.error;
+
+    const ctaLabel = checkRequiredStr(
+      input.ctaLabel,
+      "Label tombol Lihat Semua",
+      60
+    );
+    if (ctaLabel.error) fieldErrors.ctaLabel = ctaLabel.error;
+
+    const rawCount =
+      typeof input.homeCount === "number"
+        ? input.homeCount
+        : Number(input.homeCount);
+    if (!Number.isInteger(rawCount) || rawCount < 3 || rawCount > 12) {
+      fieldErrors.homeCount = "Jumlah video di beranda harus antara 3 hingga 12.";
+    }
+
+    if (Object.keys(fieldErrors).length > 0) {
+      return {
+        ok: false,
+        fieldErrors,
+        formError: "Periksa kembali isian bagian video yang bertanda merah.",
+      };
+    }
+
+    return {
+      ok: true,
+      value: {
+        enabled,
+        eyebrow: eyebrow.value,
+        heading: heading.value,
+        headingAccent: headingAccent.value,
+        description: description.value,
+        homeCount: rawCount,
+        ctaLabel: ctaLabel.value,
+        showSamples,
+      },
+    };
+  }
+
+  if (key === "video_page") {
+    const eyebrow = checkRequiredStr(input.eyebrow, "Label kecil halaman", 60);
+    if (eyebrow.error) fieldErrors.eyebrow = eyebrow.error;
+
+    const heading = checkRequiredStr(input.heading, "Judul utama", 80);
+    if (heading.error) fieldErrors.heading = heading.error;
+
+    const headingAccent = checkOptionalStr(
+      input.headingAccent,
+      "Aksen judul",
+      80
+    );
+    if (headingAccent.error) fieldErrors.headingAccent = headingAccent.error;
+
+    const description = checkOptionalStr(
+      input.description,
+      "Deskripsi halaman",
+      280
+    );
+    if (description.error) fieldErrors.description = description.error;
+
+    const searchPlaceholder = checkRequiredStr(
+      input.searchPlaceholder,
+      "Placeholder pencarian",
+      80
+    );
+    if (searchPlaceholder.error)
+      fieldErrors.searchPlaceholder = searchPlaceholder.error;
+
+    const allLabel = checkRequiredStr(
+      input.allLabel,
+      "Label filter Semua",
+      30
+    );
+    if (allLabel.error) fieldErrors.allLabel = allLabel.error;
+
+    const emptyTitle = checkRequiredStr(
+      input.emptyTitle,
+      "Judul keadaan kosong",
+      100
+    );
+    if (emptyTitle.error) fieldErrors.emptyTitle = emptyTitle.error;
+
+    const emptyText = checkRequiredStr(
+      input.emptyText,
+      "Teks keadaan kosong",
+      260
+    );
+    if (emptyText.error) fieldErrors.emptyText = emptyText.error;
+
+    const loadMoreLabel = checkRequiredStr(
+      input.loadMoreLabel,
+      "Label muat lebih banyak",
+      50
+    );
+    if (loadMoreLabel.error) fieldErrors.loadMoreLabel = loadMoreLabel.error;
+
+    const seoTitle = checkRequiredStr(input.seoTitle, "Judul SEO", 60);
+    if (seoTitle.error) fieldErrors.seoTitle = seoTitle.error;
+
+    const metaDescription = checkRequiredStr(
+      input.metaDescription,
+      "Deskripsi meta SEO",
+      155
+    );
+    if (metaDescription.error)
+      fieldErrors.metaDescription = metaDescription.error;
+
+    const rawOg =
+      typeof input.ogImageSrc === "string" ? input.ogImageSrc.trim() : "";
+    const rawOgAlt =
+      typeof input.ogImageAlt === "string" ? input.ogImageAlt.trim() : "";
+    let finalOg = "";
+    let finalOgAlt = "";
+    if (rawOg.length > 0) {
+      if (rawOg.length > 500) {
+        fieldErrors.ogImageSrc = "URL gambar OG maksimal 500 karakter.";
+      } else if (!isValidImageSrc(rawOg)) {
+        fieldErrors.ogImageSrc =
+          "URL gambar OG harus diawali / atau https://.";
+      } else {
+        finalOg = rawOg;
+      }
+      const altCheck = checkRequiredStr(
+        input.ogImageAlt,
+        "Teks alternatif gambar OG",
+        200
+      );
+      if (altCheck.error) fieldErrors.ogImageAlt = altCheck.error;
+      else finalOgAlt = altCheck.value;
+    } else if (rawOgAlt.length > 200) {
+      fieldErrors.ogImageAlt = "Teks alternatif gambar OG maksimal 200 karakter.";
+    }
+
+    if (Object.keys(fieldErrors).length > 0) {
+      return {
+        ok: false,
+        fieldErrors,
+        formError: "Periksa kembali isian halaman video yang bertanda merah.",
+      };
+    }
+
+    return {
+      ok: true,
+      value: {
+        eyebrow: eyebrow.value,
+        heading: heading.value,
+        headingAccent: headingAccent.value,
+        description: description.value,
+        searchPlaceholder: searchPlaceholder.value,
+        allLabel: allLabel.value,
+        emptyTitle: emptyTitle.value,
+        emptyText: emptyText.value,
+        loadMoreLabel: loadMoreLabel.value,
+        seoTitle: seoTitle.value,
+        metaDescription: metaDescription.value,
+        ogImageSrc: finalOg,
+        ogImageAlt: finalOgAlt,
       },
     };
   }

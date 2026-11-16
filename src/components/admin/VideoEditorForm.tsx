@@ -283,14 +283,15 @@ export function VideoEditorForm({
             <span className="text-[#B91C1C]">*</span>
           </label>
           <p className="mt-0.5 text-xs text-[#43594D]">
-            Mendukung youtube.com/watch?v=..., youtu.be/..., youtube.com/shorts/...,
-            tiktok.com/@user/video/..., vm.tiktok.com/..., dan vt.tiktok.com/...
+            Tempel tautan video TikTok, atau kode embed dari TikTok. Tautan
+            pendek (vm.tiktok.com) hanya bisa dibuka di TikTok, tidak diputar di
+            situs. Untuk YouTube, mendukung watch, shorts, embed, dan youtu.be.
           </p>
           <input
             id="video-url"
-            type="url"
+            type="text"
             value={url}
-            placeholder="https://www.youtube.com/watch?v=..."
+            placeholder="https://www.youtube.com/watch?v=... atau kode <iframe ...> TikTok"
             onChange={(e) => {
               setUrl(e.target.value);
               markDirty();
@@ -449,6 +450,12 @@ export function VideoEditorForm({
             Untuk YouTube, thumbnail otomatis digunakan jika tidak mengunggah
             gambar khusus. TikTok memakai gambar khusus atau tampilan bawaan.
           </p>
+          {liveParsed?.ok && liveParsed.platform === "tiktok" && (
+            <p className="rounded-xl border border-[#DCE8DF] bg-[#F8FBF9] px-3 py-2 text-xs font-medium text-[#143D29]">
+              TikTok tidak menyediakan thumbnail otomatis. Unggah gambar sampul
+              agar kartu lebih menarik.
+            </p>
+          )}
 
           <div className="flex items-center gap-4">
             {effectiveThumb ? (
