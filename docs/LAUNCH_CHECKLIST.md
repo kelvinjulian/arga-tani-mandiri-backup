@@ -22,3 +22,8 @@
 
 6. **Core Web Vitals & Performance Re-Verification:**
    - Re-verify LCP, CLS, and INP targets on the live production URL after deployment.
+
+7. **Testimoni Pelanggan (`/admin/konten/testimonials`):**
+   - Pastikan seluruh testimoni berasal dari pelanggan asli dengan izin publikasi yang tercatat.
+   - Pastikan seluruh angka ringkasan (*stats*) dan rating bintang mencerminkan data asli yang dapat dipertanggungjawabkan, atau matikan opsi tampilannya (`Tampilkan strip ringkasan` / `Tampilkan rating`) sebelum rilis.
+   - Tidak boleh ada item contoh (`isSample: true`, `statsAreSample: true`) atau label contoh yang tersisa sebelum situs diluncurkan.

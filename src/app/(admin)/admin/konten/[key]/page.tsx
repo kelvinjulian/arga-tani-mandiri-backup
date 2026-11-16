@@ -106,6 +106,8 @@ export default async function AdminKontenEditPage({
         imageSrc: rawImageSrc,
         imageAlt: rawImageSrc ? merged.about.imageAlt : "",
       } as unknown as Record<string, unknown>;
+    } else if (key === "testimonials") {
+      initialValue = merged.testimonials as unknown as Record<string, unknown>;
     } else if (key === "article_hub") {
       initialValue = merged.articleHub as unknown as Record<string, unknown>;
     } else if (key === "article_page") {

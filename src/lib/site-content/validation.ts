@@ -19,10 +19,12 @@ import {
   DEFAULT_PRIMARY_CTA,
   DEFAULT_SECONDARY_CTA,
   HOME_SECTION_IDS,
+  isCtaIconOption,
   isCtaTargetType,
   isValidExternalHttpsUrl,
   isValidHomeSectionId,
   isValidPublicPagePath,
+  type CtaIconOption,
   type CtaTarget,
   type HeroCtaButton,
 } from "@/lib/site-content/hero-cta";
@@ -64,12 +66,22 @@ import {
   type ArticleDetailData,
   type ArticlePageData,
 } from "@/lib/site-content/article-pages-defaults";
+import {
+  cloneTestimonialsDefaults,
+  DEFAULT_TESTIMONIALS,
+  TESTIMONIALS_MAX_ITEMS,
+  TESTIMONIALS_STATS_MAX,
+  type TestimonialItem,
+  type TestimonialStat,
+  type TestimonialsData,
+} from "@/lib/site-content/testimonials-defaults";
 
 export const SITE_CONTENT_KEYS = [
   "company",
   "hero",
   "category_showcase",
   "about",
+  "testimonials",
   "article_hub",
   "article_page",
   "article_detail",
@@ -121,6 +133,14 @@ export const SITE_CONTENT_BLOCKS: ReadonlyArray<SiteContentBlockMeta> = [
     description:
       "Visi, daftar misi perusahaan, judul keunggulan, dan 4 kartu keunggulan produk.",
     publicHref: "/#tentang-kami",
+  },
+  {
+    key: "testimonials",
+    group: "Beranda",
+    title: "Testimoni Pelanggan",
+    description:
+      "Daftar testimoni pelanggan, sorotan utama, label contoh, dan opsi rating di beranda.",
+    publicHref: "/#testimoni",
   },
   {
     key: "article_hub",
@@ -270,11 +290,13 @@ function mergeHeroCta(
       label: labelFromLegacy,
       enabled: fallback.enabled,
       target: { ...fallback.target },
+      icon: fallback.icon ?? "auto",
     };
   }
   const obj = rawCta as Record<string, unknown>;
   const enabled = typeof obj.enabled === "boolean" ? obj.enabled : fallback.enabled;
   const label = pickStr(obj.label, labelFromLegacy);
+  const icon: CtaIconOption = isCtaIconOption(obj.icon) ? obj.icon : "auto";
   const rawTarget = asObj(obj.target);
   let target: CtaTarget = { ...fallback.target };
 
@@ -294,7 +316,7 @@ function mergeHeroCta(
     }
   }
 
-  return { label, enabled, target };
+  return { label, enabled, target, icon };
 }
 
 function validateHeroCta(
@@ -387,10 +409,21 @@ function validateHeroCta(
     }
   }
 
+  let icon: CtaIconOption = "auto";
+  if (hasObj && obj.icon !== undefined && obj.icon !== null && obj.icon !== "") {
+    if (!isCtaIconOption(obj.icon)) {
+      fieldErrors[`${fieldPrefix}.icon`] =
+        `Pilihan ikon ${titleLabel.toLowerCase()} tidak valid.`;
+    } else {
+      icon = obj.icon;
+    }
+  }
+
   return {
     label: trimmedLabel || (enabled ? fallback.label : ""),
     enabled,
     target,
+    icon,
   };
 }
 
@@ -846,6 +879,135 @@ export function mergeSiteContentWithDefaults(
         ),
         bannerImageSrc: rawBannerImg,
         bannerImageAlt: rawBannerAlt,
+      };
+    })(),
+    testimonials: ((): TestimonialsData => {
+      const def = cloneTestimonialsDefaults();
+      const tRaw = asObj(byKey.get("testimonials"));
+      if (Object.keys(tRaw).length === 0) {
+        return def;
+      }
+
+      const rawItems = Array.isArray(tRaw.items) ? tRaw.items : null;
+      const items: TestimonialItem[] = rawItems
+        ? rawItems
+            .slice(0, TESTIMONIALS_MAX_ITEMS)
+            .map((entry, idx): TestimonialItem | null => {
+              const obj = asObj(entry);
+              const rawQuote =
+                typeof obj.quote === "string" ? obj.quote.trim() : "";
+              const rawName =
+                typeof obj.name === "string" ? obj.name.trim() : "";
+              if (!rawQuote || !rawName) return null;
+
+              const rawId =
+                typeof obj.id === "string" && obj.id.trim()
+                  ? obj.id.trim()
+                  : `testimoni-${idx + 1}`;
+              const photoSrc =
+                resolveImageSrc(obj.photoSrc, null) ?? "";
+              const photoAlt =
+                photoSrc && typeof obj.photoAlt === "string"
+                  ? obj.photoAlt.trim()
+                  : "";
+              const rawRating = obj.rating;
+              const rating =
+                typeof rawRating === "number" &&
+                Number.isInteger(rawRating) &&
+                rawRating >= 1 &&
+                rawRating <= 5
+                  ? rawRating
+                  : null;
+
+              return {
+                id: rawId,
+                quote: rawQuote.slice(0, 280),
+                name: rawName.slice(0, 60),
+                role:
+                  typeof obj.role === "string"
+                    ? obj.role.trim().slice(0, 60)
+                    : "",
+                location:
+                  typeof obj.location === "string"
+                    ? obj.location.trim().slice(0, 60)
+                    : "",
+                tag:
+                  typeof obj.tag === "string"
+                    ? obj.tag.trim().slice(0, 40)
+                    : "",
+                rating,
+                photoSrc,
+                photoAlt: photoAlt.slice(0, 160),
+                isSample:
+                  typeof obj.isSample === "boolean" ? obj.isSample : false,
+              };
+            })
+            .filter((item): item is TestimonialItem => item !== null)
+        : def.items;
+
+      const rawFeaturedId =
+        typeof tRaw.featuredId === "string" && tRaw.featuredId.trim()
+          ? tRaw.featuredId.trim()
+          : null;
+      const featuredId =
+        rawFeaturedId && items.some((i) => i.id === rawFeaturedId)
+          ? rawFeaturedId
+          : (items[0]?.id ?? null);
+
+      const rawStats = Array.isArray(tRaw.stats) ? tRaw.stats : null;
+      const stats: TestimonialStat[] = rawStats
+        ? rawStats
+            .slice(0, TESTIMONIALS_STATS_MAX)
+            .map((entry, idx): TestimonialStat | null => {
+              const obj = asObj(entry);
+              const val =
+                typeof obj.value === "string" ? obj.value.trim() : "";
+              const lbl =
+                typeof obj.label === "string" ? obj.label.trim() : "";
+              if (!val || !lbl) return null;
+              const rawId =
+                typeof obj.id === "string" && obj.id.trim()
+                  ? obj.id.trim()
+                  : `stat-${idx + 1}`;
+              return {
+                id: rawId,
+                value: val.slice(0, 12),
+                label: lbl.slice(0, 40),
+              };
+            })
+            .filter((s): s is TestimonialStat => s !== null)
+        : def.stats;
+
+      return {
+        enabled:
+          typeof tRaw.enabled === "boolean" ? tRaw.enabled : def.enabled,
+        eyebrow: pickStr(tRaw.eyebrow, def.eyebrow),
+        heading: pickStr(tRaw.heading, def.heading),
+        headingAccent:
+          typeof tRaw.headingAccent === "string"
+            ? tRaw.headingAccent.trim()
+            : def.headingAccent,
+        description:
+          typeof tRaw.description === "string"
+            ? tRaw.description.trim()
+            : def.description,
+        showSampleLabel:
+          typeof tRaw.showSampleLabel === "boolean"
+            ? tRaw.showSampleLabel
+            : def.showSampleLabel,
+        showRatings:
+          typeof tRaw.showRatings === "boolean"
+            ? tRaw.showRatings
+            : def.showRatings,
+        showStats:
+          typeof tRaw.showStats === "boolean" ? tRaw.showStats : def.showStats,
+        statsAreSample:
+          typeof tRaw.statsAreSample === "boolean"
+            ? tRaw.statsAreSample
+            : def.statsAreSample,
+        stats,
+        featuredId,
+        items,
       };
     })(),
     articlePage: ((): ArticlePageData => {
@@ -1426,6 +1588,8 @@ export function getDefaultBlockValue(key: SiteContentKey): Record<string, unknow
           icon: DEFAULT_WHY_ICONS[idx] ?? "FlaskConical",
         })),
       };
+    case "testimonials":
+      return cloneTestimonialsDefaults() as unknown as Record<string, unknown>;
     case "article_hub":
       return {
         ...DEFAULT_ARTICLE_HUB,
@@ -2813,6 +2977,225 @@ export function validateSiteContentBlock(
         sidebarPromoDescription: sidebarPromoDescription.value,
         sidebarPromoPoints,
         sidebarPromoButtonLabel: sidebarPromoButtonLabel.value,
+      },
+    };
+  }
+
+  if (key === "testimonials") {
+    const enabled =
+      typeof input.enabled === "boolean" ? input.enabled : true;
+    const showSampleLabel =
+      typeof input.showSampleLabel === "boolean"
+        ? input.showSampleLabel
+        : true;
+    const showRatings =
+      typeof input.showRatings === "boolean" ? input.showRatings : true;
+    const showStats =
+      typeof input.showStats === "boolean" ? input.showStats : true;
+    const statsAreSample =
+      typeof input.statsAreSample === "boolean" ? input.statsAreSample : true;
+
+    const rawStats = Array.isArray(input.stats) ? input.stats : [];
+    if (rawStats.length > TESTIMONIALS_STATS_MAX) {
+      fieldErrors.stats = `Maksimal ${TESTIMONIALS_STATS_MAX} angka ringkasan.`;
+    }
+    const stats: TestimonialStat[] = rawStats
+      .slice(0, TESTIMONIALS_STATS_MAX)
+      .map((entry, idx): TestimonialStat => {
+        const obj = asObj(entry);
+        const rawId =
+          typeof obj.id === "string" && obj.id.trim()
+            ? obj.id.trim().slice(0, 64)
+            : `stat-${idx + 1}`;
+        const valCheck = checkRequiredStr(obj.value, "Angka ringkasan", 12);
+        if (valCheck.error) fieldErrors[`stats.${idx}.value`] = valCheck.error;
+
+        const rawLabel =
+          typeof obj.label === "string" ? obj.label.trim() : "";
+        if (!rawLabel) {
+          fieldErrors[`stats.${idx}.label`] = "Label ringkasan wajib diisi.";
+        } else if (rawLabel.length < 2) {
+          fieldErrors[`stats.${idx}.label`] =
+            "Label ringkasan minimal 2 karakter.";
+        } else if (rawLabel.length > 40) {
+          fieldErrors[`stats.${idx}.label`] =
+            "Label ringkasan maksimal 40 karakter.";
+        }
+
+        return {
+          id: rawId,
+          value: valCheck.value,
+          label: rawLabel,
+        };
+      });
+
+    const eyebrow = checkRequiredStr(input.eyebrow, "Label kecil bagian", 60);
+    if (eyebrow.error) fieldErrors.eyebrow = eyebrow.error;
+
+    const heading = checkRequiredStr(input.heading, "Judul utama", 80);
+    if (heading.error) fieldErrors.heading = heading.error;
+
+    const headingAccent = checkOptionalStr(
+      input.headingAccent,
+      "Aksen judul",
+      80
+    );
+    if (headingAccent.error) fieldErrors.headingAccent = headingAccent.error;
+
+    const description = checkOptionalStr(
+      input.description,
+      "Deskripsi bagian",
+      280
+    );
+    if (description.error) fieldErrors.description = description.error;
+
+    const rawItems = Array.isArray(input.items) ? input.items : [];
+    if (rawItems.length > TESTIMONIALS_MAX_ITEMS) {
+      fieldErrors.items = `Maksimal ${TESTIMONIALS_MAX_ITEMS} testimoni.`;
+    }
+
+    const items: TestimonialItem[] = rawItems
+      .slice(0, TESTIMONIALS_MAX_ITEMS)
+      .map((entry, idx): TestimonialItem => {
+        const obj = asObj(entry);
+        const rawId =
+          typeof obj.id === "string" && obj.id.trim()
+            ? obj.id.trim().slice(0, 64)
+            : `testimoni-${idx + 1}`;
+
+        const rawQuote =
+          typeof obj.quote === "string" ? obj.quote.trim() : "";
+        if (!rawQuote) {
+          fieldErrors[`items.${idx}.quote`] = "Kutipan testimoni wajib diisi.";
+        } else if (rawQuote.length < 30) {
+          fieldErrors[`items.${idx}.quote`] =
+            "Kutipan testimoni minimal 30 karakter.";
+        } else if (rawQuote.length > 280) {
+          fieldErrors[`items.${idx}.quote`] =
+            "Kutipan testimoni maksimal 280 karakter.";
+        }
+
+        const rawName = typeof obj.name === "string" ? obj.name.trim() : "";
+        if (!rawName) {
+          fieldErrors[`items.${idx}.name`] = "Nama pelanggan wajib diisi.";
+        } else if (rawName.length < 2) {
+          fieldErrors[`items.${idx}.name`] = "Nama minimal 2 karakter.";
+        } else if (rawName.length > 60) {
+          fieldErrors[`items.${idx}.name`] = "Nama maksimal 60 karakter.";
+        }
+
+        const roleCheck = checkOptionalStr(obj.role, "Peran/komoditas", 60);
+        if (roleCheck.error) fieldErrors[`items.${idx}.role`] = roleCheck.error;
+
+        const locationCheck = checkOptionalStr(obj.location, "Lokasi", 60);
+        if (locationCheck.error)
+          fieldErrors[`items.${idx}.location`] = locationCheck.error;
+
+        const tagCheck = checkOptionalStr(obj.tag, "Tag produk/layanan", 40);
+        if (tagCheck.error) fieldErrors[`items.${idx}.tag`] = tagCheck.error;
+
+        let rating: number | null = null;
+        if (
+          obj.rating !== null &&
+          obj.rating !== undefined &&
+          obj.rating !== ""
+        ) {
+          const parsedRating =
+            typeof obj.rating === "number" ? obj.rating : Number(obj.rating);
+          if (
+            !Number.isInteger(parsedRating) ||
+            parsedRating < 1 ||
+            parsedRating > 5
+          ) {
+            fieldErrors[`items.${idx}.rating`] =
+              "Rating harus berupa angka bulat 1 sampai 5.";
+          } else {
+            rating = parsedRating;
+          }
+        }
+
+        const rawPhotoSrc =
+          typeof obj.photoSrc === "string" ? obj.photoSrc.trim() : "";
+        const rawPhotoAlt =
+          typeof obj.photoAlt === "string" ? obj.photoAlt.trim() : "";
+        let finalPhotoSrc = "";
+        let finalPhotoAlt = "";
+
+        if (rawPhotoSrc.length > 0) {
+          if (rawPhotoSrc.length > 500) {
+            fieldErrors[`items.${idx}.photoSrc`] =
+              "URL foto maksimal 500 karakter.";
+          } else if (!isValidImageSrc(rawPhotoSrc)) {
+            fieldErrors[`items.${idx}.photoSrc`] =
+              "URL foto harus diawali / atau https://.";
+          } else {
+            finalPhotoSrc = rawPhotoSrc;
+          }
+
+          const altCheck = checkRequiredStr(
+            obj.photoAlt,
+            "Teks alternatif foto",
+            160
+          );
+          if (altCheck.error) {
+            fieldErrors[`items.${idx}.photoAlt`] = altCheck.error;
+          } else {
+            finalPhotoAlt = altCheck.value;
+          }
+        } else if (rawPhotoAlt.length > 160) {
+          fieldErrors[`items.${idx}.photoAlt`] =
+            "Teks alternatif foto maksimal 160 karakter.";
+        }
+
+        const isSample =
+          typeof obj.isSample === "boolean" ? obj.isSample : false;
+
+        return {
+          id: rawId,
+          quote: rawQuote,
+          name: rawName,
+          role: roleCheck.value,
+          location: locationCheck.value,
+          tag: tagCheck.value,
+          rating,
+          photoSrc: finalPhotoSrc,
+          photoAlt: finalPhotoAlt,
+          isSample,
+        };
+      });
+
+    const rawFeaturedId =
+      typeof input.featuredId === "string" && input.featuredId.trim()
+        ? input.featuredId.trim()
+        : null;
+    const featuredId =
+      rawFeaturedId && items.some((item) => item.id === rawFeaturedId)
+        ? rawFeaturedId
+        : (items[0]?.id ?? null);
+
+    if (Object.keys(fieldErrors).length > 0) {
+      return {
+        ok: false,
+        fieldErrors,
+        formError: "Periksa kembali isian testimoni yang bertanda merah.",
+      };
+    }
+
+    return {
+      ok: true,
+      value: {
+        enabled,
+        eyebrow: eyebrow.value,
+        heading: heading.value,
+        headingAccent: headingAccent.value,
+        description: description.value,
+        showSampleLabel,
+        showRatings,
+        showStats,
+        statsAreSample,
+        stats,
+        featuredId,
+        items,
       },
     };
   }

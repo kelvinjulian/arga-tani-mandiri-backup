@@ -36,6 +36,7 @@ import {
   DEFAULT_SECONDARY_CTA,
   type HeroCtaButton,
 } from "@/lib/site-content/hero-cta";
+import { TestimonialsEditor } from "@/components/admin/TestimonialsEditor";
 import {
   DEFAULT_ABOUT_IMAGE_ALT,
   DEFAULT_ABOUT_IMAGE_BADGE,
@@ -866,6 +867,7 @@ export function SiteContentEditorForm({
                         labelError={fieldErrors["primaryCta.label"]}
                         targetError={fieldErrors["primaryCta.target"]}
                         enabledError={fieldErrors["primaryCta.enabled"]}
+                        iconError={fieldErrors["primaryCta.icon"]}
                         onChange={(next) => {
                           setFormVal((prev) => ({
                             ...prev,
@@ -886,6 +888,7 @@ export function SiteContentEditorForm({
                         labelError={fieldErrors["secondaryCta.label"]}
                         targetError={fieldErrors["secondaryCta.target"]}
                         enabledError={fieldErrors["secondaryCta.enabled"]}
+                        iconError={fieldErrors["secondaryCta.icon"]}
                         onChange={(next) => {
                           setFormVal((prev) => ({
                             ...prev,
@@ -2273,6 +2276,15 @@ export function SiteContentEditorForm({
             </div>
           );
         })()}
+
+        {/* TESTIMONIALS BLOCK */}
+        {blockKey === "testimonials" && (
+          <TestimonialsEditor
+            formVal={formVal}
+            updateField={updateField}
+            fieldErrors={fieldErrors}
+          />
+        )}
 
         {/* ARTICLE HUB BLOCK */}
         {blockKey === "article_hub" && (() => {

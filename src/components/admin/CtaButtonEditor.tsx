@@ -1,14 +1,23 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowRight } from "lucide-react";
 import {
+  CTA_ICON_OPTIONS,
   CTA_TARGET_TYPES,
   HOME_SECTION_OPTIONS,
   PUBLIC_PAGE_OPTIONS,
+  resolveHeroCtaIcon,
+  type CtaIconOption,
   type CtaTargetType,
   type HeroCtaButton,
 } from "@/lib/site-content/hero-cta";
 import { getWhatsAppHref } from "@/lib/whatsapp";
+
+const ICON_OPTION_LABELS: Record<CtaIconOption, string> = {
+  auto: "Otomatis",
+  "arrow-right": "Panah samping",
+  "arrow-down": "Panah bawah",
+};
 
 const TARGET_TYPE_LABELS: Record<CtaTargetType, string> = {
   section: "Bagian di halaman beranda",
@@ -29,6 +38,7 @@ interface CtaButtonEditorProps {
   labelError?: string;
   targetError?: string;
   enabledError?: string;
+  iconError?: string;
   hint?: string;
 }
 
@@ -43,9 +53,12 @@ export function CtaButtonEditor({
   labelError,
   targetError,
   enabledError,
+  iconError,
   hint = "Tampil di: Beranda, bagian hero",
 }: CtaButtonEditorProps) {
   const waHref = getWhatsAppHref(whatsappNumber);
+  const currentIconOption: CtaIconOption = value.icon ?? "auto";
+  const resolvedIcon = resolveHeroCtaIcon(value);
 
   const handleTypeChange = (nextType: CtaTargetType) => {
     let nextValue = "";
@@ -315,6 +328,59 @@ export function CtaButtonEditor({
       {targetError && (
         <p role="alert" className="text-xs font-medium text-[#B91C1C]">
           {targetError}
+        </p>
+      )}
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
+        <div>
+          <label
+            htmlFor={`${idPrefix}-icon`}
+            className="block text-xs font-semibold text-[#143D29]"
+          >
+            Ikon panah
+          </label>
+          <p className="text-[11px] text-[#43594D]">
+            Tampil di: Beranda, bagian hero, tombol
+          </p>
+          <select
+            id={`${idPrefix}-icon`}
+            value={currentIconOption}
+            onChange={(e) =>
+              onChange({
+                ...value,
+                icon: e.target.value as CtaIconOption,
+              })
+            }
+            className="mt-1 min-h-[42px] w-full rounded-xl border border-[#CBD8D0] bg-white px-3 py-2 text-sm text-[#0F1F17] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29]"
+          >
+            {CTA_ICON_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {ICON_OPTION_LABELS[opt]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex min-h-[42px] items-center gap-2 rounded-xl border border-[#DCE8DF] bg-white px-3 py-2 text-xs text-[#143D29]">
+          <span className="text-[#43594D]">Pratinjau ikon:</span>
+          <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F1F17]">
+            {resolvedIcon === "arrow-down" ? (
+              <>
+                <ArrowDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>Panah bawah</span>
+              </>
+            ) : (
+              <>
+                <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>Panah samping</span>
+              </>
+            )}
+          </span>
+        </div>
+      </div>
+
+      {iconError && (
+        <p role="alert" className="text-xs font-medium text-[#B91C1C]">
+          {iconError}
         </p>
       )}
 

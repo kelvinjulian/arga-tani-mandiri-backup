@@ -4,6 +4,7 @@ export const HOME_SECTION_IDS = {
   BERANDA: "beranda",
   PRODUK: "produk",
   TENTANG_KAMI: "tentang-kami",
+  TESTIMONI: "testimoni",
   ARTIKEL_EDUKASI: "artikel-edukasi",
   KONSULTASI_WHATSAPP: "konsultasi-whatsapp",
   KONTAK: "kontak",
@@ -19,6 +20,7 @@ export const HOME_SECTION_OPTIONS: ReadonlyArray<{
   { id: HOME_SECTION_IDS.BERANDA, label: "Beranda (Atas halaman)" },
   { id: HOME_SECTION_IDS.PRODUK, label: "Kategori Produk (#produk)" },
   { id: HOME_SECTION_IDS.TENTANG_KAMI, label: "Tentang Kami (#tentang-kami)" },
+  { id: HOME_SECTION_IDS.TESTIMONI, label: "Testimoni (#testimoni)" },
   {
     id: HOME_SECTION_IDS.ARTIKEL_EDUKASI,
     label: "Artikel Edukasi (#artikel-edukasi)",
@@ -48,6 +50,10 @@ export const CTA_TARGET_TYPES = [
 
 export type CtaTargetType = (typeof CTA_TARGET_TYPES)[number];
 
+export const CTA_ICON_OPTIONS = ["auto", "arrow-right", "arrow-down"] as const;
+
+export type CtaIconOption = (typeof CTA_ICON_OPTIONS)[number];
+
 export interface CtaTarget {
   type: CtaTargetType;
   value: string;
@@ -57,12 +63,14 @@ export interface HeroCtaButton {
   label: string;
   enabled: boolean;
   target: CtaTarget;
+  icon?: CtaIconOption;
 }
 
 export const DEFAULT_PRIMARY_CTA: HeroCtaButton = {
-  label: "Lihat Katalog Produk",
+  label: "Tentang Arga Tani Mandiri",
   enabled: true,
-  target: { type: "section", value: HOME_SECTION_IDS.PRODUK },
+  target: { type: "section", value: HOME_SECTION_IDS.TENTANG_KAMI },
+  icon: "arrow-down",
 };
 
 export const DEFAULT_SECONDARY_CTA: HeroCtaButton = {
@@ -75,6 +83,23 @@ const SECTION_ID_SET = new Set<string>(HOME_SECTION_OPTIONS.map((o) => o.id));
 const PUBLIC_PAGE_SET = new Set<string>(
   PUBLIC_PAGE_OPTIONS.map((o) => o.path)
 );
+
+export function isCtaIconOption(value: unknown): value is CtaIconOption {
+  return (
+    typeof value === "string" &&
+    (CTA_ICON_OPTIONS as readonly string[]).includes(value)
+  );
+}
+
+export function resolveHeroCtaIcon(
+  cta: Pick<HeroCtaButton, "icon" | "target">
+): "arrow-right" | "arrow-down" {
+  const icon = cta.icon ?? "auto";
+  if (icon === "arrow-right" || icon === "arrow-down") {
+    return icon;
+  }
+  return cta.target.type === "section" ? "arrow-down" : "arrow-right";
+}
 
 export function isCtaTargetType(value: unknown): value is CtaTargetType {
   return (

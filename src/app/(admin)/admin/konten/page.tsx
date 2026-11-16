@@ -40,6 +40,7 @@ const HOME_KEYS: ReadonlyArray<SiteContentKey> = [
   "hero",
   "category_showcase",
   "about",
+  "testimonials",
   "article_hub",
   "whatsapp_band",
 ];

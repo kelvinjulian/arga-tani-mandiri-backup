@@ -68,3 +68,13 @@ Jalankan `supabase/migrations/0004_article_categories.sql` di **Supabase SQL Edi
 - Mengisi data awal idempoten untuk 4 kategori artikel bawaan (`panduan-label`, `manajemen-budidaya`, `pembenah-tanah`, `penyimpanan-gudang`).
 - Membuat fungsi RPC atomik `public.rename_article_category(p_id, p_name, p_slug)` (`SECURITY DEFINER`, `search_path = ''`, validasi `public.is_admin()`) agar pengubahan nama/slug kategori ikut memperbarui `articles.category` dan `articles.filter_category` dalam satu transaksi.
 - Menambahkan blok `site_content` baru dengan key `article_hub` (otomatis dibuat/upsert saat pertama kali disimpan dari `/admin/konten/article_hub`).
+
+---
+
+## 6. Video (`0006_videos.sql`)
+
+Jalankan `supabase/migrations/0006_videos.sql` di **Supabase SQL Editor** setelah `0005`:
+- Membuat enum `public.video_platform` (`'youtube'`, `'tiktok'`) dan `public.video_status` (`'draft'`, `'published'`), serta tabel `public.videos` beserta indeks unik `(platform, video_id)` untuk mencegah duplikasi dan trigger `trg_videos_updated_at`.
+- Mengaktifkan RLS: publik (`anon`, `authenticated`) hanya dapat membaca baris dengan `status = 'published'`, sedangkan admin terkonfirmasi (`public.is_admin()`) dapat membaca seluruh baris serta melakukan `INSERT`, `UPDATE`, dan `DELETE`.
+- Menerapkan *privilege hardening*: mencabut `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`, `TRIGGER` dari `anon` dan mencabut `TRUNCATE`, `REFERENCES`, `TRIGGER` dari `authenticated`.
+- **Pengujian keamanan:** Jalankan uji `set role anon;` / `reset role;` serta uji REST `curl` yang tercantum di `docs/SUPABASE_SETUP.md` untuk memastikan baris `draft` tidak bocor ke publik dan mutasi tanpa sesi admin selalu ditolak.
