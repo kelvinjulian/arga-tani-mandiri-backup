@@ -78,3 +78,17 @@ Pada setiap bagian **Konten Beranda** dan **Kategori Produk**, tersedia tombol *
 3. **Ubah nama / slug & urutan:** klik **Ubah** untuk memperbarui nama/slug (artikel yang memakai kategori ini otomatis ikut diperbarui), atau gunakan tombol panah atas/bawah untuk mengatur urutan tampil di filter.
 4. **Hapus kategori:** kategori hanya dapat dihapus jika tidak sedang dipakai oleh artikel mana pun.
 5. **Dari editor artikel:** saat membuat/mengubah artikel, pilih kategori dari daftar dropdown atau klik **+ Kategori baru** untuk membuat kategori langsung tanpa kehilangan draf yang sedang ditulis.
+
+## Mengelola Bagian Testimoni di Beranda
+
+1. Buka **Konten Situs** (`/admin/konten`) lalu pilih **Testimoni Pelanggan** (`/admin/konten/testimonials`).
+2. Anda dapat mengaktifkan/menonaktifkan bagian, mengatur label **Contoh**, tampilan **Rating** bintang, serta **Strip Angka Ringkasan** (maksimal 4 angka, dapat ditambah, dihapus, dan diurutkan).
+3. Di **Daftar Testimoni** (maksimal 12 item), gunakan tombol **Jadikan sorotan** untuk memilih testimoni awal pada kartu utama, ubah urutan, atau unggah foto opsional (wajib isi teks alternatif jika foto diisi).
+4. Hapus atau ganti seluruh item bertanda **Contoh** (baik testimoni maupun angka ringkasan) dengan data asli pelanggan (dengan izin) sebelum situs diluncurkan, lalu klik **Simpan Perubahan**.
+
+## Mengelola Daftar Video (YouTube & TikTok)
+
+1. Buka **Video** (`/admin/video`) dari **Dashboard** admin.
+2. **Tambah satu video:** klik **Tambah Video**, tempel tautan YouTube (`youtube.com/watch?v=...`, `youtu.be/...`, `youtube.com/shorts/...`) atau TikTok (`tiktok.com/@akun/video/...`, `vm.tiktok.com/...`, `vt.tiktok.com/...`), isi judul, lalu atur deskripsi, durasi, atau thumbnail opsional.
+3. **Tempel banyak URL sekaligus:** klik **Tempel Banyak URL** (`/admin/video/banyak`), masukkan hingga 50 tautan (satu per baris), klik **Periksa URL & Pratinjau** untuk melihat hasil validasi/duplikat dan mengedit judul, lalu simpan yang valid.
+4. **Status, Beranda, & Unggulan:** pilih **Terbit** agar tampil di publik atau **Draft** untuk disimpan internal; aktifkan **Jadikan unggulan** untuk menandai satu video utama (menggantikan video unggulan sebelumnya secara otomatis). Gunakan tombol panah atas/bawah di daftar untuk mengatur urutan tampil (tetap bekerja lintas halaman paginasi).

@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   FileText,
+  Film,
   FolderKanban,
   LayoutTemplate,
   Tags,
@@ -40,6 +41,8 @@ const HOME_KEYS: ReadonlyArray<SiteContentKey> = [
   "hero",
   "category_showcase",
   "about",
+  "testimonials",
+  "video_section",
   "article_hub",
   "whatsapp_band",
 ];
@@ -48,6 +51,8 @@ const ARTICLE_KEYS: ReadonlyArray<SiteContentKey> = [
   "article_page",
   "article_detail",
 ];
+
+const VIDEO_KEYS: ReadonlyArray<SiteContentKey> = ["video_page"];
 
 const SITEWIDE_KEYS: ReadonlyArray<SiteContentKey> = ["company", "footer"];
 
@@ -78,6 +83,7 @@ export default async function AdminKontenListPage() {
 
   const homeBlocks = pickBlocks(HOME_KEYS);
   const articleBlocks = pickBlocks(ARTICLE_KEYS);
+  const videoBlocks = pickBlocks(VIDEO_KEYS);
   const sitewideBlocks = pickBlocks(SITEWIDE_KEYS);
 
   const renderBlockCard = (block: SiteContentBlockMeta) => {
@@ -275,7 +281,56 @@ export default async function AdminKontenListPage() {
           </div>
         </section>
 
-        {/* Section 3: Seluruh Situs */}
+        {/* Section 3: Halaman Video */}
+        <section aria-labelledby="group-video-heading">
+          <div>
+            <h2
+              id="group-video-heading"
+              className="font-display text-lg font-bold text-[#0F1F17]"
+            >
+              Halaman Video
+            </h2>
+            <p className="mt-0.5 text-xs text-[#43594D] sm:text-sm">
+              Mengelola tampilan halaman galeri /video dan daftar video YouTube
+              serta TikTok.
+            </p>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {videoBlocks.map(renderBlockCard)}
+
+            <Link
+              href="/admin/video"
+              className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-5 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9F0E3] text-[#143D29]">
+                    <Film className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF3EE] px-2.5 py-1 text-xs font-bold text-[#143D29]">
+                    <span>Kelola</span>
+                    <ArrowRight
+                      className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </div>
+                <h3 className="mt-3.5 font-display text-base font-bold text-[#0F1F17]">
+                  Daftar Video
+                </h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-[#33473D]">
+                  Tambah, tempel banyak URL, urutkan, atau hapus video YouTube
+                  dan TikTok.
+                </p>
+              </div>
+              <p className="mt-4 border-t border-[#E6EEE9] pt-3 text-[11px] font-medium text-[#43594D]">
+                Pengelolaan daftar video
+              </p>
+            </Link>
+          </div>
+        </section>
+
+        {/* Section 4: Seluruh Situs */}
         <section aria-labelledby="group-seluruh-situs-heading">
           <div>
             <h2

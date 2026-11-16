@@ -17,6 +17,16 @@ import {
   type FooterData,
 } from "@/lib/site-content/footer-defaults";
 import {
+  cloneTestimonialsDefaults,
+  type TestimonialsData,
+} from "@/lib/site-content/testimonials-defaults";
+import {
+  cloneVideoPageDefaults,
+  cloneVideoSectionDefaults,
+  type VideoPageData,
+  type VideoSectionData,
+} from "@/lib/site-content/video-defaults";
+import {
   DEFAULT_ABOUT_COMMITMENT_CARDS,
   DEFAULT_ABOUT_COMMITMENT_PARAGRAPHS,
   DEFAULT_ABOUT_EYEBROW,
@@ -163,6 +173,9 @@ export interface SiteData {
     ];
   };
   articleHub?: ArticleHubData;
+  testimonials?: TestimonialsData;
+  videoSection?: VideoSectionData;
+  videoPage?: VideoPageData;
   articlePage?: ArticlePageData;
   articleDetail?: ArticleDetailData;
   whatsappBand: {
@@ -213,8 +226,8 @@ export const SITE_DATA: SiteData = {
     headlineAccent: "dan Hasil Panen Maksimal",
     subheadline:
       "Arga Tani Mandiri menyediakan produk pupuk, pestisida, dan nutrisi tanaman berkualitas untuk mendukung produktivitas dan keberlanjutan pertanian Indonesia.",
-    primaryCtaLabel: "Lihat Katalog Produk",
-    secondaryCtaLabel: "Kunjungi Tani InD® di Shopee",
+    primaryCtaLabel: DEFAULT_PRIMARY_CTA.label,
+    secondaryCtaLabel: DEFAULT_SECONDARY_CTA.label,
     primaryCta: DEFAULT_PRIMARY_CTA,
     secondaryCta: DEFAULT_SECONDARY_CTA,
     imageSrc: "/images/hero-agriculture.jpg",
@@ -406,6 +419,9 @@ export const SITE_DATA: SiteData = {
     ],
   },
   articleHub: DEFAULT_ARTICLE_HUB,
+  testimonials: cloneTestimonialsDefaults(),
+  videoSection: cloneVideoSectionDefaults(),
+  videoPage: cloneVideoPageDefaults(),
   whatsappBand: {
     heading: "Chat Tim Konsultasi Budidaya Arga Tani Mandiri",
     description:

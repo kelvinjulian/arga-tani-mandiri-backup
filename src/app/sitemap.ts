@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getArticles } from "@/lib/content";
 import { getSiteUrl, isSiteIndexingEnabled } from "@/lib/seo";
+import { hasPublishedVideos } from "@/lib/videos/content";
 
 // Revalidate every 5 minutes; on-demand revalidation (revalidatePath/revalidateTag) will be added with /admin CMS.
 export const revalidate = 300;
@@ -11,7 +12,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const baseUrl = getSiteUrl();
-  const articles = await getArticles();
+  const [articles, hasVideos] = await Promise.all([
+    getArticles(),
+    hasPublishedVideos(),
+  ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -24,6 +28,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    ...(hasVideos
+      ? [
+          {
+            url: `${baseUrl}/video`,
+            changeFrequency: "weekly" as const,
+            priority: 0.75,
+          },
+        ]
+      : []),
   ];
 
   const publishedArticleRoutes: MetadataRoute.Sitemap = articles

@@ -120,7 +120,7 @@ export function ArticleHubSection({
     <section
       id={HOME_SECTION_IDS.ARTIKEL_EDUKASI}
       aria-labelledby="article-hub-heading"
-      className="scroll-mt-28 relative z-10 bg-transparent py-10 md:py-14"
+      className="scroll-mt-28 relative z-10 bg-transparent pt-[var(--section-gap)] pb-[var(--section-gap)]"
     >
       <Container>
         {/* A. Two-Row Asymmetric Header:

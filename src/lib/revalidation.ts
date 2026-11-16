@@ -8,5 +8,10 @@ export function revalidateAllSitePaths() {
   revalidatePath("/");
   revalidatePath("/artikel");
   revalidatePath("/artikel/[slug]", "page");
+  try {
+    revalidatePath("/video");
+  } catch {
+    // Guarded if /video is not yet built
+  }
   revalidatePath("/sitemap.xml");
 }

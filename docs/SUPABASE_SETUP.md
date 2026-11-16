@@ -62,6 +62,27 @@ insert into public.categories (id, slug, name, description, image_src, image_alt
 reset role;
 ```
 
+### Pengujian Keamanan `0006_videos.sql`
+
+```sql
+set role anon;
+select count(*) from public.videos;     -- hanya mengembalikan baris dengan status = 'published'
+insert into public.videos (platform, url, title) values ('youtube', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'Uji'); -- wajib GAGAL
+reset role;
+```
+
+Pengujian REST API (ganti `<SUPABASE_URL>` dan `<ANON_KEY>` dengan nilai publik proyek):
+
+```bash
+# GET diizinkan (hanya mengembalikan status = published)
+curl -s "<SUPABASE_URL>/rest/v1/videos?select=id,title,status" -H "apikey: <ANON_KEY>"
+
+# POST / PATCH / DELETE wajib ditolak (401/403)
+curl -i -X POST "<SUPABASE_URL>/rest/v1/videos" -H "apikey: <ANON_KEY>" -H "Content-Type: application/json" -d '{"platform":"youtube","url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ","title":"Uji"}'
+curl -i -X PATCH "<SUPABASE_URL>/rest/v1/videos?id=eq.00000000-0000-0000-0000-000000000000" -H "apikey: <ANON_KEY>" -H "Content-Type: application/json" -d '{"title":"Uji"}'
+curl -i -X DELETE "<SUPABASE_URL>/rest/v1/videos?id=eq.00000000-0000-0000-0000-000000000000" -H "apikey: <ANON_KEY>"
+```
+
 ---
 
 ## 4. Hal yang Perlu Diverifikasi di Dokumentasi Supabase Terbaru

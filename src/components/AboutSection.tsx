@@ -163,7 +163,7 @@ export function AboutSection({
     <section
       id={HOME_SECTION_IDS.TENTANG_KAMI}
       aria-labelledby="about-heading"
-      className="scroll-mt-28 relative z-10 bg-transparent pt-4 lg:pt-6 pb-14 lg:pb-16 overflow-x-clip"
+      className="scroll-mt-28 relative z-10 bg-transparent pt-[var(--section-gap)] pb-0 overflow-x-clip"
     >
       {/* Subtle Concentric SVG Circle Background Ring Graphics behind edges */}
       <svg
