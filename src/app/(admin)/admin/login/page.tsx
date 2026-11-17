@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { ADMIN_BASE_PATH } from "@/lib/admin-path";
 import { checkAdminSession } from "@/lib/supabase/admin";
 import { AdminLoginForm } from "./AdminLoginForm";
 
@@ -18,7 +19,7 @@ export default async function AdminLoginPage({
 }: AdminLoginPageProps) {
   const session = await checkAdminSession();
   if (session.status === "authorized") {
-    redirect("/admin");
+    redirect(ADMIN_BASE_PATH);
   }
 
   const params = await searchParams;

@@ -1,5 +1,9 @@
 import { SHOPEE_STORE_URL, productCategories } from "@/data/categories";
 import {
+  DEFAULT_NAVBAR_DATA,
+  type NavbarData,
+} from "@/lib/site-content/navbar-defaults";
+import {
   DEFAULT_PRIMARY_CTA,
   DEFAULT_SECONDARY_CTA,
   type HeroCtaButton,
@@ -95,6 +99,7 @@ export interface SiteData {
   };
   whatsappNumber: string | null;
   whatsappPlaceholderLabel: string;
+  navbar?: NavbarData;
   contact: {
     address: string | null;
     addressPlaceholder: string;
@@ -430,4 +435,10 @@ export const SITE_DATA: SiteData = {
     disabledHint: "Layanan konsultasi aktif melalui WhatsApp resmi",
   },
   footer: cloneFooterDefaults(),
+  navbar: {
+    items: DEFAULT_NAVBAR_DATA.items.map((item) => ({
+      ...item,
+      target: { ...item.target },
+    })),
+  },
 };

@@ -1,4 +1,5 @@
 import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ADMIN_BASE_PATH } from "@/lib/admin-path";
 import { AdminSafeLink } from "./AdminSafeLink";
 
 export interface AdminBreadcrumbCrumb {
@@ -24,7 +25,8 @@ export function AdminBreadcrumb({
     .reverse()
     .find((crumb) => Boolean(crumb.href));
 
-  const resolvedBackHref = backHref ?? fallbackParent?.href ?? "/admin";
+  const resolvedBackHref =
+    backHref ?? fallbackParent?.href ?? ADMIN_BASE_PATH;
   const resolvedBackLabel =
     backLabel ?? fallbackParent?.label ?? "Dashboard";
 

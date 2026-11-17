@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { adminPath } from "@/lib/admin-path";
 import {
   AlertTriangle,
   ArrowDown,
@@ -37,6 +38,7 @@ import {
   type HeroCtaButton,
 } from "@/lib/site-content/hero-cta";
 import { TestimonialsEditor } from "@/components/admin/TestimonialsEditor";
+import { NavbarContentEditor } from "@/components/admin/NavbarContentEditor";
 import {
   VideoPageEditor,
   VideoSectionEditor,
@@ -2290,6 +2292,20 @@ export function SiteContentEditorForm({
           />
         )}
 
+        {/* NAVBAR BLOCK */}
+        {blockKey === "navbar" && (
+          <NavbarContentEditor
+            formVal={formVal}
+            updateField={updateField}
+            setItems={(nextItems) => {
+              setFormVal((prev) => ({ ...prev, items: nextItems }));
+              setIsDirty(true);
+            }}
+            fieldErrors={fieldErrors}
+            whatsappNumber={companyContext?.whatsappNumber ?? null}
+          />
+        )}
+
         {/* VIDEO SECTION BLOCK */}
         {blockKey === "video_section" && (
           <VideoSectionEditor
@@ -2625,7 +2641,7 @@ export function SiteContentEditorForm({
                       </p>
                     </div>
                     <Link
-                      href="/admin/kategori-artikel"
+                      href={adminPath("/kategori-artikel")}
                       className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-[#143D29] bg-white px-3 py-1.5 text-xs font-semibold text-[#143D29] hover:bg-[#EAF3EE]"
                     >
                       <span>Kelola Urutan &amp; Label Kategori</span>
@@ -3245,7 +3261,7 @@ export function SiteContentEditorForm({
                     3. Pencarian &amp; Filter Kategori (/artikel)
                   </h2>
                   <Link
-                    href="/admin/kategori-artikel"
+                    href={adminPath("/kategori-artikel")}
                     className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-[#143D29] bg-[#F8FBF9] px-3 py-1.5 text-xs font-semibold text-[#143D29] hover:bg-[#EAF3EE]"
                   >
                     <span>Kelola Urutan &amp; Label Kategori</span>
@@ -4330,7 +4346,7 @@ export function SiteContentEditorForm({
                     </p>
                   </div>
                   <Link
-                    href="/admin/konten/company"
+                    href={adminPath("/konten/company")}
                     className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-[#143D29] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#143D29] hover:bg-[#EAF3EE]"
                   >
                     <span>Ubah di Identitas Perusahaan</span>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ADMIN_BASE_PATH, adminPath } from "@/lib/admin-path";
 import {
   Eye,
   FilePlus2,
@@ -119,7 +120,7 @@ export default async function AdminArtikelListPage({
     if (searchQuery) sp.set("q", searchQuery);
     if (page > 1) sp.set("page", String(page));
     const qs = sp.toString();
-    return qs ? `/admin/artikel?${qs}` : "/admin/artikel";
+    return qs ? adminPath(`/artikel?${qs}`) : adminPath("/artikel");
   };
 
   return (
@@ -129,7 +130,7 @@ export default async function AdminArtikelListPage({
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
         <AdminBreadcrumb
           crumbs={[
-            { label: "Dashboard", href: "/admin" },
+            { label: "Dashboard", href: ADMIN_BASE_PATH },
             { label: "Daftar Artikel" },
           ]}
         />
@@ -144,13 +145,13 @@ export default async function AdminArtikelListPage({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              href="/admin/kategori-artikel"
+              href={adminPath("/kategori-artikel")}
               className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-sm font-semibold text-[#143D29] shadow-xs transition-colors hover:bg-[#EAF3EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
             >
               <span>Kelola kategori</span>
             </Link>
             <Link
-              href="/admin/artikel/baru"
+              href={adminPath("/artikel/baru")}
               className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#0E2B1D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
             >
               <FilePlus2 className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -181,7 +182,7 @@ export default async function AdminArtikelListPage({
         {/* Filter & Search Bar */}
         <form
           method="get"
-          action="/admin/artikel"
+          action={adminPath("/artikel")}
           className="mt-6 flex flex-col gap-3 rounded-2xl border border-[#CBD8D0] bg-white p-4 shadow-xs sm:flex-row sm:items-end"
         >
           <div className="flex-1">
@@ -236,7 +237,7 @@ export default async function AdminArtikelListPage({
             </button>
             {(statusFilter !== "all" || searchQuery) && (
               <Link
-                href="/admin/artikel"
+                href={adminPath("/artikel")}
                 className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[#CBD8D0] bg-white px-3.5 py-2 text-sm font-semibold text-[#143D29] transition-colors hover:bg-[#EAF3EE]"
               >
                 Reset
@@ -294,14 +295,14 @@ export default async function AdminArtikelListPage({
 
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Link
-                        href={`/admin/artikel/${row.id}`}
+                        href={adminPath(`/artikel/${row.id}`)}
                         className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#143D29] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0E2B1D]"
                       >
                         <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         <span>Ubah</span>
                       </Link>
                       <Link
-                        href={`/admin/artikel/${row.id}/pratinjau`}
+                        href={adminPath(`/artikel/${row.id}/pratinjau`)}
                         className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#CBD8D0] bg-white px-3 py-2 text-xs font-semibold text-[#143D29] hover:bg-[#EAF3EE]"
                       >
                         <Eye className="h-3.5 w-3.5" aria-hidden="true" />
@@ -375,14 +376,14 @@ export default async function AdminArtikelListPage({
                         <td className="px-5 py-4 text-right">
                           <div className="inline-flex items-center justify-end gap-2">
                             <Link
-                              href={`/admin/artikel/${row.id}`}
+                              href={adminPath(`/artikel/${row.id}`)}
                               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg bg-[#143D29] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#0E2B1D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
                             >
                               <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                               <span>Ubah</span>
                             </Link>
                             <Link
-                              href={`/admin/artikel/${row.id}/pratinjau`}
+                              href={adminPath(`/artikel/${row.id}/pratinjau`)}
                               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-[#CBD8D0] bg-white px-3 py-1.5 text-xs font-semibold text-[#143D29] transition-colors hover:bg-[#EAF3EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
                             >
                               <Eye className="h-3.5 w-3.5" aria-hidden="true" />

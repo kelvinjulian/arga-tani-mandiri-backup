@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, FileText, Film, LayoutTemplate } from "lucide-react";
 import { requireAdminPage } from "@/lib/supabase/admin";
+import { adminPath } from "@/lib/admin-path";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ export default async function AdminDashboardPage() {
           className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
           <Link
-            href="/admin/artikel"
+            href={adminPath("/artikel")}
             className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-6 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
           >
             <div>
@@ -61,7 +62,7 @@ export default async function AdminDashboardPage() {
           </Link>
 
           <Link
-            href="/admin/konten"
+            href={adminPath("/konten")}
             className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-6 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
           >
             <div>
@@ -88,7 +89,7 @@ export default async function AdminDashboardPage() {
           </Link>
 
           <Link
-            href="/admin/video"
+            href={adminPath("/video")}
             className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-6 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
           >
             <div>

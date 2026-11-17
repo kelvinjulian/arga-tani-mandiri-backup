@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/supabase/admin";
+import { ADMIN_BASE_PATH, adminPath } from "@/lib/admin-path";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import {
@@ -88,12 +89,12 @@ export default async function AdminArticleCategoriesPage() {
       <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
         <AdminBreadcrumb
           crumbs={[
-            { label: "Dashboard", href: "/admin" },
-            { label: "Konten Situs", href: "/admin/konten" },
+            { label: "Dashboard", href: ADMIN_BASE_PATH },
+            { label: "Konten Situs", href: adminPath("/konten") },
             { label: "Halaman Artikel" },
             { label: "Kategori Artikel" },
           ]}
-          backHref="/admin/konten"
+          backHref={adminPath("/konten")}
           backLabel="Konten Situs"
         />
         <div className="mb-6">

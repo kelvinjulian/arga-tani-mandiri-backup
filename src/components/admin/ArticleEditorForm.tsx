@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { adminPath } from "@/lib/admin-path";
 import {
   AlertTriangle,
   ArrowDown,
@@ -280,7 +281,7 @@ export function ArticleEditorForm({
     setTags(normalizeStringList(tags, true));
 
     if (!isEdit && result.id) {
-      router.push(`/admin/artikel/${result.id}?saved=1`);
+      router.push(adminPath(`/artikel/${result.id}?saved=1`));
       return;
     }
 
@@ -375,7 +376,7 @@ export function ArticleEditorForm({
           <div className="flex flex-wrap items-center gap-2">
             {isEdit && initialData.id && (
               <Link
-                href={`/admin/artikel/${initialData.id}/pratinjau`}
+                href={adminPath(`/artikel/${initialData.id}/pratinjau`)}
                 className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-[#CBD8D0] bg-white px-3.5 py-2 text-xs font-semibold text-[#143D29] hover:bg-[#EAF3EE]"
               >
                 <Eye className="h-4 w-4" aria-hidden="true" />

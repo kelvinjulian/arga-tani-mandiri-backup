@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ADMIN_BASE_PATH, adminPath } from "@/lib/admin-path";
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,6 +16,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { VideoListActions } from "@/components/admin/VideoListActions";
 import {
   getEffectiveVideoThumbnail,
+  type TikTokPlayMode,
   type VideoPlatform,
   type VideoStatus,
 } from "@/lib/videos/url-parser";
@@ -35,6 +37,7 @@ interface AdminVideoRow {
   title: string;
   thumbnail_src: string | null;
   status: VideoStatus;
+  play_mode?: TikTokPlayMode | null;
   is_featured: boolean;
   show_on_home: boolean;
   sort_order: number;
@@ -82,10 +85,7 @@ export default async function AdminVideoListPage({
 
   let query = supabase
     .from("videos")
-    .select(
-      "id, platform, url, video_id, title, thumbnail_src, status, is_featured, show_on_home, sort_order, updated_at",
-      { count: "exact" }
-    )
+    .select("*", { count: "exact" })
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
 
@@ -123,7 +123,7 @@ export default async function AdminVideoListPage({
     if (searchQuery) params.set("q", searchQuery);
     if (page > 1) params.set("page", String(page));
     const qs = params.toString();
-    return qs ? `/admin/video?${qs}` : "/admin/video";
+    return qs ? adminPath(`/video?${qs}`) : adminPath("/video");
   };
 
   return (
@@ -133,7 +133,7 @@ export default async function AdminVideoListPage({
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
         <AdminBreadcrumb
           crumbs={[
-            { label: "Dashboard", href: "/admin" },
+            { label: "Dashboard", href: ADMIN_BASE_PATH },
             { label: "Daftar Video" },
           ]}
         />
@@ -151,14 +151,14 @@ export default async function AdminVideoListPage({
 
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              href="/admin/video/banyak"
+              href={adminPath("/video/banyak")}
               className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-sm font-semibold text-[#143D29] shadow-xs hover:bg-[#EAF3EE]"
             >
               <ListPlus className="h-4 w-4" aria-hidden="true" />
               <span>Tempel Banyak URL</span>
             </Link>
             <Link
-              href="/admin/video/baru"
+              href={adminPath("/video/baru")}
               className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-[#0E2B1D]"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
@@ -170,7 +170,7 @@ export default async function AdminVideoListPage({
         {/* Search & Filter */}
         <form
           method="get"
-          action="/admin/video"
+          action={adminPath("/video")}
           className="mt-6 grid grid-cols-1 gap-3 rounded-2xl border border-[#CBD8D0] bg-white p-4 shadow-xs sm:grid-cols-12"
         >
           <div className="relative sm:col-span-5">
@@ -288,7 +288,7 @@ export default async function AdminVideoListPage({
                         </td>
                         <td className="px-4 py-3 max-w-[260px]">
                           <Link
-                            href={`/admin/video/${row.id}`}
+                            href={adminPath(`/video/${row.id}`)}
                             className="line-clamp-2 font-semibold text-[#0F1F17] hover:text-[#15803D] hover:underline"
                           >
                             {row.title}
@@ -300,15 +300,22 @@ export default async function AdminVideoListPage({
                           ) : null}
                         </td>
                         <td className="px-4 py-3">
-                          <span
-                            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold uppercase ${
-                              row.platform === "youtube"
-                                ? "bg-[#FEE2E2] text-[#991B1B]"
-                                : "bg-[#E0F2FE] text-[#075985]"
-                            }`}
-                          >
-                            {row.platform}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span
+                              className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold uppercase ${
+                                row.platform === "youtube"
+                                  ? "bg-[#FEE2E2] text-[#991B1B]"
+                                  : "bg-[#E0F2FE] text-[#075985]"
+                              }`}
+                            >
+                              {row.platform}
+                            </span>
+                            {row.platform === "tiktok" && (
+                              <span className="inline-block rounded-full border border-[#CBD8D0] bg-[#F4FAF6] px-2 py-0.5 text-[11px] font-medium text-[#143D29]">
+                                {row.play_mode === "embed" ? "Embed" : "Tautan"}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <span

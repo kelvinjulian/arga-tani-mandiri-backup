@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdminPage } from "@/lib/supabase/admin";
+import { ADMIN_BASE_PATH, adminPath } from "@/lib/admin-path";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import {
@@ -8,7 +9,7 @@ import {
   type VideoEditorInitialData,
 } from "@/components/admin/VideoEditorForm";
 import { isValidUuid } from "@/lib/articles/admin-validation";
-import type { VideoStatus } from "@/lib/videos/url-parser";
+import type { TikTokPlayMode, VideoStatus } from "@/lib/videos/url-parser";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,7 @@ export default async function AdminVideoEditPage({
     duration: (row.duration as string) ?? "",
     thumbnail_src: (row.thumbnail_src as string) ?? "",
     status: ((row.status as VideoStatus) ?? "published") as VideoStatus,
+    play_mode: (row.play_mode === "embed" ? "embed" : "link") as TikTokPlayMode,
     is_featured: Boolean(row.is_featured),
     show_on_home: Boolean(row.show_on_home),
   };
@@ -62,8 +64,8 @@ export default async function AdminVideoEditPage({
       <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
         <AdminBreadcrumb
           crumbs={[
-            { label: "Dashboard", href: "/admin" },
-            { label: "Daftar Video", href: "/admin/video" },
+            { label: "Dashboard", href: ADMIN_BASE_PATH },
+            { label: "Daftar Video", href: adminPath("/video") },
             { label: initialData.title || "Ubah Video" },
           ]}
         />

@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { adminPath } from "@/lib/admin-path";
 import { CheckCircle2, ListPlus, Save } from "lucide-react";
 import {
   MAX_BULK_URLS,
   parseVideoUrl,
+  type TikTokPlayMode,
   type VideoPlatform,
 } from "@/lib/videos/url-parser";
 import { bulkInsertVideosAction } from "@/app/(admin)/admin/video/actions";
@@ -21,6 +23,7 @@ interface PreviewRow {
   normalizedUrl: string;
   platform: VideoPlatform | null;
   videoId: string | null;
+  playMode: TikTokPlayMode;
   title: string;
   status: "valid" | "duplicate" | "invalid";
   reason: string;
@@ -42,7 +45,12 @@ export function VideoBulkForm({ existingKeys }: VideoBulkFormProps) {
     setBatchError(null);
     setResultSummary(null);
 
-    const lines = rawText
+    const normalizedInput = rawText.replace(
+      /<iframe\b[\s\S]{0,2000}?<\/iframe>/gi,
+      (match) => match.replace(/\r?\n+/g, " ")
+    );
+
+    const lines = normalizedInput
       .split(/\r?\n/)
       .map((l) => l.trim())
       .filter(Boolean);
@@ -74,6 +82,7 @@ export function VideoBulkForm({ existingKeys }: VideoBulkFormProps) {
           normalizedUrl: line,
           platform: null,
           videoId: null,
+          playMode: "link",
           title: "",
           status: "invalid",
           reason: parsed.error,
@@ -97,6 +106,7 @@ export function VideoBulkForm({ existingKeys }: VideoBulkFormProps) {
             normalizedUrl: parsed.normalizedUrl,
             platform: parsed.platform,
             videoId: parsed.videoId,
+            playMode: parsed.suggestedMode,
             title: defaultTitle,
             status: "duplicate",
             reason: "Video ini sudah ada atau terduplikasi di daftar.",
@@ -111,9 +121,13 @@ export function VideoBulkForm({ existingKeys }: VideoBulkFormProps) {
         normalizedUrl: parsed.normalizedUrl,
         platform: parsed.platform,
         videoId: parsed.videoId,
+        playMode: parsed.suggestedMode,
         title: defaultTitle,
         status: "valid",
-        reason: "Siap disimpan",
+        reason:
+          parsed.platform === "tiktok"
+            ? `Siap disimpan (${parsed.suggestedMode === "embed" ? "Embed" : "Buka di TikTok"})`
+            : "Siap disimpan",
       };
     });
 
@@ -128,7 +142,11 @@ export function VideoBulkForm({ existingKeys }: VideoBulkFormProps) {
     setBatchError(null);
 
     const res = await bulkInsertVideosAction(
-      validRows.map((r) => ({ url: r.normalizedUrl, title: r.title }))
+      validRows.map((r) => ({
+        url: r.normalizedUrl,
+        title: r.title,
+        play_mode: r.playMode,
+      }))
     );
 
     setIsSaving(false);
@@ -155,9 +173,9 @@ export function VideoBulkForm({ existingKeys }: VideoBulkFormProps) {
           Tempel Banyak URL Video
         </h1>
         <p className="mt-1 text-sm text-[#33473D]">
-          Tempel satu URL YouTube atau TikTok per baris (maksimal{" "}
-          {MAX_BULK_URLS} URL per batch). Anda dapat meninjau dan mengubah
-          judul sebelum menyimpan.
+          Tempel tautan video YouTube, atau kode embed dari YouTube (Bagikan
+          &gt; Sematkan), serta tautan/embed TikTok, satu per baris (maksimal{" "}
+          {MAX_BULK_URLS} item per batch).
         </p>
       </div>
 
@@ -184,7 +202,7 @@ export function VideoBulkForm({ existingKeys }: VideoBulkFormProps) {
             </span>
           </div>
           <Link
-            href="/admin/video"
+            href={adminPath("/video")}
             className="inline-flex min-h-[38px] items-center rounded-xl bg-[#143D29] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#0E2B1D]"
           >
             Lihat Daftar Video

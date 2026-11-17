@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { adminPath } from "@/lib/admin-path";
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from "lucide-react";
 import {
   deleteVideoAction,
@@ -73,7 +74,7 @@ export function VideoListActions({
         <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
       <Link
-        href={`/admin/video/${id}`}
+        href={adminPath(`/video/${id}`)}
         className="inline-flex min-h-[34px] items-center gap-1 rounded-lg border border-[#CBD8D0] bg-white px-2.5 py-1 text-xs font-semibold text-[#143D29] hover:bg-[#EAF3EE]"
       >
         <Pencil className="h-3.5 w-3.5" aria-hidden="true" />

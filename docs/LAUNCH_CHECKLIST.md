@@ -30,3 +30,5 @@
 
 8. **Video Edukasi (`/admin/video` & `/admin/konten/video_section`):**
    - Tambahkan video asli yang sudah terbit, atau matikan opsi **Tampilkan kartu contoh saat video kosong** (`showSamples: false`) di `/admin/konten/video_section` sebelum situs diluncurkan.
+10. **Menu Navbar (`/admin/konten/navbar`)**
+   - Periksa seluruh item aktif pada **Navbar** (tautan bagian beranda, halaman `/artikel` atau `/video`, tautan luar `https://`, serta tujuan WhatsApp) dan pastikan tidak ada tujuan kosong atau rusak di desktop maupun menu seluler.

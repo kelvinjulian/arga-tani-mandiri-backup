@@ -185,32 +185,32 @@ export default async function HomePage() {
                   {/* Continuous curved emerald underline stroke connected seamlessly to botanical leaf sprout */}
                   <svg
                     aria-hidden="true"
-                    viewBox="0 0 420 34"
+                    viewBox="0 0 436 34"
                     fill="none"
-                    className="pointer-events-none absolute -bottom-1 left-0 w-[105%] h-6.5 text-[#15803D]"
+                    className="pointer-events-none absolute -bottom-1 left-0 h-6.5 w-full text-[#15803D] sm:w-[108%]"
                     preserveAspectRatio="none"
                   >
                     <path
-                      d="M 4 24 C 115 14, 260 28, 392 17 C 397 16, 401 13, 403 9"
+                      d="M 4 24 C 120 14, 270 28, 408 17 C 413 16, 417 13, 419 9"
                       stroke="#15803D"
                       strokeWidth="3"
                       strokeLinecap="round"
                     />
-                    {/* Botanical leaf sprout connected directly at (403, 9) and (395, 16) */}
+                    {/* Botanical leaf sprout connected directly at (419, 9) and (413, 15) */}
                     <path
-                      d="M 403 9 C 397 3, 389 5, 391 12 C 396 13, 401 11, 403 9 Z"
+                      d="M 419 9 C 413 3, 405 5, 407 12 C 412 13, 417 11, 419 9 Z"
                       stroke="#15803D"
                       strokeWidth="1.8"
                       fill="#DCEFE2"
                     />
                     <path
-                      d="M 403 9 C 408 2, 417 3, 415 10 C 410 12, 406 11, 403 9 Z"
+                      d="M 419 9 C 424 2, 433 3, 431 10 C 426 12, 422 11, 419 9 Z"
                       stroke="#15803D"
                       strokeWidth="1.8"
                       fill="#DCEFE2"
                     />
                     <path
-                      d="M 397 15 C 404 15, 411 19, 408 24 C 402 24, 398 20, 397 15 Z"
+                      d="M 413 15 C 420 15, 427 19, 424 24 C 418 24, 414 20, 413 15 Z"
                       stroke="#15803D"
                       strokeWidth="1.8"
                       fill="#DCEFE2"

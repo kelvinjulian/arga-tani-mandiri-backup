@@ -56,6 +56,7 @@ function FeaturedEditorialCard({
   const isYouTube = video.platform === "youtube";
   const hasTikTokEmbedId =
     !isYouTube &&
+    video.playMode === "embed" &&
     typeof video.videoId === "string" &&
     /^\d{8,25}$/.test(video.videoId);
   const showThumb = Boolean(video.thumbnailSrc) && !thumbFailed;

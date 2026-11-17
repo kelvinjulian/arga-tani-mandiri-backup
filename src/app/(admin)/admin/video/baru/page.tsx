@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/supabase/admin";
+import { ADMIN_BASE_PATH, adminPath } from "@/lib/admin-path";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import {
@@ -23,6 +24,7 @@ export default async function AdminVideoNewPage() {
     duration: "",
     thumbnail_src: "",
     status: "published",
+    play_mode: "link",
     is_featured: false,
     show_on_home: true,
   };
@@ -33,8 +35,8 @@ export default async function AdminVideoNewPage() {
       <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
         <AdminBreadcrumb
           crumbs={[
-            { label: "Dashboard", href: "/admin" },
-            { label: "Daftar Video", href: "/admin/video" },
+            { label: "Dashboard", href: ADMIN_BASE_PATH },
+            { label: "Daftar Video", href: adminPath("/video") },
             { label: "Tambah Video" },
           ]}
         />

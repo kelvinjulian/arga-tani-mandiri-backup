@@ -9,6 +9,7 @@ import {
   Tags,
 } from "lucide-react";
 import { requireAdminPage } from "@/lib/supabase/admin";
+import { ADMIN_BASE_PATH, adminPath } from "@/lib/admin-path";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import {
@@ -54,6 +55,8 @@ const ARTICLE_KEYS: ReadonlyArray<SiteContentKey> = [
 
 const VIDEO_KEYS: ReadonlyArray<SiteContentKey> = ["video_page"];
 
+const NAV_KEYS: ReadonlyArray<SiteContentKey> = ["navbar"];
+
 const SITEWIDE_KEYS: ReadonlyArray<SiteContentKey> = ["company", "footer"];
 
 function pickBlocks(
@@ -84,6 +87,7 @@ export default async function AdminKontenListPage() {
   const homeBlocks = pickBlocks(HOME_KEYS);
   const articleBlocks = pickBlocks(ARTICLE_KEYS);
   const videoBlocks = pickBlocks(VIDEO_KEYS);
+  const navBlocks = pickBlocks(NAV_KEYS);
   const sitewideBlocks = pickBlocks(SITEWIDE_KEYS);
 
   const renderBlockCard = (block: SiteContentBlockMeta) => {
@@ -91,7 +95,7 @@ export default async function AdminKontenListPage() {
     return (
       <Link
         key={block.key}
-        href={`/admin/konten/${block.key}`}
+        href={adminPath(`/konten/${block.key}`)}
         className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-5 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
       >
         <div>
@@ -132,7 +136,7 @@ export default async function AdminKontenListPage() {
         <div>
           <AdminBreadcrumb
             crumbs={[
-              { label: "Dashboard", href: "/admin" },
+              { label: "Dashboard", href: ADMIN_BASE_PATH },
               { label: "Konten Situs" },
             ]}
           />
@@ -154,7 +158,26 @@ export default async function AdminKontenListPage() {
           </div>
         )}
 
-        {/* Section 1: Beranda */}
+        {/* Section 1: Navigasi */}
+        <section aria-labelledby="group-navigasi-heading">
+          <div>
+            <h2
+              id="group-navigasi-heading"
+              className="font-display text-lg font-bold text-[#0F1F17]"
+            >
+              Navigasi
+            </h2>
+            <p className="mt-0.5 text-xs text-[#43594D] sm:text-sm">
+              Mengelola item menu, urutan, tujuan tautan, dan gaya tombol pada
+              navbar atas.
+            </p>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {navBlocks.map(renderBlockCard)}
+          </div>
+        </section>
+
+        {/* Section 2: Beranda */}
         <section aria-labelledby="group-beranda-heading">
           <div>
             <h2
@@ -171,7 +194,7 @@ export default async function AdminKontenListPage() {
             {homeBlocks.map(renderBlockCard)}
 
             <Link
-              href="/admin/kategori"
+              href={adminPath("/kategori")}
               className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-5 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
             >
               <div>
@@ -202,85 +225,6 @@ export default async function AdminKontenListPage() {
           </div>
         </section>
 
-        {/* Section 2: Halaman Artikel */}
-        <section aria-labelledby="group-artikel-heading">
-          <div>
-            <h2
-              id="group-artikel-heading"
-              className="font-display text-lg font-bold text-[#0F1F17]"
-            >
-              Halaman Artikel
-            </h2>
-            <p className="mt-0.5 text-xs text-[#43594D] sm:text-sm">
-              Mengelola daftar artikel, kategori filter, serta tampilan tetap di
-              halaman /artikel dan /artikel/[slug].
-            </p>
-          </div>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {articleBlocks.map(renderBlockCard)}
-
-            <Link
-              href="/admin/artikel"
-              className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-5 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-            >
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9F0E3] text-[#143D29]">
-                    <FileText className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF3EE] px-2.5 py-1 text-xs font-bold text-[#143D29]">
-                    <span>Kelola</span>
-                    <ArrowRight
-                      className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
-                      aria-hidden="true"
-                    />
-                  </span>
-                </div>
-                <h3 className="mt-3.5 font-display text-base font-bold text-[#0F1F17]">
-                  Artikel
-                </h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-[#33473D]">
-                  Buat, ubah, pratinjau, terbitkan, atau hapus isi artikel
-                  edukasi.
-                </p>
-              </div>
-              <p className="mt-4 border-t border-[#E6EEE9] pt-3 text-[11px] font-medium text-[#43594D]">
-                Pengelolaan daftar artikel
-              </p>
-            </Link>
-
-            <Link
-              href="/admin/kategori-artikel"
-              className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-5 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-            >
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9F0E3] text-[#143D29]">
-                    <Tags className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF3EE] px-2.5 py-1 text-xs font-bold text-[#143D29]">
-                    <span>Kelola</span>
-                    <ArrowRight
-                      className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
-                      aria-hidden="true"
-                    />
-                  </span>
-                </div>
-                <h3 className="mt-3.5 font-display text-base font-bold text-[#0F1F17]">
-                  Kategori Artikel
-                </h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-[#33473D]">
-                  Tambah, ubah nama, atur urutan, atau hapus kategori filter
-                  artikel.
-                </p>
-              </div>
-              <p className="mt-4 border-t border-[#E6EEE9] pt-3 text-[11px] font-medium text-[#43594D]">
-                Pengelolaan kategori &amp; filter chip
-              </p>
-            </Link>
-          </div>
-        </section>
-
         {/* Section 3: Halaman Video */}
         <section aria-labelledby="group-video-heading">
           <div>
@@ -299,7 +243,7 @@ export default async function AdminKontenListPage() {
             {videoBlocks.map(renderBlockCard)}
 
             <Link
-              href="/admin/video"
+              href={adminPath("/video")}
               className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-5 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
             >
               <div>
@@ -330,7 +274,86 @@ export default async function AdminKontenListPage() {
           </div>
         </section>
 
-        {/* Section 4: Seluruh Situs */}
+        {/* Section 4: Halaman Artikel */}
+        <section aria-labelledby="group-artikel-heading">
+          <div>
+            <h2
+              id="group-artikel-heading"
+              className="font-display text-lg font-bold text-[#0F1F17]"
+            >
+              Halaman Artikel
+            </h2>
+            <p className="mt-0.5 text-xs text-[#43594D] sm:text-sm">
+              Mengelola daftar artikel, kategori filter, serta tampilan tetap di
+              halaman /artikel dan /artikel/[slug].
+            </p>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {articleBlocks.map(renderBlockCard)}
+
+            <Link
+              href={adminPath("/artikel")}
+              className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-5 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9F0E3] text-[#143D29]">
+                    <FileText className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF3EE] px-2.5 py-1 text-xs font-bold text-[#143D29]">
+                    <span>Kelola</span>
+                    <ArrowRight
+                      className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </div>
+                <h3 className="mt-3.5 font-display text-base font-bold text-[#0F1F17]">
+                  Artikel
+                </h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-[#33473D]">
+                  Buat, ubah, pratinjau, terbitkan, atau hapus isi artikel
+                  edukasi.
+                </p>
+              </div>
+              <p className="mt-4 border-t border-[#E6EEE9] pt-3 text-[11px] font-medium text-[#43594D]">
+                Pengelolaan daftar artikel
+              </p>
+            </Link>
+
+            <Link
+              href={adminPath("/kategori-artikel")}
+              className="group flex flex-col justify-between rounded-2xl border border-[#CBD8D0] bg-white p-5 shadow-xs transition-all hover:border-[#15803D] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9F0E3] text-[#143D29]">
+                    <Tags className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF3EE] px-2.5 py-1 text-xs font-bold text-[#143D29]">
+                    <span>Kelola</span>
+                    <ArrowRight
+                      className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </div>
+                <h3 className="mt-3.5 font-display text-base font-bold text-[#0F1F17]">
+                  Kategori Artikel
+                </h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-[#33473D]">
+                  Tambah, ubah nama, atur urutan, atau hapus kategori filter
+                  artikel.
+                </p>
+              </div>
+              <p className="mt-4 border-t border-[#E6EEE9] pt-3 text-[11px] font-medium text-[#43594D]">
+                Pengelolaan kategori &amp; filter chip
+              </p>
+            </Link>
+          </div>
+        </section>
+
+        {/* Section 5: Seluruh Situs */}
         <section aria-labelledby="group-seluruh-situs-heading">
           <div>
             <h2

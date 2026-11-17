@@ -106,7 +106,11 @@ export function VideoSection({ videos, videoSection }: VideoSectionProps) {
       return;
     }
 
-    if (video.videoId && /^\d{8,25}$/.test(video.videoId)) {
+    if (
+      video.playMode === "embed" &&
+      video.videoId &&
+      /^\d{8,25}$/.test(video.videoId)
+    ) {
       setActiveTikTokVideo(video);
       return;
     }

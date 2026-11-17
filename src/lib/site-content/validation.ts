@@ -16,6 +16,23 @@ import {
   type FooterSocialLink,
 } from "@/lib/site-content/footer-defaults";
 import {
+  cloneNavbarDefaults,
+  DEFAULT_NAVBAR_BRAND_SUBTITLE,
+  DEFAULT_NAVBAR_BRAND_TITLE,
+  DEFAULT_NAVBAR_LOGO_ALT,
+  DEFAULT_NAVBAR_LOGO_SRC,
+  isNavbarItemStyle,
+  isNavbarTargetType,
+  NAVBAR_BRAND_SUBTITLE_MAX,
+  NAVBAR_BRAND_TITLE_MAX,
+  NAVBAR_LABEL_MAX,
+  NAVBAR_MAX_ITEMS,
+  NAVBAR_MIN_ITEMS,
+  type NavbarData,
+  type NavbarItem,
+  type NavbarTarget,
+} from "@/lib/site-content/navbar-defaults";
+import {
   DEFAULT_PRIMARY_CTA,
   DEFAULT_SECONDARY_CTA,
   HOME_SECTION_IDS,
@@ -83,6 +100,7 @@ import {
 } from "@/lib/site-content/video-defaults";
 
 export const SITE_CONTENT_KEYS = [
+  "navbar",
   "company",
   "hero",
   "category_showcase",
@@ -103,6 +121,7 @@ export type SiteContentGroup =
   | "Beranda"
   | "Halaman Artikel"
   | "Halaman Video"
+  | "Navigasi"
   | "Seluruh Situs";
 
 export interface SiteContentBlockMeta {
@@ -201,6 +220,14 @@ export const SITE_CONTENT_BLOCKS: ReadonlyArray<SiteContentBlockMeta> = [
     description:
       "Judul, deskripsi, label tombol, dan catatan layanan pada pita konsultasi WhatsApp.",
     publicHref: "/artikel",
+  },
+  {
+    key: "navbar",
+    group: "Navigasi",
+    title: "Navbar",
+    description:
+      "Kelola menu navigasi atas, urutan, visibilitas, tujuan tautan, dan gaya tombol (tautan atau tombol aksi).",
+    publicHref: "/",
   },
   {
     key: "footer",
@@ -1488,6 +1515,90 @@ export function mergeSiteContentWithDefaults(
         legalBadges: rawBadges,
       };
     })(),
+    navbar: (() => {
+      const navbarRaw = asObj(byKey.get("navbar"));
+      const logoSrc = resolveImageSrc(
+        typeof navbarRaw.logoSrc === "string" ? navbarRaw.logoSrc.trim() : "",
+        DEFAULT_NAVBAR_LOGO_SRC
+      );
+      const logoAlt =
+        typeof navbarRaw.logoAlt === "string"
+          ? navbarRaw.logoAlt.trim().slice(0, 120)
+          : DEFAULT_NAVBAR_LOGO_ALT;
+      const brandTitle = pickStr(
+        navbarRaw.brandTitle,
+        DEFAULT_NAVBAR_BRAND_TITLE
+      ).slice(0, NAVBAR_BRAND_TITLE_MAX);
+      const brandSubtitle =
+        typeof navbarRaw.brandSubtitle === "string"
+          ? navbarRaw.brandSubtitle.trim().slice(0, NAVBAR_BRAND_SUBTITLE_MAX)
+          : DEFAULT_NAVBAR_BRAND_SUBTITLE;
+
+      if (!Array.isArray(navbarRaw.items)) {
+        return {
+          ...cloneNavbarDefaults(),
+          logoSrc,
+          logoAlt,
+          brandTitle,
+          brandSubtitle,
+        };
+      }
+      const seenIds = new Set<string>();
+      const items: NavbarItem[] = [];
+      for (const rawEntry of navbarRaw.items) {
+        if (items.length >= NAVBAR_MAX_ITEMS) break;
+        const entry = asObj(rawEntry);
+        const id = typeof entry.id === "string" ? entry.id.trim() : "";
+        if (!id || id.length > 40 || seenIds.has(id)) continue;
+        const label = typeof entry.label === "string" ? entry.label.trim() : "";
+        if (!label || label.length > NAVBAR_LABEL_MAX) continue;
+        const targetRaw = asObj(entry.target);
+        if (!isNavbarTargetType(targetRaw.type)) continue;
+        const targetType = targetRaw.type;
+        const rawVal =
+          typeof targetRaw.value === "string" ? targetRaw.value.trim() : "";
+        let target: NavbarTarget | null = null;
+        if (targetType === "section" && isValidHomeSectionId(rawVal)) {
+          target = { type: "section", value: rawVal };
+        } else if (targetType === "page" && isValidPublicPagePath(rawVal)) {
+          target = { type: "page", value: rawVal };
+        } else if (
+          targetType === "external" &&
+          isValidExternalHttpsUrl(rawVal)
+        ) {
+          target = { type: "external", value: rawVal };
+        } else if (targetType === "whatsapp") {
+          target = { type: "whatsapp", value: "" };
+        }
+        if (!target) continue;
+        seenIds.add(id);
+        const style = isNavbarItemStyle(entry.style) ? entry.style : "link";
+        const enabled =
+          typeof entry.enabled === "boolean" ? entry.enabled : true;
+        const openInNewTab =
+          typeof entry.openInNewTab === "boolean"
+            ? entry.openInNewTab
+            : targetType === "external";
+        items.push({
+          id,
+          label,
+          enabled,
+          target,
+          style,
+          openInNewTab,
+        });
+      }
+      if (items.length === 0 || !items.some((i) => i.enabled)) {
+        return {
+          ...cloneNavbarDefaults(),
+          logoSrc,
+          logoAlt,
+          brandTitle,
+          brandSubtitle,
+        };
+      }
+      return { logoSrc, logoAlt, brandTitle, brandSubtitle, items };
+    })(),
   };
 }
 
@@ -1710,6 +1821,8 @@ export function getDefaultBlockValue(key: SiteContentKey): Record<string, unknow
       return { ...SITE_DATA.whatsappBand };
     case "footer":
       return cloneFooterDefaults() as unknown as Record<string, unknown>;
+    case "navbar":
+      return cloneNavbarDefaults() as unknown as Record<string, unknown>;
   }
 }
 
@@ -3485,6 +3598,149 @@ export function validateSiteContentBlock(
         metaDescription: metaDescription.value,
         ogImageSrc: finalOg,
         ogImageAlt: finalOgAlt,
+      },
+    };
+  }
+
+  if (key === "navbar") {
+    const brandTitleRes = checkRequiredStr(
+      input.brandTitle ?? DEFAULT_NAVBAR_BRAND_TITLE,
+      "Nama brand navbar",
+      NAVBAR_BRAND_TITLE_MAX
+    );
+    if (brandTitleRes.error) fieldErrors.brandTitle = brandTitleRes.error;
+
+    const brandSubtitleRaw =
+      typeof input.brandSubtitle === "string"
+        ? input.brandSubtitle.trim()
+        : DEFAULT_NAVBAR_BRAND_SUBTITLE;
+    if (brandSubtitleRaw.length > NAVBAR_BRAND_SUBTITLE_MAX) {
+      fieldErrors.brandSubtitle = `Subjudul brand navbar maksimal ${NAVBAR_BRAND_SUBTITLE_MAX} karakter.`;
+    }
+
+    const logoSrcRaw =
+      typeof input.logoSrc === "string" ? input.logoSrc.trim() : "";
+    let validatedLogoSrc = DEFAULT_NAVBAR_LOGO_SRC;
+    if (logoSrcRaw) {
+      if (logoSrcRaw.startsWith("/") || isValidHttpsUrl(logoSrcRaw)) {
+        validatedLogoSrc = logoSrcRaw;
+      } else {
+        fieldErrors.logoSrc =
+          "URL logo harus berupa path lokal (/...) atau https:// yang valid.";
+      }
+    }
+
+    const logoAltRaw =
+      typeof input.logoAlt === "string" ? input.logoAlt.trim() : "";
+    if (logoAltRaw.length > 120) {
+      fieldErrors.logoAlt = "Teks alternatif logo maksimal 120 karakter.";
+    }
+
+    const rawItems = Array.isArray(input.items) ? input.items : [];
+    if (rawItems.length < NAVBAR_MIN_ITEMS) {
+      fieldErrors.items = `Minimal ${NAVBAR_MIN_ITEMS} item menu harus tersedia.`;
+    } else if (rawItems.length > NAVBAR_MAX_ITEMS) {
+      fieldErrors.items = `Maksimal ${NAVBAR_MAX_ITEMS} item menu di navbar.`;
+    }
+
+    const seenIds = new Set<string>();
+    const items: NavbarItem[] = [];
+
+    rawItems.slice(0, NAVBAR_MAX_ITEMS).forEach((rawEntry, idx) => {
+      const entry = asObj(rawEntry);
+      const id = typeof entry.id === "string" ? entry.id.trim() : "";
+      if (!id || !/^[a-zA-Z0-9_-]{1,40}$/.test(id)) {
+        fieldErrors[`items.${idx}.id`] =
+          "ID item tidak valid (hanya huruf, angka, '-' atau '_', maks 40 karakter).";
+      } else if (seenIds.has(id)) {
+        fieldErrors[`items.${idx}.id`] = "ID item menu tidak boleh duplikat.";
+      } else {
+        seenIds.add(id);
+      }
+
+      const labelRes = checkRequiredStr(
+        entry.label,
+        `Label menu #${idx + 1}`,
+        NAVBAR_LABEL_MAX
+      );
+      if (labelRes.error) {
+        fieldErrors[`items.${idx}.label`] = labelRes.error;
+      }
+
+      const style = entry.style;
+      if (!isNavbarItemStyle(style)) {
+        fieldErrors[`items.${idx}.style`] = "Gaya tampilan menu tidak valid.";
+      }
+
+      const targetRaw = asObj(entry.target);
+      const targetType = targetRaw.type;
+      const rawVal =
+        typeof targetRaw.value === "string" ? targetRaw.value.trim() : "";
+      let validatedTarget: NavbarTarget = { type: "section", value: "beranda" };
+
+      if (!isNavbarTargetType(targetType)) {
+        fieldErrors[`items.${idx}.target`] = "Jenis tujuan menu tidak valid.";
+      } else if (targetType === "section") {
+        if (!isValidHomeSectionId(rawVal)) {
+          fieldErrors[`items.${idx}.target`] =
+            "Pilih bagian beranda yang valid.";
+        } else {
+          validatedTarget = { type: "section", value: rawVal };
+        }
+      } else if (targetType === "page") {
+        if (!isValidPublicPagePath(rawVal)) {
+          fieldErrors[`items.${idx}.target`] = "Pilih halaman situs yang valid.";
+        } else {
+          validatedTarget = { type: "page", value: rawVal };
+        }
+      } else if (targetType === "external") {
+        if (!isValidExternalHttpsUrl(rawVal)) {
+          fieldErrors[`items.${idx}.target`] =
+            "URL eksternal wajib menggunakan https:// yang valid.";
+        } else {
+          validatedTarget = { type: "external", value: rawVal };
+        }
+      } else {
+        validatedTarget = { type: "whatsapp", value: "" };
+      }
+
+      const enabled =
+        typeof entry.enabled === "boolean" ? entry.enabled : true;
+      const openInNewTab =
+        typeof entry.openInNewTab === "boolean"
+          ? entry.openInNewTab
+          : targetType === "external";
+
+      items.push({
+        id,
+        label: labelRes.value,
+        enabled,
+        target: validatedTarget,
+        style: isNavbarItemStyle(style) ? style : "link",
+        openInNewTab,
+      });
+    });
+
+    if (items.length > 0 && !items.some((item) => item.enabled)) {
+      fieldErrors.items = "Minimal 1 item menu harus aktif (Tampilkan).";
+    }
+
+    if (Object.keys(fieldErrors).length > 0) {
+      return {
+        ok: false,
+        fieldErrors,
+        formError: "Periksa kembali item menu navbar yang masih perlu diperbaiki.",
+      };
+    }
+
+    return {
+      ok: true,
+      value: {
+        logoSrc: validatedLogoSrc,
+        logoAlt: logoAltRaw,
+        brandTitle: brandTitleRes.value,
+        brandSubtitle: brandSubtitleRaw,
+        items,
       },
     };
   }

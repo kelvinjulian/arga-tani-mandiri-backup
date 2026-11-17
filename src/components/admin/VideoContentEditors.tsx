@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Film, Trash2, UploadCloud } from "lucide-react";
+import { adminPath } from "@/lib/admin-path";
 import { uploadArticleImage } from "@/lib/supabase/media-upload";
 import {
   DEFAULT_VIDEO_PAGE,
@@ -77,7 +78,7 @@ function ManageVideosBanner() {
         </span>
       </div>
       <Link
-        href="/admin/video"
+        href={adminPath("/video")}
         className="inline-flex min-h-[38px] items-center rounded-xl bg-[#143D29] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#0E2B1D]"
       >
         Kelola Daftar Video →

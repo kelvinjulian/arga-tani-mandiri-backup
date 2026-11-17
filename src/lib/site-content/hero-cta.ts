@@ -35,11 +35,12 @@ export const HOME_SECTION_OPTIONS: ReadonlyArray<{
 ];
 
 export const PUBLIC_PAGE_OPTIONS: ReadonlyArray<{
-  path: "/" | "/artikel";
+  path: "/" | "/artikel" | "/video";
   label: string;
 }> = [
   { path: "/", label: "Beranda (/)" },
   { path: "/artikel", label: "Artikel Edukasi (/artikel)" },
+  { path: "/video", label: "Galeri Video (/video)" },
 ];
 
 export const CTA_TARGET_TYPES = [
