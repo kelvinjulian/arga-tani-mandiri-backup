@@ -3,6 +3,7 @@ import { resolveImageSrc } from "@/lib/media/resolveImageSrc";
 import {
   getYouTubeThumbnailUrl,
   parseVideoUrl,
+  type TikTokPlayMode,
   type VideoPlatform,
 } from "@/lib/videos/url-parser";
 
@@ -17,6 +18,7 @@ export interface PublicVideoItem {
   duration: string | null;
   isFeatured: boolean;
   showOnHome: boolean;
+  playMode: TikTokPlayMode;
   publishedAt: string | null;
 }
 
@@ -31,6 +33,7 @@ interface RawVideoRow {
   duration: unknown;
   is_featured: unknown;
   show_on_home: unknown;
+  play_mode?: unknown;
   published_at: unknown;
 }
 
@@ -62,6 +65,13 @@ function mapAndValidateVideoRow(row: RawVideoRow): PublicVideoItem | null {
       ? getYouTubeThumbnailUrl(parsed.videoId)
       : null;
 
+  const rawPlayMode =
+    parsed.platform === "tiktok" &&
+    parsed.videoId &&
+    row.play_mode === "embed"
+      ? "embed"
+      : "link";
+
   return {
     id: row.id,
     platform: parsed.platform,
@@ -79,6 +89,7 @@ function mapAndValidateVideoRow(row: RawVideoRow): PublicVideoItem | null {
         : null,
     isFeatured: Boolean(row.is_featured),
     showOnHome: Boolean(row.show_on_home),
+    playMode: rawPlayMode,
     publishedAt:
       typeof row.published_at === "string" ? row.published_at : null,
   };
@@ -93,9 +104,7 @@ export async function getHomeVideos(limit: number): Promise<PublicVideoItem[]> {
   try {
     const { data, error } = await supabase
       .from("videos")
-      .select(
-        "id, platform, url, video_id, title, description, thumbnail_src, duration, is_featured, show_on_home, published_at"
-      )
+      .select("*")
       .eq("status", "published")
       .eq("show_on_home", true)
       .order("is_featured", { ascending: false })
@@ -155,10 +164,7 @@ export async function getVideoCatalog(params: {
   try {
     let query = supabase
       .from("videos")
-      .select(
-        "id, platform, url, video_id, title, description, thumbnail_src, duration, is_featured, show_on_home, published_at",
-        { count: "exact" }
-      )
+      .select("*", { count: "exact" })
       .eq("status", "published")
       .order("is_featured", { ascending: false })
       .order("sort_order", { ascending: true })

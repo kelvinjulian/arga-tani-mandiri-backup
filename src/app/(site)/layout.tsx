@@ -31,6 +31,12 @@ export default async function SiteLayout({
         <Navbar
           companyName={siteData.companyName}
           shopeeStoreUrl={siteData.officialStore.url}
+          whatsappNumber={siteData.whatsappNumber}
+          logoSrc={siteData.navbar?.logoSrc}
+          logoAlt={siteData.navbar?.logoAlt}
+          brandTitle={siteData.navbar?.brandTitle}
+          brandSubtitle={siteData.navbar?.brandSubtitle}
+          navbarItems={siteData.navbar?.items}
           categories={categories}
         />
         <main id="konten-utama" className="w-full min-w-0 flex-1">

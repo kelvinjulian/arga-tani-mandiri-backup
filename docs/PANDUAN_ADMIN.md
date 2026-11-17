@@ -6,7 +6,7 @@ Panduan singkat ini disusun untuk pengelola situs agar dapat memperbarui artikel
 
 ## 1. Cara Masuk & Keluar
 
-1. Buka halaman `/admin/login` di browser Anda.
+1. Buka halaman `/atm-kelola/login` di browser Anda (atau `/<NEXT_PUBLIC_ADMIN_PATH>/login` jika slug admin diubah).
 2. Masukkan **email** dan **kata sandi** akun admin Anda, lalu tekan **Masuk**.
 3. Jika sudah selesai bekerja, tekan tombol **Keluar** di pojok kanan atas agar akun tetap aman.
 
@@ -67,13 +67,13 @@ Pada setiap bagian **Konten Beranda** dan **Kategori Produk**, tersedia tombol *
 
 ## Mengubah Bagian Artikel Edukasi di Beranda
 
-1. Buka **Konten Beranda** (`/admin/konten`) lalu pilih **Artikel Edukasi (Beranda)**.
+1. Buka **Konten Beranda** (`/atm-kelola/konten`) lalu pilih **Artikel Edukasi (Beranda)**.
 2. Anda dapat mengubah judul bagian, deskripsi, tombol **Lihat Semua Artikel** (beserta tujuan tautannya), label kartu baca, jumlah kartu samping (1–3), teks saat artikel kosong, gambar aksen opsional, dan teks pita konsultasi di bagian bawah.
 3. Klik **Simpan Perubahan** untuk menerbitkan, atau **Kembalikan ke teks awal** untuk kembali ke teks bawaan.
 
 ## Mengelola Kategori Artikel
 
-1. Buka **Kategori Artikel** (`/admin/kategori-artikel`) dari Dasbor atau tombol **Kelola Kategori Artikel** di halaman Daftar Artikel.
+1. Buka **Kategori Artikel** (`/atm-kelola/kategori-artikel`) dari Dasbor atau tombol **Kelola Kategori Artikel** di halaman Daftar Artikel.
 2. **Tambah kategori:** isi Nama Kategori dan Slug Filter (terisi otomatis), lalu klik **Tambah**.
 3. **Ubah nama / slug & urutan:** klik **Ubah** untuk memperbarui nama/slug (artikel yang memakai kategori ini otomatis ikut diperbarui), atau gunakan tombol panah atas/bawah untuk mengatur urutan tampil di filter.
 4. **Hapus kategori:** kategori hanya dapat dihapus jika tidak sedang dipakai oleh artikel mana pun.
@@ -81,14 +81,25 @@ Pada setiap bagian **Konten Beranda** dan **Kategori Produk**, tersedia tombol *
 
 ## Mengelola Bagian Testimoni di Beranda
 
-1. Buka **Konten Situs** (`/admin/konten`) lalu pilih **Testimoni Pelanggan** (`/admin/konten/testimonials`).
+1. Buka **Konten Situs** (`/atm-kelola/konten`) lalu pilih **Testimoni Pelanggan** (`/atm-kelola/konten/testimonials`).
 2. Anda dapat mengaktifkan/menonaktifkan bagian, mengatur label **Contoh**, tampilan **Rating** bintang, serta **Strip Angka Ringkasan** (maksimal 4 angka, dapat ditambah, dihapus, dan diurutkan).
 3. Di **Daftar Testimoni** (maksimal 12 item), gunakan tombol **Jadikan sorotan** untuk memilih testimoni awal pada kartu utama, ubah urutan, atau unggah foto opsional (wajib isi teks alternatif jika foto diisi).
 4. Hapus atau ganti seluruh item bertanda **Contoh** (baik testimoni maupun angka ringkasan) dengan data asli pelanggan (dengan izin) sebelum situs diluncurkan, lalu klik **Simpan Perubahan**.
 
 ## Mengelola Daftar Video (YouTube & TikTok)
 
-1. Buka **Video** (`/admin/video`) dari **Dashboard** admin.
+1. Buka **Video** (`/atm-kelola/video`) dari **Dashboard** admin.
 2. **Tambah satu video:** klik **Tambah Video**, tempel tautan YouTube (`youtube.com/watch?v=...`, `youtu.be/...`, `youtube.com/shorts/...`) atau TikTok (`tiktok.com/@akun/video/...`, `vm.tiktok.com/...`, `vt.tiktok.com/...`), isi judul, lalu atur deskripsi, durasi, atau thumbnail opsional.
-3. **Tempel banyak URL sekaligus:** klik **Tempel Banyak URL** (`/admin/video/banyak`), masukkan hingga 50 tautan (satu per baris), klik **Periksa URL & Pratinjau** untuk melihat hasil validasi/duplikat dan mengedit judul, lalu simpan yang valid.
+3. **Tempel banyak URL sekaligus:** klik **Tempel Banyak URL** (`/atm-kelola/video/banyak`), masukkan hingga 50 tautan (satu per baris), klik **Periksa URL & Pratinjau** untuk melihat hasil validasi/duplikat dan mengedit judul, lalu simpan yang valid.
 4. **Status, Beranda, & Unggulan:** pilih **Terbit** agar tampil di publik atau **Draft** untuk disimpan internal; aktifkan **Jadikan unggulan** untuk menandai satu video utama (menggantikan video unggulan sebelumnya secara otomatis). Gunakan tombol panah atas/bawah di daftar untuk mengatur urutan tampil (tetap bekerja lintas halaman paginasi).
+5. **Cara memutar video TikTok (Embed vs Buka di TikTok):**
+   - **Putar di situs (embed):** hanya tersedia untuk video TikTok yang memiliki ID numerik (`tiktok.com/@akun/video/<id>`, `tiktok.com/player/v1/<id>`, atau kode `<iframe>` embed dari TikTok). Saat menempel kode `<iframe>` atau URL `/player/v1/`, opsi ini otomatis terpilih sebagai bawaan.
+   - **Buka di TikTok:** wajib untuk tautan pendek (`vm.tiktok.com` / `vt.tiktok.com`) yang tidak memiliki ID numerik, dan menjadi bawaan aman untuk tautan biasa (`/@akun/video/...`).
+   - Pemutar embed TikTok hanya berjalan jika TikTok dan pemilik video mengizinkan penyematan (beberapa akun/video memblokir embed atau memerlukan domain situs aktif). Selalu uji tampilan embed di situs publik setelah menyimpan; jika tidak muncul atau terasa ragu, ubah ke **Buka di TikTok**.
+
+## Mengelola Menu Navbar
+
+1. Buka **Konten Situs → Navigasi → Navbar** (`/atm-kelola/konten/navbar`).
+2. Anda dapat menambah (maksimal 8 item), menghapus (minimal 1 item), mengaktifkan/menyembunyikan, atau mengurutkan item menu.
+3. Pilih **Tujuan** dari dropdown (Bagian beranda, Halaman situs, Tautan luar `https://`, atau WhatsApp perusahaan otomatis), lalu atur **Gaya Tampilan** (*Tautan*, *Tombol utama*, atau *Tombol garis tepi*) dan opsi **Buka di tab baru**.
+4. Jaga jumlah menu aktif tetap ringkas (disarankan maksimal 7 item) agar tampilan navbar tetap lega di layar kecil, lalu klik **Simpan Perubahan**.

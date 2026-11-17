@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdminPage } from "@/lib/supabase/admin";
+import { ADMIN_BASE_PATH, adminPath } from "@/lib/admin-path";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import {
@@ -50,7 +51,12 @@ export default async function AdminKontenEditPage({
     contact: { ...SITE_DATA.contact },
   };
 
-  if (key === "hero" || key === "article_hub" || key === "footer") {
+  if (
+    key === "hero" ||
+    key === "article_hub" ||
+    key === "footer" ||
+    key === "navbar"
+  ) {
     const { data: companyRow } = await supabase
       .from("site_content")
       .select("value")
@@ -134,6 +140,8 @@ export default async function AdminKontenEditPage({
       initialValue = merged.articleDetail as unknown as Record<string, unknown>;
     } else if (key === "whatsapp_band") {
       initialValue = merged.whatsappBand as unknown as Record<string, unknown>;
+    } else if (key === "navbar") {
+      initialValue = merged.navbar as unknown as Record<string, unknown>;
     } else {
       const rawRow = row.value as Record<string, unknown>;
       const rawLogoSrc =
@@ -152,12 +160,12 @@ export default async function AdminKontenEditPage({
       <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
         <AdminBreadcrumb
           crumbs={[
-            { label: "Dashboard", href: "/admin" },
-            { label: "Konten Situs", href: "/admin/konten" },
+            { label: "Dashboard", href: ADMIN_BASE_PATH },
+            { label: "Konten Situs", href: adminPath("/konten") },
             { label: blockMeta.group },
             { label: blockMeta.title },
           ]}
-          backHref="/admin/konten"
+          backHref={adminPath("/konten")}
           backLabel="Konten Situs"
         />
         <SiteContentEditorForm

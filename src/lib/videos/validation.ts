@@ -1,6 +1,7 @@
 import { isValidImageSrc } from "@/lib/site-content/validation";
 import {
   parseVideoUrl,
+  type TikTokPlayMode,
   type VideoPlatform,
   type VideoStatus,
 } from "@/lib/videos/url-parser";
@@ -16,11 +17,18 @@ export interface VideoEditorPayload {
   status: VideoStatus;
   is_featured: boolean;
   show_on_home: boolean;
+  play_mode?: TikTokPlayMode;
 }
 
 export type VideoFieldErrors = Partial<
   Record<
-    "url" | "title" | "description" | "duration" | "thumbnail_src" | "status",
+    | "url"
+    | "title"
+    | "description"
+    | "duration"
+    | "thumbnail_src"
+    | "status"
+    | "play_mode",
     string
   >
 >;
@@ -36,6 +44,7 @@ export interface ValidatedVideoData {
   status: VideoStatus;
   is_featured: boolean;
   show_on_home: boolean;
+  play_mode: TikTokPlayMode;
 }
 
 export function validateVideoPayload(payload: VideoEditorPayload):
@@ -81,6 +90,19 @@ export function validateVideoPayload(payload: VideoEditorPayload):
     fieldErrors.status = "Status video tidak valid.";
   }
 
+  let playMode: TikTokPlayMode = "link";
+  if (parsedUrl.ok && parsedUrl.platform === "tiktok") {
+    const requestedMode = payload.play_mode ?? parsedUrl.suggestedMode;
+    if (requestedMode !== "embed" && requestedMode !== "link") {
+      fieldErrors.play_mode = "Cara memutar TikTok tidak valid.";
+    } else if (requestedMode === "embed" && !parsedUrl.videoId) {
+      fieldErrors.play_mode =
+        "Tautan pendek TikTok tidak memiliki ID video sehingga hanya bisa dibuka di TikTok.";
+    } else {
+      playMode = requestedMode;
+    }
+  }
+
   if (Object.keys(fieldErrors).length > 0 || !parsedUrl.ok) {
     return {
       ok: false,
@@ -102,6 +124,7 @@ export function validateVideoPayload(payload: VideoEditorPayload):
       status: payload.status,
       is_featured: Boolean(payload.is_featured),
       show_on_home: Boolean(payload.show_on_home),
+      play_mode: playMode,
     },
   };
 }

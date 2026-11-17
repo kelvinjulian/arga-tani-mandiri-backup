@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { ADMIN_BASE_PATH } from "@/lib/admin-path";
 import { getSiteUrl, isSiteIndexingEnabled } from "@/lib/seo";
 
 export default function robots(): MetadataRoute.Robots {
@@ -16,7 +17,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin", "/admin/"],
+      disallow: [ADMIN_BASE_PATH, `${ADMIN_BASE_PATH}/`],
     },
     sitemap: `${siteUrl}/sitemap.xml`,
   };

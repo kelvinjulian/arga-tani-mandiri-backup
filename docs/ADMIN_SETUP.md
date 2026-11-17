@@ -1,6 +1,8 @@
 # Panduan Setup Akun Admin (`docs/ADMIN_SETUP.md`)
 
-Dokumen ini menjelaskan cara membuat akun admin pertama di Supabase dan menguji alur masuk `/admin` secara aman. Tidak ada kredensial atau kunci rahasia di sini.
+Dokumen ini menjelaskan cara membuat akun admin pertama di Supabase dan menguji alur masuk `/atm-kelola` (atau nilai `NEXT_PUBLIC_ADMIN_PATH` yang dikonfigurasi) secara aman. Tidak ada kredensial atau kunci rahasia di sini.
+
+> **Catatan path admin (`NEXT_PUBLIC_ADMIN_PATH`):** Secara bawaan panel admin berada di `/atm-kelola`, dan rute lama `/admin` selalu mengembalikan halaman 404. Atur `NEXT_PUBLIC_ADMIN_PATH` di Vercel hanya jika Anda ingin mengganti slug bawaan (`atm-kelola`). Perlu diingat bahwa variabel `NEXT_PUBLIC_` dikirim ke browser, sehingga path ini bersifat *obscure* (tidak mudah ditebak), bukan rahasia kriptografis.
 
 ---
 
@@ -27,20 +29,21 @@ ON CONFLICT (email) DO NOTHING;
 
 ---
 
-## 3. Pengujian Alur Login (`/admin`)
+## 3. Pengujian Alur Login (`/atm-kelola`)
 
-1. **Akses tanpa login:** Buka `/admin` di browser — aplikasi harus mengarahkan otomatis ke `/admin/login`.
-2. **Gagal login (kata sandi salah / email tidak terdaftar):** Masukkan kredensial yang salah — pesan galat generik `"Email atau kata sandi salah"` harus muncul tanpa membocorkan apakah email terdaftar.
-3. **Akun non-admin:** Jika login dengan akun Supabase Auth yang tidak ada di `public.admin_users` (atau email belum dikonfirmasi), sesi harus langsung dikeluarkan dan menampilkan `"Akun ini tidak memiliki akses admin"`.
-4. **Login admin berhasil:** Masuk dengan akun admin terkonfirmasi — aplikasi mengarahkan ke `/admin`, menampilkan email admin yang masuk serta dua kartu placeholder (`Artikel` dan `Konten Beranda` bertanda `Segera hadir`).
-5. **Redirect saat sudah login:** Mengakses `/admin/login` dalam keadaan sudah login sebagai admin harus mengarahkan kembali ke `/admin`.
-6. **Logout:** Tekan tombol **Keluar** — sesi cookie dihapus dan browser diarahkan ke `/admin/login`.
+1. **Akses tanpa login:** Buka `/atm-kelola` di browser — aplikasi harus mengarahkan otomatis ke `/atm-kelola/login`.
+2. **Akses `/admin` lama:** Buka `/admin` atau `/admin/login` — aplikasi harus mengembalikan halaman **404** (tanpa redirect ke path baru).
+3. **Gagal login (kata sandi salah / email tidak terdaftar):** Masukkan kredensial yang salah — pesan galat generik `"Email atau kata sandi salah"` harus muncul tanpa membocorkan apakah email terdaftar.
+4. **Akun non-admin:** Jika login dengan akun Supabase Auth yang tidak ada di `public.admin_users` (atau email belum dikonfirmasi), sesi harus langsung dikeluarkan dan menampilkan `"Akun ini tidak memiliki akses admin"`.
+5. **Login admin berhasil:** Masuk dengan akun admin terkonfirmasi — aplikasi mengarahkan ke `/atm-kelola`, menampilkan email admin yang masuk serta modul pengelolaan.
+6. **Redirect saat sudah login:** Mengakses `/atm-kelola/login` dalam keadaan sudah login sebagai admin harus mengarahkan kembali ke `/atm-kelola`.
+7. **Logout:** Tekan tombol **Keluar** — sesi cookie dihapus dan browser diarahkan ke `/atm-kelola/login`.
 
 ---
 
 ## 4. Mengelola artikel
 
-- **Rute admin artikel:** Setelah masuk ke `/admin`, pilih kartu **Artikel** untuk membuka daftar artikel (`/admin/artikel`), membuat artikel baru (`/admin/artikel/baru`), mengubah (`/admin/artikel/[id]`), atau melihat pratinjau (`/admin/artikel/[id]/pratinjau`).
+- **Rute admin artikel:** Setelah masuk ke `/atm-kelola`, pilih kartu **Artikel** untuk membuka daftar artikel (`/atm-kelola/artikel`), membuat artikel baru (`/atm-kelola/artikel/baru`), mengubah (`/atm-kelola/artikel/[id]`), atau melihat pratinjau (`/atm-kelola/artikel/[id]/pratinjau`).
 - **Status alur kerja:**
   - `draft`: hanya dapat dibaca oleh admin di panel admin (`RLS` membatasi akses publik).
   - `review`: dapat diakses di URL publik dengan meta `noindex` untuk peninjauan sebelum terbit.
@@ -54,8 +57,8 @@ ON CONFLICT (email) DO NOTHING;
 
 ## 5. Mengelola konten beranda dan kategori
 
-- **Blok `site_content` (`/admin/konten` & `/admin/konten/[key]`):** Mengelola 6 kunci JSONB (`company`, `hero`, `category_showcase`, `about`, `whatsapp_band`, `footer`). Saat membaca (`getSiteContent()`), setiap field digabung per-field (*deep-merge*) terhadap nilai bawaan di `src/data/site.ts` sehingga data yang kosong atau tidak valid otomatis memakai nilai bawaan.
-- **Kategori produk (`/admin/kategori`):** Mengelola 1–8 baris tabel `categories` dengan pengurutan `sort_order`, validasi URL `https://` (peringatan lunak jika bukan domain Shopee), dan unggah gambar ke bucket `media`.
+- **Blok `site_content` (`/atm-kelola/konten` & `/atm-kelola/konten/[key]`):** Mengelola kunci JSONB (`navbar`, `company`, `hero`, `category_showcase`, `about`, `testimonials`, `video_section`, `article_hub`, `article_page`, `article_detail`, `video_page`, `whatsapp_band`, `footer`). Saat membaca (`getSiteContent()`), setiap field digabung per-field (*deep-merge*) terhadap nilai bawaan di `src/data/site.ts` sehingga data yang kosong atau tidak valid otomatis memakai nilai bawaan.
+- **Kategori produk (`/atm-kelola/kategori`):** Mengelola 1–8 baris tabel `categories` dengan pengurutan `sort_order`, validasi URL `https://` (peringatan lunak jika bukan domain Shopee), dan unggah gambar ke bucket `media`.
 - **Nomor WhatsApp:** Divalidasi harus 9–15 digit angka tanpa `+`. Jika kosong atau tidak valid, komponen publik merender placeholder non-tautan `[ISI: nomor WhatsApp]` dan tidak pernah membentuk tautan `wa.me/` yang rusak. Editor menampilkan peringatan khusus selama nilai masih memakai angka contoh `6281234567890`.
 - **Konkurensi, reset, & revalidasi:** Setiap pembaruan dan pengurutan ulang memeriksa `updated_at` asli (*optimistic concurrency*). Tombol **Kembalikan ke teks awal** menulis ulang nilai bawaan `SITE_DATA` / `productCategories`. Setiap simpan/hapus/reset memanggil `revalidateAllSitePaths()` (`revalidatePath("/", "layout")`, `/`, `/artikel`, `/artikel/[slug]`, dan `/sitemap.xml`).
 
@@ -67,7 +70,7 @@ Jalankan `supabase/migrations/0004_article_categories.sql` di **Supabase SQL Edi
 - Mengaktifkan RLS (`SELECT` publik; `INSERT`/`UPDATE`/`DELETE` khusus `authenticated` dengan `public.is_admin()`) dan menerapkan privilege hardening yang sama dengan `0003_hardening.sql`.
 - Mengisi data awal idempoten untuk 4 kategori artikel bawaan (`panduan-label`, `manajemen-budidaya`, `pembenah-tanah`, `penyimpanan-gudang`).
 - Membuat fungsi RPC atomik `public.rename_article_category(p_id, p_name, p_slug)` (`SECURITY DEFINER`, `search_path = ''`, validasi `public.is_admin()`) agar pengubahan nama/slug kategori ikut memperbarui `articles.category` dan `articles.filter_category` dalam satu transaksi.
-- Menambahkan blok `site_content` baru dengan key `article_hub` (otomatis dibuat/upsert saat pertama kali disimpan dari `/admin/konten/article_hub`).
+- Menambahkan blok `site_content` baru dengan key `article_hub` (otomatis dibuat/upsert saat pertama kali disimpan dari `/atm-kelola/konten/article_hub`).
 
 ---
 
@@ -78,3 +81,12 @@ Jalankan `supabase/migrations/0006_videos.sql` di **Supabase SQL Editor** setela
 - Mengaktifkan RLS: publik (`anon`, `authenticated`) hanya dapat membaca baris dengan `status = 'published'`, sedangkan admin terkonfirmasi (`public.is_admin()`) dapat membaca seluruh baris serta melakukan `INSERT`, `UPDATE`, dan `DELETE`.
 - Menerapkan *privilege hardening*: mencabut `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`, `TRIGGER` dari `anon` dan mencabut `TRUNCATE`, `REFERENCES`, `TRIGGER` dari `authenticated`.
 - **Pengujian keamanan:** Jalankan uji `set role anon;` / `reset role;` serta uji REST `curl` yang tercantum di `docs/SUPABASE_SETUP.md` untuk memastikan baris `draft` tidak bocor ke publik dan mutasi tanpa sesi admin selalu ditolak.
+
+---
+
+## 7. Mode Putar TikTok (`0007_video_play_mode.sql`)
+
+Jalankan `supabase/migrations/0007_video_play_mode.sql` di **Supabase SQL Editor** setelah `0006`:
+- Menambahkan kolom `play_mode text NOT NULL DEFAULT 'link'` dengan constraint `CHECK (play_mode IN ('embed', 'link'))` pada `public.videos` secara idempoten.
+- Baris lama otomatis mendapat nilai `'link'`; baris YouTube mengabaikan nilai ini.
+- Tidak ada perubahan kebijakan RLS maupun `REVOKE`/`GRANT` karena aturan level-tabel pada `0006_videos.sql` sudah mencakup kolom baru.

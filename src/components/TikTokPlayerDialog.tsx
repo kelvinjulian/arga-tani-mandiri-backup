@@ -125,12 +125,11 @@ export function TikTokPlayerDialog({
           <div className="aspect-[9/16] w-[min(360px,calc(85dvh*9/16),calc(100vw-3rem))] max-h-[85dvh] overflow-hidden rounded-2xl bg-[#071D11]">
             {hasValidNumericId ? (
               <iframe
-                src={`https://www.tiktok.com/player/v1/${video.videoId}?autoplay=1&music_info=1&description=1`}
+                src={`https://www.tiktok.com/player/v1/${video.videoId}?embed_from=webapp_share&music_info=1&description=1&autoplay=1&muted=1`}
                 title={displayTitle}
-                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
                 className="h-full w-full border-0"
               />
             ) : (
@@ -152,8 +151,10 @@ export function TikTokPlayerDialog({
           </div>
         </div>
 
-        <div className="mt-3 flex shrink-0 items-center justify-between gap-2 pt-1 text-xs">
-          <span className="text-[#C6E2D1]">Pemutar Resmi TikTok</span>
+        <div className="mt-3 flex shrink-0 flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+          <span className="text-[#C6E2D1]">
+            Video tidak tampil? Buka langsung di TikTok.
+          </span>
           <a
             href={video.url}
             target="_blank"

@@ -1,12 +1,56 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  ADMIN_BASE_PATH,
+  adminPath,
+  isAdminBasePath,
+  isLegacyAdminPath,
+} from "@/lib/admin-path";
+
+function rewriteToInternalAdmin(
+  request: NextRequest,
+  pathname: string,
+  sourceResponse?: NextResponse
+): NextResponse {
+  if (ADMIN_BASE_PATH === "/admin") {
+    const res = sourceResponse ?? NextResponse.next({ request });
+    res.headers.set("Cache-Control", "no-store");
+    return res;
+  }
+
+  const subPath = pathname.slice(ADMIN_BASE_PATH.length) || "/";
+  const rewriteUrl = request.nextUrl.clone();
+  rewriteUrl.pathname = subPath === "/" ? "/admin" : `/admin${subPath}`;
+
+  const rewriteResponse = NextResponse.rewrite(rewriteUrl);
+  if (sourceResponse) {
+    sourceResponse.cookies.getAll().forEach((cookie) => {
+      rewriteResponse.cookies.set(cookie);
+    });
+  }
+  rewriteResponse.headers.set("Cache-Control", "no-store");
+  return rewriteResponse;
+}
 
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  if (isLegacyAdminPath(pathname)) {
+    const notFoundUrl = request.nextUrl.clone();
+    notFoundUrl.pathname = "/__nonexistent_404__";
+    notFoundUrl.search = "";
+    return NextResponse.rewrite(notFoundUrl, { status: 404 });
+  }
+
+  if (!isAdminBasePath(pathname)) {
+    return NextResponse.next({ request });
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.next({ request });
+    return rewriteToInternalAdmin(request, pathname);
   }
 
   let supabaseResponse = NextResponse.next({ request });
@@ -33,18 +77,17 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-  const isLoginRoute = pathname === "/admin/login";
+  const subPath = pathname.slice(ADMIN_BASE_PATH.length) || "/";
+  const isLoginRoute = subPath === "/login";
 
   if (!user) {
     if (!isLoginRoute) {
       const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = "/admin/login";
+      loginUrl.pathname = adminPath("/login");
       loginUrl.search = "";
       return NextResponse.redirect(loginUrl);
     }
-    supabaseResponse.headers.set("Cache-Control", "no-store");
-    return supabaseResponse;
+    return rewriteToInternalAdmin(request, pathname, supabaseResponse);
   }
 
   const { data: isAdmin, error: rpcError } = await supabase.rpc("is_admin");
@@ -54,7 +97,7 @@ export async function proxy(request: NextRequest) {
     await supabase.auth.signOut();
     if (!isLoginRoute) {
       const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = "/admin/login";
+      loginUrl.pathname = adminPath("/login");
       loginUrl.search = "?error=unauthorized";
       const redirectResponse = NextResponse.redirect(loginUrl);
       supabaseResponse.cookies.getAll().forEach((cookie) => {
@@ -63,13 +106,12 @@ export async function proxy(request: NextRequest) {
       redirectResponse.headers.set("Cache-Control", "no-store");
       return redirectResponse;
     }
-    supabaseResponse.headers.set("Cache-Control", "no-store");
-    return supabaseResponse;
+    return rewriteToInternalAdmin(request, pathname, supabaseResponse);
   }
 
   if (isLoginRoute) {
     const adminUrl = request.nextUrl.clone();
-    adminUrl.pathname = "/admin";
+    adminUrl.pathname = ADMIN_BASE_PATH;
     adminUrl.search = "";
     const redirectResponse = NextResponse.redirect(adminUrl);
     supabaseResponse.cookies.getAll().forEach((cookie) => {
@@ -79,10 +121,11 @@ export async function proxy(request: NextRequest) {
     return redirectResponse;
   }
 
-  supabaseResponse.headers.set("Cache-Control", "no-store");
-  return supabaseResponse;
+  return rewriteToInternalAdmin(request, pathname, supabaseResponse);
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|icon.png|robots.txt|sitemap.xml).*)",
+  ],
 };

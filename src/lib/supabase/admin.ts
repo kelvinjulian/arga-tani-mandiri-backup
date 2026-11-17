@@ -1,5 +1,6 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import { adminPath } from "@/lib/admin-path";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type AdminSessionResult =
@@ -46,7 +47,7 @@ export async function requireAdminPage(): Promise<{
 }> {
   const supabase = await createSupabaseServerClient();
   if (!supabase) {
-    redirect("/admin/login");
+    redirect(adminPath("/login"));
   }
 
   const {
@@ -55,13 +56,13 @@ export async function requireAdminPage(): Promise<{
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    redirect("/admin/login");
+    redirect(adminPath("/login"));
   }
 
   const { data: isAdmin, error: rpcError } = await supabase.rpc("is_admin");
   if (rpcError || isAdmin !== true) {
     await supabase.auth.signOut();
-    redirect("/admin/login?error=unauthorized");
+    redirect(adminPath("/login?error=unauthorized"));
   }
 
   return { supabase, user };

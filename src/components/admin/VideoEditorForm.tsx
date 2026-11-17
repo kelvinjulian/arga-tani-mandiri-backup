@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { adminPath } from "@/lib/admin-path";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -17,6 +18,7 @@ import { uploadArticleImage } from "@/lib/supabase/media-upload";
 import {
   getEffectiveVideoThumbnail,
   parseVideoUrl,
+  type TikTokPlayMode,
   type VideoStatus,
 } from "@/lib/videos/url-parser";
 import {
@@ -34,6 +36,7 @@ export interface VideoEditorInitialData {
   duration: string;
   thumbnail_src: string;
   status: VideoStatus;
+  play_mode?: TikTokPlayMode;
   is_featured: boolean;
   show_on_home: boolean;
 }
@@ -56,6 +59,10 @@ export function VideoEditorForm({
   const [duration, setDuration] = useState(initialData.duration);
   const [thumbnailSrc, setThumbnailSrc] = useState(initialData.thumbnail_src);
   const [status, setStatus] = useState<VideoStatus>(initialData.status);
+  const [playMode, setPlayMode] = useState<TikTokPlayMode>(
+    initialData.play_mode ?? "link"
+  );
+  const [playModeTouched, setPlayModeTouched] = useState(false);
   const [isFeatured, setIsFeatured] = useState(initialData.is_featured);
   const [showOnHome, setShowOnHome] = useState(initialData.show_on_home);
   const [updatedAt, setUpdatedAt] = useState<string | null>(
@@ -150,6 +157,7 @@ export function VideoEditorForm({
       duration,
       thumbnail_src: thumbnailSrc,
       status,
+      play_mode: playMode,
       is_featured: isFeatured,
       show_on_home: showOnHome,
     });
@@ -168,7 +176,7 @@ export function VideoEditorForm({
     window.__adminIsDirty = false;
 
     if (!isEdit && res.id) {
-      router.push(`/admin/video/${res.id}?saved=1`);
+      router.push(adminPath(`/video/${res.id}?saved=1`));
       return;
     }
 
@@ -195,7 +203,7 @@ export function VideoEditorForm({
 
     setIsDirty(false);
     window.__adminIsDirty = false;
-    router.push("/admin/video");
+    router.push(adminPath("/video"));
     router.refresh();
   };
 
@@ -253,7 +261,7 @@ export function VideoEditorForm({
           <span>{formError}</span>
           {duplicateVideoId && (
             <Link
-              href={`/admin/video/${duplicateVideoId}`}
+              href={adminPath(`/video/${duplicateVideoId}`)}
               className="inline-flex min-h-[36px] items-center rounded-xl border border-[#CBD8D0] bg-white px-3 py-1.5 text-xs font-bold text-[#143D29] hover:bg-[#EAF3EE]"
             >
               Lihat video yang sudah ada →
@@ -283,17 +291,26 @@ export function VideoEditorForm({
             <span className="text-[#B91C1C]">*</span>
           </label>
           <p className="mt-0.5 text-xs text-[#43594D]">
-            Tempel tautan video TikTok, atau kode embed dari TikTok. Tautan
-            pendek (vm.tiktok.com) hanya bisa dibuka di TikTok, tidak diputar di
-            situs. Untuk YouTube, mendukung watch, shorts, embed, dan youtu.be.
+            Tempel tautan video YouTube, atau kode embed dari YouTube (Bagikan
+            &gt; Sematkan). Juga mendukung tautan/embed TikTok; tautan pendek
+            (vm.tiktok.com) hanya bisa dibuka di TikTok.
           </p>
           <input
             id="video-url"
             type="text"
             value={url}
-            placeholder="https://www.youtube.com/watch?v=... atau kode <iframe ...> TikTok"
+            placeholder="https://www.youtube.com/watch?v=... atau kode <iframe ...>"
             onChange={(e) => {
-              setUrl(e.target.value);
+              const nextUrl = e.target.value;
+              setUrl(nextUrl);
+              const nextParsed = parseVideoUrl(nextUrl);
+              if (nextParsed.ok && nextParsed.platform === "tiktok") {
+                if (!nextParsed.videoId) {
+                  setPlayMode("link");
+                } else if (!isEdit && !playModeTouched) {
+                  setPlayMode(nextParsed.suggestedMode);
+                }
+              }
               markDirty();
             }}
             className="mt-1.5 min-h-[44px] w-full rounded-xl border border-[#CBD8D0] px-3.5 py-2 font-mono text-sm"
@@ -332,6 +349,79 @@ export function VideoEditorForm({
               <p className="font-medium">{liveParsed.error}</p>
             )}
           </div>
+        )}
+
+        {liveParsed?.ok && liveParsed.platform === "tiktok" && (
+          <fieldset className="rounded-xl border border-[#CBD8D0] bg-[#FAFDFB] p-4">
+            <legend className="px-1 text-sm font-semibold text-[#143D29]">
+              Cara memutar (TikTok)
+            </legend>
+            <div className="mt-2 grid gap-2.5 sm:grid-cols-2">
+              <label
+                className={`flex items-start gap-2.5 rounded-xl border p-3 text-sm transition ${
+                  !liveParsed.videoId
+                    ? "cursor-not-allowed border-[#E2EAE4] bg-[#F4F7F5] text-[#6B7F74]"
+                    : playMode === "embed"
+                      ? "cursor-pointer border-[#143D29] bg-[#EDF5F0] text-[#0F1F17]"
+                      : "cursor-pointer border-[#CBD8D0] bg-white text-[#0F1F17] hover:border-[#9EB7A8]"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="tiktok-play-mode"
+                  value="embed"
+                  disabled={!liveParsed.videoId}
+                  checked={playMode === "embed"}
+                  onChange={() => {
+                    setPlayMode("embed");
+                    setPlayModeTouched(true);
+                    markDirty();
+                  }}
+                  className="mt-0.5 h-4 w-4 accent-[#143D29]"
+                />
+                <span>
+                  <span className="block font-semibold">
+                    Putar di situs (embed)
+                  </span>
+                  {!liveParsed.videoId && (
+                    <span className="mt-0.5 block text-xs text-[#7F1D1D]">
+                      Tidak tersedia: tautan pendek tidak memiliki ID video numerik.
+                    </span>
+                  )}
+                </span>
+              </label>
+
+              <label
+                className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 text-sm transition ${
+                  playMode === "link"
+                    ? "border-[#143D29] bg-[#EDF5F0] text-[#0F1F17]"
+                    : "border-[#CBD8D0] bg-white text-[#0F1F17] hover:border-[#9EB7A8]"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="tiktok-play-mode"
+                  value="link"
+                  checked={playMode === "link"}
+                  onChange={() => {
+                    setPlayMode("link");
+                    setPlayModeTouched(true);
+                    markDirty();
+                  }}
+                  className="mt-0.5 h-4 w-4 accent-[#143D29]"
+                />
+                <span className="font-semibold">Buka di TikTok</span>
+              </label>
+            </div>
+            <p className="mt-2.5 text-xs text-[#43594D]">
+              Embed hanya berjalan jika TikTok dan pemilik video mengizinkan. Jika ragu, pilih Buka di TikTok.
+            </p>
+            {fieldErrors.play_mode && (
+              <p role="alert" className="mt-1.5 text-xs font-medium text-[#B91C1C]">
+                {fieldErrors.play_mode}
+              </p>
+            )}
+          </fieldset>
         )}
 
         {/* Title */}

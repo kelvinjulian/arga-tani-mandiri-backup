@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { ADMIN_BASE_PATH, adminPath } from "@/lib/admin-path";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface LoginActionState {
@@ -41,7 +42,7 @@ export async function loginAction(
     return { error: "Akun ini tidak memiliki akses admin" };
   }
 
-  redirect("/admin");
+  redirect(ADMIN_BASE_PATH);
 }
 
 export async function logoutAction(): Promise<void> {
@@ -49,5 +50,5 @@ export async function logoutAction(): Promise<void> {
   if (supabase) {
     await supabase.auth.signOut();
   }
-  redirect("/admin/login");
+  redirect(adminPath("/login"));
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Eye, Pencil } from "lucide-react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { ADMIN_BASE_PATH, adminPath } from "@/lib/admin-path";
 import { requireAdminPage } from "@/lib/supabase/admin";
 import { isValidUuid } from "@/lib/articles/admin-validation";
 import {
@@ -103,7 +104,7 @@ export default async function AdminArtikelPreviewPage({
 
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              href={`/admin/artikel/${article.id}`}
+              href={adminPath(`/artikel/${article.id}`)}
               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg bg-[#D9F0E3] px-3 py-1.5 text-xs font-bold text-[#0F1F17] hover:bg-white"
             >
               <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
@@ -116,8 +117,8 @@ export default async function AdminArtikelPreviewPage({
       <div className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6">
         <AdminBreadcrumb
           crumbs={[
-            { label: "Dashboard", href: "/admin" },
-            { label: "Daftar Artikel", href: "/admin/artikel" },
+            { label: "Dashboard", href: ADMIN_BASE_PATH },
+            { label: "Daftar Artikel", href: adminPath("/artikel") },
             { label: "Pratinjau Artikel" },
           ]}
           className="mb-0"

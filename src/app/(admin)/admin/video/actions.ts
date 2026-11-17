@@ -7,6 +7,7 @@ import {
   MAX_BULK_URLS,
   MAX_VIDEOS_TOTAL,
   parseVideoUrl,
+  type TikTokPlayMode,
 } from "@/lib/videos/url-parser";
 import {
   validateVideoPayload,
@@ -27,6 +28,7 @@ export interface SaveVideoResult {
 export interface BulkVideoInputItem {
   url: string;
   title: string;
+  play_mode?: TikTokPlayMode;
 }
 
 export interface BulkInsertVideosResult {
@@ -137,24 +139,40 @@ export async function saveVideoAction(
         ? (existing.published_at ?? new Date().toISOString())
         : existing.published_at;
 
-    const { data: updatedRows, error: updateError } = await supabase
+    const updateFields = {
+      platform: data.platform,
+      url: data.url,
+      video_id: data.video_id,
+      title: data.title,
+      description: data.description,
+      duration: data.duration,
+      thumbnail_src: data.thumbnail_src,
+      status: data.status,
+      is_featured: data.is_featured,
+      show_on_home: data.show_on_home,
+      published_at: publishedAt,
+    };
+
+    let { data: updatedRows, error: updateError } = await supabase
       .from("videos")
-      .update({
-        platform: data.platform,
-        url: data.url,
-        video_id: data.video_id,
-        title: data.title,
-        description: data.description,
-        duration: data.duration,
-        thumbnail_src: data.thumbnail_src,
-        status: data.status,
-        is_featured: data.is_featured,
-        show_on_home: data.show_on_home,
-        published_at: publishedAt,
-      })
+      .update({ ...updateFields, play_mode: data.play_mode })
       .eq("id", payload.id)
       .eq("updated_at", payload.originalUpdatedAt)
       .select("id, updated_at");
+
+    if (
+      updateError &&
+      (updateError.code === "42703" || updateError.code === "PGRST204")
+    ) {
+      const retry = await supabase
+        .from("videos")
+        .update(updateFields)
+        .eq("id", payload.id)
+        .eq("updated_at", payload.originalUpdatedAt)
+        .select("id, updated_at");
+      updatedRows = retry.data;
+      updateError = retry.error;
+    }
 
     if (updateError) {
       if (updateError.code === "23505") {
@@ -215,24 +233,38 @@ export async function saveVideoAction(
       ? maxOrderRow.sort_order + 1
       : 0;
 
-  const { data: insertedRows, error: insertError } = await supabase
+  const insertFields = {
+    platform: data.platform,
+    url: data.url,
+    video_id: data.video_id,
+    title: data.title,
+    description: data.description,
+    duration: data.duration,
+    thumbnail_src: data.thumbnail_src,
+    status: data.status,
+    is_featured: data.is_featured,
+    show_on_home: data.show_on_home,
+    sort_order: nextSortOrder,
+    published_at:
+      data.status === "published" ? new Date().toISOString() : null,
+  };
+
+  let { data: insertedRows, error: insertError } = await supabase
     .from("videos")
-    .insert({
-      platform: data.platform,
-      url: data.url,
-      video_id: data.video_id,
-      title: data.title,
-      description: data.description,
-      duration: data.duration,
-      thumbnail_src: data.thumbnail_src,
-      status: data.status,
-      is_featured: data.is_featured,
-      show_on_home: data.show_on_home,
-      sort_order: nextSortOrder,
-      published_at:
-        data.status === "published" ? new Date().toISOString() : null,
-    })
+    .insert({ ...insertFields, play_mode: data.play_mode })
     .select("id, updated_at");
+
+  if (
+    insertError &&
+    (insertError.code === "42703" || insertError.code === "PGRST204")
+  ) {
+    const retry = await supabase
+      .from("videos")
+      .insert(insertFields)
+      .select("id, updated_at");
+    insertedRows = retry.data;
+    insertError = retry.error;
+  }
 
   if (insertError || !insertedRows || insertedRows.length === 0) {
     if (insertError?.code === "23505") {
@@ -349,6 +381,7 @@ export async function bulkInsertVideosAction(
     status: "published";
     is_featured: boolean;
     show_on_home: boolean;
+    play_mode: TikTokPlayMode;
     sort_order: number;
     published_at: string;
   }> = [];
@@ -377,6 +410,14 @@ export async function bulkInsertVideosAction(
       break;
     }
 
+    const requestedMode = item.play_mode ?? parsed.suggestedMode;
+    const resolvedMode: TikTokPlayMode =
+      parsed.platform === "tiktok" &&
+      parsed.videoId &&
+      requestedMode === "embed"
+        ? "embed"
+        : "link";
+
     toInsert.push({
       platform: parsed.platform,
       url: parsed.normalizedUrl,
@@ -385,6 +426,7 @@ export async function bulkInsertVideosAction(
       status: "published",
       is_featured: false,
       show_on_home: true,
+      play_mode: resolvedMode,
       sort_order: nextSortOrder,
       published_at: nowIso,
     });
@@ -400,7 +442,15 @@ export async function bulkInsertVideosAction(
     };
   }
 
-  const { error: insertError } = await supabase.from("videos").insert(toInsert);
+  let { error: insertError } = await supabase.from("videos").insert(toInsert);
+  if (
+    insertError &&
+    (insertError.code === "42703" || insertError.code === "PGRST204")
+  ) {
+    const withoutPlayMode = toInsert.map(({ play_mode: _pm, ...rest }) => rest);
+    const retry = await supabase.from("videos").insert(withoutPlayMode);
+    insertError = retry.error;
+  }
   if (insertError) {
     return {
       ok: false,

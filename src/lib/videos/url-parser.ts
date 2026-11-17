@@ -1,5 +1,6 @@
 export type VideoPlatform = "youtube" | "tiktok";
 export type VideoStatus = "draft" | "published";
+export type TikTokPlayMode = "embed" | "link";
 
 export const MAX_VIDEOS_TOTAL = 300;
 export const MAX_BULK_URLS = 50;
@@ -16,6 +17,17 @@ const YOUTUBE_MAIN_HOSTS = new Set([
   "m.youtube.com",
 ]);
 
+const YOUTUBE_EMBED_HOSTS = new Set([
+  "youtube.com",
+  "www.youtube.com",
+  "www.youtube-nocookie.com",
+]);
+
+const YOUTUBE_NOCOOKIE_HOSTS = new Set([
+  "youtube-nocookie.com",
+  "www.youtube-nocookie.com",
+]);
+
 const TIKTOK_MAIN_HOSTS = new Set([
   "tiktok.com",
   "www.tiktok.com",
@@ -30,13 +42,14 @@ export type ParseVideoUrlResult =
       platform: VideoPlatform;
       videoId: string | null;
       normalizedUrl: string;
+      suggestedMode: TikTokPlayMode;
     }
   | {
       ok: false;
       error: string;
     };
 
-function parseTikTokIframeSnippet(raw: string): ParseVideoUrlResult {
+function parseIframeSnippet(raw: string): ParseVideoUrlResult {
   if (raw.length > 2500) {
     return {
       ok: false,
@@ -49,7 +62,7 @@ function parseTikTokIframeSnippet(raw: string): ParseVideoUrlResult {
   if (!extractedSrc) {
     return {
       ok: false,
-      error: "Atribut src pada kode embed iframe TikTok tidak ditemukan.",
+      error: "Atribut src pada kode embed iframe tidak ditemukan.",
     };
   }
 
@@ -78,53 +91,72 @@ function parseTikTokIframeSnippet(raw: string): ParseVideoUrlResult {
   }
 
   const host = parsed.hostname.toLowerCase();
-  if (host !== "www.tiktok.com") {
+  const segments = parsed.pathname.split("/").filter(Boolean);
+
+  if (YOUTUBE_EMBED_HOSTS.has(host)) {
+    const id = segments[1] ?? "";
+    if (segments[0] === "embed" && YOUTUBE_ID_REGEX.test(id)) {
+      return {
+        ok: true,
+        platform: "youtube",
+        videoId: id,
+        normalizedUrl: `https://www.youtube.com/watch?v=${id}`,
+        suggestedMode: "link",
+      };
+    }
+    return {
+      ok: false,
+      error: "URL src iframe YouTube harus berbentuk /embed/<ID> yang valid.",
+    };
+  }
+
+  if (host === "www.tiktok.com") {
+    // https://www.tiktok.com/player/v1/<digits>
+    if (
+      segments[0] === "player" &&
+      segments[1] === "v1" &&
+      TIKTOK_DIGITS_REGEX.test(segments[2] ?? "")
+    ) {
+      const id = segments[2];
+      return {
+        ok: true,
+        platform: "tiktok",
+        videoId: id,
+        normalizedUrl: `https://www.tiktok.com/player/v1/${id}`,
+        suggestedMode: "embed",
+      };
+    }
+
+    // https://www.tiktok.com/@user/video/<digits>
+    if (
+      segments.length >= 3 &&
+      segments[0].startsWith("@") &&
+      segments[0].length > 1 &&
+      segments[1] === "video" &&
+      TIKTOK_DIGITS_REGEX.test(segments[2] ?? "")
+    ) {
+      const user = segments[0];
+      const id = segments[2];
+      return {
+        ok: true,
+        platform: "tiktok",
+        videoId: id,
+        normalizedUrl: `https://www.tiktok.com/${user}/video/${id}`,
+        suggestedMode: "embed",
+      };
+    }
+
     return {
       ok: false,
       error:
-        "Host src pada kode embed iframe harus persis www.tiktok.com.",
-    };
-  }
-
-  const segments = parsed.pathname.split("/").filter(Boolean);
-
-  // https://www.tiktok.com/player/v1/<digits>
-  if (
-    segments[0] === "player" &&
-    segments[1] === "v1" &&
-    TIKTOK_DIGITS_REGEX.test(segments[2] ?? "")
-  ) {
-    const id = segments[2];
-    return {
-      ok: true,
-      platform: "tiktok",
-      videoId: id,
-      normalizedUrl: `https://www.tiktok.com/player/v1/${id}`,
-    };
-  }
-
-  // https://www.tiktok.com/@user/video/<digits>
-  if (
-    segments.length >= 3 &&
-    segments[0].startsWith("@") &&
-    segments[0].length > 1 &&
-    segments[1] === "video" &&
-    TIKTOK_DIGITS_REGEX.test(segments[2] ?? "")
-  ) {
-    const user = segments[0];
-    const id = segments[2];
-    return {
-      ok: true,
-      platform: "tiktok",
-      videoId: id,
-      normalizedUrl: `https://www.tiktok.com/${user}/video/${id}`,
+        "URL src iframe TikTok harus berbentuk /player/v1/<id> atau /@user/video/<id>.",
     };
   }
 
   return {
     ok: false,
     error:
-      "URL src iframe TikTok harus berbentuk /player/v1/<id> atau /@user/video/<id>.",
+      "Host src pada kode embed iframe harus www.youtube.com, youtube.com, www.youtube-nocookie.com, atau www.tiktok.com.",
   };
 }
 
@@ -135,7 +167,7 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
   }
 
   if (/^<iframe\b/i.test(trimmed)) {
-    return parseTikTokIframeSnippet(trimmed);
+    return parseIframeSnippet(trimmed);
   }
 
   let parsed: URL;
@@ -173,6 +205,7 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
       platform: "youtube",
       videoId: id,
       normalizedUrl: `https://www.youtube.com/watch?v=${id}`,
+      suggestedMode: "link",
     };
   }
 
@@ -192,6 +225,7 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
         platform: "youtube",
         videoId: id,
         normalizedUrl: `https://www.youtube.com/watch?v=${id}`,
+        suggestedMode: "link",
       };
     }
 
@@ -208,6 +242,7 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
         platform: "youtube",
         videoId: id,
         normalizedUrl: `https://www.youtube.com/shorts/${id}`,
+        suggestedMode: "link",
       };
     }
 
@@ -224,6 +259,7 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
         platform: "youtube",
         videoId: id,
         normalizedUrl: `https://www.youtube.com/watch?v=${id}`,
+        suggestedMode: "link",
       };
     }
 
@@ -231,6 +267,24 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
       ok: false,
       error:
         "Gunakan tautan video YouTube (/watch?v=..., /shorts/..., /embed/..., atau youtu.be/...).",
+    };
+  }
+
+  // YouTube nocookie embed URL: youtube-nocookie.com/embed/<ID>
+  if (YOUTUBE_NOCOOKIE_HOSTS.has(host)) {
+    const id = segments[1] ?? "";
+    if (segments[0] === "embed" && YOUTUBE_ID_REGEX.test(id)) {
+      return {
+        ok: true,
+        platform: "youtube",
+        videoId: id,
+        normalizedUrl: `https://www.youtube.com/watch?v=${id}`,
+        suggestedMode: "link",
+      };
+    }
+    return {
+      ok: false,
+      error: "URL youtube-nocookie.com harus berbentuk /embed/<ID> yang valid.",
     };
   }
 
@@ -248,6 +302,7 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
       platform: "tiktok",
       videoId: null,
       normalizedUrl: `https://${host}/${code}`,
+      suggestedMode: "link",
     };
   }
 
@@ -267,6 +322,7 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
         platform: "tiktok",
         videoId: null,
         normalizedUrl: `https://www.tiktok.com/t/${code}`,
+        suggestedMode: "link",
       };
     }
 
@@ -282,6 +338,7 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
         platform: "tiktok",
         videoId: id,
         normalizedUrl: `https://www.tiktok.com/player/v1/${id}`,
+        suggestedMode: "embed",
       };
     }
 
@@ -300,6 +357,7 @@ export function parseVideoUrl(rawInput: string): ParseVideoUrlResult {
         platform: "tiktok",
         videoId,
         normalizedUrl: `https://www.tiktok.com/${user}/video/${videoId}`,
+        suggestedMode: "link",
       };
     }
 

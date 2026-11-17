@@ -85,9 +85,19 @@ curl -i -X DELETE "<SUPABASE_URL>/rest/v1/videos?id=eq.00000000-0000-0000-0000-0
 
 ---
 
-## 4. Hal yang Perlu Diverifikasi di Dokumentasi Supabase Terbaru
+## 4. Konfigurasi URL Redirect Autentikasi & Hal yang Perlu Diverifikasi
 
-Sebelum membangun tahap CMS/autentikasi (`/admin`), verifikasi hal berikut pada dokumentasi resmi Supabase:
+### Redirect URLs pada Supabase Authentication
+Di **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs**, tambahkan URL login & dasbor baru (jangan hapus URL lama sebelum pemindahan dikonfirmasi berfungsi):
+- Lokal:
+  - `http://localhost:3000/atm-kelola`
+  - `http://localhost:3000/atm-kelola/login`
+- Produksi (Vercel):
+  - `https://<domain-vercel-anda>/atm-kelola`
+  - `https://<domain-vercel-anda>/atm-kelola/login`
+- Jika `NEXT_PUBLIC_ADMIN_PATH` diatur ke slug selain `atm-kelola`, ganti `atm-kelola` pada daftar di atas dengan nilai slug tersebut.
+
+Sebelum membangun atau menguji tahap CMS/autentikasi (`/atm-kelola`), verifikasi juga hal berikut pada dokumentasi resmi Supabase:
 1. **Kolom `storage.buckets`:** Pastikan versi skema `storage` proyek Anda mendukung kolom `file_size_limit` dan `allowed_mime_types` pada `INSERT INTO storage.buckets`.
 2. **Klaim JWT Email (`auth.jwt() ->> 'email'`):** Pastikan penyedia login Supabase Auth yang dipilih (Email/Password atau Magic Link) selalu menyertakan klaim `email` pada JWT saat admin melakukan mutasi dari browser/SSR.
 3. **Nama Kunci Publik:** Pastikan proyek Supabase Anda menggunakan `NEXT_PUBLIC_SUPABASE_ANON_KEY` (atau *publishable key* yang kompatibel dengan `@supabase/supabase-js`).

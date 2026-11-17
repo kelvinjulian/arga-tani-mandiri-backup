@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { adminPath } from "@/lib/admin-path";
 import { verifyAdminAction } from "@/lib/supabase/admin";
 import {
   isValidUuid,
@@ -310,5 +311,5 @@ export async function deleteArticleAction(
   }
 
   revalidateArticlePaths(existing.slug);
-  redirect("/admin/artikel?deleted=1");
+  redirect(adminPath("/artikel?deleted=1"));
 }
