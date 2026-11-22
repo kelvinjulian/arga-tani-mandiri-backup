@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 
 export default function ErrorPage({
@@ -10,6 +10,12 @@ export default function ErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[ErrorBoundary]", error);
+    }
+  }, [error]);
+
   return (
     <div
       role="alert"
@@ -23,17 +29,20 @@ export default function ErrorPage({
           Halaman Tidak Dapat Ditampilkan Saat Ini
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-[#33473D]">
-          Terjadi kendala teknis saat memuat tampilan halaman:{" "}
-          {error.message || "Kesalahan tidak diketahui"}. Silakan muat ulang
-          halaman atau kembali ke beranda.
+          Terjadi kesalahan. Silakan coba lagi.
         </p>
+        {error.digest ? (
+          <p className="mt-1.5 font-mono text-xs text-[#43594D]">
+            Kode: {error.digest}
+          </p>
+        ) : null}
         <div className="mt-6 flex flex-wrap gap-3">
           <button
             type="button"
             onClick={() => reset()}
             className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#143D29] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0E2B1D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
           >
-            Coba Muat Ulang
+            Coba lagi
           </button>
           <Link
             href="/"

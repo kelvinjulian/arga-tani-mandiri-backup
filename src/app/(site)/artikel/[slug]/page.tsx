@@ -7,6 +7,7 @@ import {
   getSiteContent,
 } from "@/lib/content";
 import { getRobotsMetadata, getSiteUrl, serializeJsonLd } from "@/lib/seo";
+import { resolveImageSrc } from "@/lib/media/resolveImageSrc";
 import { ArticleDetailView } from "@/components/ArticleDetailView";
 
 // Revalidate every 5 minutes; on-demand revalidation (revalidatePath/revalidateTag) will be added with /admin CMS.
@@ -42,6 +43,18 @@ export async function generateMetadata({
   const isNoIndex = article.status !== "published";
   const fullTitle = `${article.seoTitle} | ${siteData.companyName}`;
   const canonicalPath = `/artikel/${article.slug}`;
+  const siteUrl = getSiteUrl();
+  const resolvedImagePath = resolveImageSrc(
+    article.imageSrc,
+    "/images/hero-agriculture.jpg"
+  );
+  const absoluteOgImageUrl = resolvedImagePath.startsWith("http")
+    ? resolvedImagePath
+    : `${siteUrl}${resolvedImagePath}`;
+  const ogImageAlt =
+    typeof article.imageAlt === "string" && article.imageAlt.trim()
+      ? article.imageAlt.trim()
+      : article.seoTitle;
 
   return {
     title: article.seoTitle,
@@ -59,10 +72,10 @@ export async function generateMetadata({
       locale: "id_ID",
       images: [
         {
-          url: "/images/hero-agriculture.jpg",
+          url: absoluteOgImageUrl,
           width: 1200,
           height: 630,
-          alt: "Aktivitas pertanian di lahan budidaya",
+          alt: ogImageAlt,
         },
       ],
     },
@@ -70,7 +83,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: fullTitle,
       description: article.metaDescription,
-      images: ["/images/hero-agriculture.jpg"],
+      images: [absoluteOgImageUrl],
     },
   };
 }

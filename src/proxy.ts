@@ -15,6 +15,7 @@ function rewriteToInternalAdmin(
   if (ADMIN_BASE_PATH === "/admin") {
     const res = sourceResponse ?? NextResponse.next({ request });
     res.headers.set("Cache-Control", "no-store");
+    res.headers.set("X-Robots-Tag", "noindex, nofollow");
     return res;
   }
 
@@ -29,6 +30,7 @@ function rewriteToInternalAdmin(
     });
   }
   rewriteResponse.headers.set("Cache-Control", "no-store");
+  rewriteResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
   return rewriteResponse;
 }
 
@@ -85,7 +87,10 @@ export async function proxy(request: NextRequest) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = adminPath("/login");
       loginUrl.search = "";
-      return NextResponse.redirect(loginUrl);
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      redirectResponse.headers.set("Cache-Control", "no-store");
+      redirectResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
+      return redirectResponse;
     }
     return rewriteToInternalAdmin(request, pathname, supabaseResponse);
   }
@@ -104,6 +109,7 @@ export async function proxy(request: NextRequest) {
         redirectResponse.cookies.set(cookie);
       });
       redirectResponse.headers.set("Cache-Control", "no-store");
+      redirectResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
       return redirectResponse;
     }
     return rewriteToInternalAdmin(request, pathname, supabaseResponse);
@@ -118,6 +124,7 @@ export async function proxy(request: NextRequest) {
       redirectResponse.cookies.set(cookie);
     });
     redirectResponse.headers.set("Cache-Control", "no-store");
+    redirectResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
     return redirectResponse;
   }
 

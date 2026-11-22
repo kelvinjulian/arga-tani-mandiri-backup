@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const DEFAULT_SITE_URL = "https://argatanimandiri.example.com";
+const DEFAULT_SITE_URL = "https://argatanimandiri.com";
 
 export function getSiteUrl(): string {
   const raw = process.env.SITE_URL?.trim();
