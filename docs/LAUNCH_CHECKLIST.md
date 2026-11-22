@@ -30,5 +30,9 @@
 
 8. **Video Edukasi (`/admin/video` & `/admin/konten/video_section`):**
    - Tambahkan video asli yang sudah terbit, atau matikan opsi **Tampilkan kartu contoh saat video kosong** (`showSamples: false`) di `/admin/konten/video_section` sebelum situs diluncurkan.
-10. **Menu Navbar (`/admin/konten/navbar`)**
+10. **Menu Navbar (`/atm-kelola/konten/navbar`)**
    - Periksa seluruh item aktif pada **Navbar** (tautan bagian beranda, halaman `/artikel` atau `/video`, tautan luar `https://`, serta tujuan WhatsApp) dan pastikan tidak ada tujuan kosong atau rusak di desktop maupun menu seluler.
+11. **Pengujian Mobile (`< 1024px`)**
+   - **Lebar viewport:** Uji di `320px`, `360px`, `390px`, `430px`, `768px`, dan `1024px` (pastikan tidak ada scroll horizontal, teks terpotong, atau elemen meluber).
+   - **Perangkat nyata:** Uji langsung di **Android Chrome** dan **iOS Safari** (ketuk setiap tombol CTA hero, drawer menu seluler, sticky bottom action bar, geser *snap carousel* di Produk/Testimoni/Video/Artikel, serta dialog video TikTok/YouTube).
+   - **Jaringan & orientasi:** Uji pemuatan gambar hero (LCP) dan *lazy-loading* dengan simulasi jaringan **Slow 4G**, serta periksa tampilan pada **orientasi lanskap** (*landscape*) dan saat *on-screen keyboard* terbuka pada kolom pencarian.

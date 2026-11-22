@@ -30,6 +30,7 @@ import {
   resolveHeroCtaIcon,
 } from "@/lib/site-content/hero-cta";
 import { Container } from "@/components/Container";
+import { MobileSnapRow } from "@/components/MobileSnapRow";
 import { AboutSection } from "@/components/AboutSection";
 import { ArticleHubSection } from "@/components/ArticleHubSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
@@ -136,214 +137,236 @@ export default async function HomePage() {
           __html: serializeJsonLd(organizationJsonLd),
         }}
       />
-      {/* Section 1: Hero Section (Balanced Left Column, Wider Slanted Photo, Zero Text Collision) */}
+      {/* Section 1: Hero Section (Mobile: content-sized background photo ending 28px below trust row; Desktop lg+: Balanced Left Column & Wider Slanted Photo) */}
       <section
         id={HOME_SECTION_IDS.BERANDA}
         data-testid="hero-section"
         aria-labelledby="hero-heading"
-        style={{ minHeight: "0px", height: "auto" }}
-        className="scroll-mt-28 relative z-0 w-full min-h-0 overflow-x-clip pt-2 lg:pt-3 pb-6 lg:pb-8"
+        className="scroll-mt-28 relative z-0 w-full overflow-x-clip pt-0 pb-4 lg:min-h-0 lg:pt-3 lg:pb-8"
       >
         <Container className="relative z-10">
           <div className="relative flex flex-col lg:block">
             {/* ── Left Column Content (47% width on desktop so larger H1 & cards never collide with 55.5% photo) ── */}
-            <div className="relative z-10 w-full min-w-0 lg:w-[47%] pt-4 lg:pt-6">
-              {/* Eyebrow Pill */}
-              <div className="hero-enter-1 inline-flex items-center gap-2 rounded-full border border-[#CFE2D5] bg-[#E8F3EC] px-3.5 py-1 text-xs font-semibold text-[#14532D]">
-                <Sprout
-                  className="h-3.5 w-3.5 shrink-0 text-[#15803D]"
+            <div className="relative z-10 w-full min-w-0 lg:w-[47%] lg:pt-6">
+              {/* Mobile Hero Stage Wrapper: background photo ends 28px below the trust row (pb-7), never covering the Bento cards below */}
+              <div className="relative -mx-4 flex min-h-[520px] max-h-[100svh] flex-col justify-end overflow-hidden px-4 pt-6 pb-7 sm:-mx-6 sm:px-6 lg:mx-0 lg:block lg:min-h-0 lg:max-h-none lg:overflow-visible lg:p-0">
+                {/* Mobile/Tablet (<1024px) Full-Bleed Background Image + WCAG AA Dark Scrim Overlay */}
+                <div
                   aria-hidden="true"
-                />
-                <span>{siteData.hero.eyebrow}</span>
-              </div>
-
-              {/* Expressive & Rhythmic H1 Headline (Proportioned so "Budidaya Optimal" sits close to photo with a clean gap and zero collision) */}
-              <h1
-                id="hero-heading"
-                className="hero-enter-2 mt-2.5 font-display text-[clamp(1.75rem,2.32vw+0.35rem,2.3rem)] font-bold leading-[1.15] tracking-[-0.028em] text-[#0E291B]"
-              >
-                <span data-testid="h1-line-1" className="block">
-                  Sarana Produksi
-                </span>
-                <span
-                  data-testid="h1-line-2"
-                  className="mt-1 flex flex-wrap sm:flex-nowrap items-center gap-x-1.5 gap-y-1"
+                  className="pointer-events-none absolute inset-0 z-0 overflow-hidden bg-[#081F12] lg:hidden"
                 >
-                  <span className="whitespace-nowrap">Pertanian untuk</span>
-                  <span
-                    data-testid="h1-line-3"
-                    className="inline-block whitespace-nowrap rounded-2xl border border-[#C2E0CC] bg-[#DCEFE2] px-2.5 py-0.5 text-[#0E291B]"
-                  >
-                    Budidaya Optimal
-                  </span>
-                </span>
-                <span
-                  data-testid="h1-line-4"
-                  className="relative mt-1 inline-block pb-3 sm:whitespace-nowrap bg-gradient-to-r from-[#15803D] to-[#0D9488] bg-clip-text text-transparent"
-                >
-                  {siteData.hero.headlineAccent}
-                  {/* Continuous curved emerald underline stroke connected seamlessly to botanical leaf sprout */}
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 436 34"
-                    fill="none"
-                    className="pointer-events-none absolute -bottom-1 left-0 h-6.5 w-full text-[#15803D] sm:w-[108%]"
-                    preserveAspectRatio="none"
-                  >
-                    <path
-                      d="M 4 24 C 120 14, 270 28, 408 17 C 413 16, 417 13, 419 9"
-                      stroke="#15803D"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                    {/* Botanical leaf sprout connected directly at (419, 9) and (413, 15) */}
-                    <path
-                      d="M 419 9 C 413 3, 405 5, 407 12 C 412 13, 417 11, 419 9 Z"
-                      stroke="#15803D"
-                      strokeWidth="1.8"
-                      fill="#DCEFE2"
-                    />
-                    <path
-                      d="M 419 9 C 424 2, 433 3, 431 10 C 426 12, 422 11, 419 9 Z"
-                      stroke="#15803D"
-                      strokeWidth="1.8"
-                      fill="#DCEFE2"
-                    />
-                    <path
-                      d="M 413 15 C 420 15, 427 19, 424 24 C 418 24, 414 20, 413 15 Z"
-                      stroke="#15803D"
-                      strokeWidth="1.8"
-                      fill="#DCEFE2"
-                    />
-                  </svg>
-                </span>
-              </h1>
-
-              {/* Subheadline Description below H1 */}
-              <p className="hero-enter-3 mt-2.5 max-w-[460px] text-xs sm:text-[13.5px] leading-relaxed text-[#2C4737]">
-                {siteData.hero.subheadline}
-              </p>
-
-              {/* Two Primary CTA Buttons side-by-side in a single row */}
-              {(resolvedPrimaryCta.kind !== "disabled" ||
-                resolvedSecondaryCta.kind !== "disabled") && (
-                <div className="hero-enter-4 mt-4 flex flex-row flex-wrap sm:flex-nowrap items-center gap-3">
-                  {resolvedPrimaryCta.kind === "link" &&
-                    (resolvedPrimaryCta.isExternal ? (
-                      <a
-                        href={resolvedPrimaryCta.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0E2B1D] active:bg-[#091C13] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-                      >
-                        {primaryCta.target.type === "whatsapp" ? (
-                          <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        ) : primaryCta.target.type === "shopee" ? (
-                          <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        ) : (
-                          <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        )}
-                        <span>{primaryCta.label}</span>
-                        <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      </a>
-                    ) : (
-                      <Link
-                        href={resolvedPrimaryCta.href}
-                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#143D29] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0E2B1D] active:bg-[#091C13] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-                      >
-                        <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        <span>{primaryCta.label}</span>
-                        {resolveHeroCtaIcon(primaryCta) === "arrow-down" ? (
-                          <ArrowDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        ) : (
-                          <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        )}
-                      </Link>
-                    ))}
-                  {resolvedPrimaryCta.kind === "whatsapp-placeholder" && (
-                    <span className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#33473D]">
-                      <MessageCircle className="h-4 w-4 shrink-0 text-[#15803D]" aria-hidden="true" />
-                      <span>{resolvedPrimaryCta.text}</span>
-                    </span>
-                  )}
-
-                  {resolvedSecondaryCta.kind === "link" &&
-                    (resolvedSecondaryCta.isExternal ? (
-                      <a
-                        href={resolvedSecondaryCta.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#C23B1A] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#992B11] active:bg-[#7F230D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-                      >
-                        {secondaryCta.target.type === "whatsapp" ? (
-                          <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        ) : (
-                          <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        )}
-                        <span>{secondaryCta.label}</span>
-                        <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      </a>
-                    ) : (
-                      <Link
-                        href={resolvedSecondaryCta.href}
-                        className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl bg-[#C23B1A] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#992B11] active:bg-[#7F230D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
-                      >
-                        <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        <span>{secondaryCta.label}</span>
-                        {resolveHeroCtaIcon(secondaryCta) === "arrow-down" ? (
-                          <ArrowDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        ) : (
-                          <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        )}
-                      </Link>
-                    ))}
-                  {resolvedSecondaryCta.kind === "whatsapp-placeholder" && (
-                    <span className="inline-flex min-h-[44px] shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#33473D]">
-                      <MessageCircle className="h-4 w-4 shrink-0 text-[#15803D]" aria-hidden="true" />
-                      <span>{resolvedSecondaryCta.text}</span>
-                    </span>
-                  )}
+                  <ResilientImage
+                    src={siteData.hero.imageSrc}
+                    fallbackSrc="/images/hero-agriculture.jpg"
+                    alt={siteData.hero.imageAlt}
+                    fill
+                    priority
+                    sizes="(max-width: 1023px) 100vw, 1px"
+                    className="object-cover object-[58%_72%]"
+                  />
+                  {/* Strongest behind text/CTAs, softer near top and bottom edge */}
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,31,18,0.52)_0%,rgba(6,24,14,0.86)_42%,rgba(5,22,13,0.92)_85%,rgba(8,31,18,0.78)_100%)]" />
                 </div>
-              )}
 
-              {/* Compact Horizontal Trust Pill Bar */}
-              <div
-                data-testid="hero-trust-row"
-                className="hero-enter-5 mt-3.5 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-[#D5E6DA] bg-[#EFF6F1] px-3.5 py-1.5 text-[11px] sm:text-xs font-semibold text-[#1F4B33]"
-              >
-                <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck
-                    className="h-3.5 w-3.5 text-[#15803D]"
-                    aria-hidden="true"
-                  />
-                  <span>Kualitas Terjamin</span>
-                </span>
-                <span aria-hidden="true" className="text-[#84A993]">
-                  •
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <Leaf
-                    className="h-3.5 w-3.5 text-[#15803D]"
-                    aria-hidden="true"
-                  />
-                  <span>Ramah Lingkungan</span>
-                </span>
-                <span aria-hidden="true" className="text-[#84A993]">
-                  •
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <PackageCheck
-                    className="h-3.5 w-3.5 text-[#15803D]"
-                    aria-hidden="true"
-                  />
-                  <span>Kemasan 500gr &amp; 1kg</span>
-                </span>
+                <div className="relative z-10">
+                  {/* Eyebrow Pill */}
+                  <div className="hero-enter-1 inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#0A2617]/85 px-3.5 py-1 text-xs font-semibold text-[#E6F4EC] lg:border-[#CFE2D5] lg:bg-[#E8F3EC] lg:text-[#14532D]">
+                    <Sprout
+                      className="h-3.5 w-3.5 shrink-0 text-[#6EE7B7] lg:text-[#15803D]"
+                      aria-hidden="true"
+                    />
+                    <span>{siteData.hero.eyebrow}</span>
+                  </div>
+
+                  {/* Expressive & Rhythmic H1 Headline */}
+                  <h1
+                    id="hero-heading"
+                    className="hero-enter-2 mt-3 font-display text-[clamp(1.75rem,2.32vw+0.35rem,2.3rem)] font-bold leading-[1.15] tracking-[-0.028em] text-white lg:mt-2.5 lg:text-[#0E291B]"
+                  >
+                    <span data-testid="h1-line-1" className="block">
+                      Sarana Produksi
+                    </span>
+                    <span
+                      data-testid="h1-line-2"
+                      className="mt-1 flex flex-wrap sm:flex-nowrap items-center gap-x-1.5 gap-y-1"
+                    >
+                      <span className="whitespace-nowrap">Pertanian untuk</span>
+                      <span
+                        data-testid="h1-line-3"
+                        className="inline-block whitespace-nowrap rounded-2xl border border-[#6EE7B7]/40 bg-[#14532D]/90 px-2.5 py-0.5 text-[#ECFDF5] lg:border-[#C2E0CC] lg:bg-[#DCEFE2] lg:text-[#0E291B]"
+                      >
+                        Budidaya Optimal
+                      </span>
+                    </span>
+                    <span
+                      data-testid="h1-line-4"
+                      className="relative mt-1 inline-block max-w-full pb-3 sm:whitespace-nowrap bg-gradient-to-r from-[#6EE7B7] to-[#5EEAD4] bg-clip-text text-transparent lg:from-[#15803D] lg:to-[#0D9488]"
+                    >
+                      {siteData.hero.headlineAccent}
+                      {/* Continuous curved emerald underline stroke connected seamlessly to botanical leaf sprout */}
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 436 34"
+                        fill="none"
+                        className="pointer-events-none absolute -bottom-1 left-0 h-6.5 w-full text-[#6EE7B7] lg:w-[108%] lg:text-[#15803D]"
+                        preserveAspectRatio="none"
+                      >
+                        <path
+                          d="M 4 24 C 120 14, 270 28, 408 17 C 413 16, 417 13, 419 9"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                        />
+                        {/* Botanical leaf sprout connected directly at (419, 9) and (413, 15) */}
+                        <path
+                          d="M 419 9 C 413 3, 405 5, 407 12 C 412 13, 417 11, 419 9 Z"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          fill="#DCEFE2"
+                        />
+                        <path
+                          d="M 419 9 C 424 2, 433 3, 431 10 C 426 12, 422 11, 419 9 Z"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          fill="#DCEFE2"
+                        />
+                        <path
+                          d="M 413 15 C 420 15, 427 19, 424 24 C 418 24, 414 20, 413 15 Z"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          fill="#DCEFE2"
+                        />
+                      </svg>
+                    </span>
+                  </h1>
+
+                  {/* Subheadline Description below H1 */}
+                  <p className="hero-enter-3 mt-3 max-w-[460px] text-base leading-relaxed text-[#E6F4EC] lg:mt-2.5 lg:text-[13.5px] lg:text-[#2C4737]">
+                    {siteData.hero.subheadline}
+                  </p>
+
+                  {/* Two Primary CTA Buttons: stacked full-width (min-h 48px) on mobile, side-by-side on desktop */}
+                  {(resolvedPrimaryCta.kind !== "disabled" ||
+                    resolvedSecondaryCta.kind !== "disabled") && (
+                    <div className="hero-enter-4 mt-5 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center lg:mt-4 lg:flex-nowrap">
+                      {resolvedPrimaryCta.kind === "link" &&
+                        (resolvedPrimaryCta.isExternal ? (
+                          <a
+                            href={resolvedPrimaryCta.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-[#6EE7B7]/35 bg-[#15803D] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0E2B1D] active:bg-[#091C13] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto lg:min-h-[44px] lg:border-0 lg:bg-[#143D29] lg:px-4 lg:py-2.5 lg:focus-visible:outline-[#0F1F17]"
+                          >
+                            {primaryCta.target.type === "whatsapp" ? (
+                              <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            ) : primaryCta.target.type === "shopee" ? (
+                              <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            ) : (
+                              <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            )}
+                            <span>{primaryCta.label}</span>
+                            <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          </a>
+                        ) : (
+                          <Link
+                            href={resolvedPrimaryCta.href}
+                            className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-[#6EE7B7]/35 bg-[#15803D] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0E2B1D] active:bg-[#091C13] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto lg:min-h-[44px] lg:border-0 lg:bg-[#143D29] lg:px-4 lg:py-2.5 lg:focus-visible:outline-[#0F1F17]"
+                          >
+                            <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <span>{primaryCta.label}</span>
+                            {resolveHeroCtaIcon(primaryCta) === "arrow-down" ? (
+                              <ArrowDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            ) : (
+                              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            )}
+                          </Link>
+                        ))}
+                      {resolvedPrimaryCta.kind === "whatsapp-placeholder" && (
+                        <span className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-sm font-semibold text-[#33473D] sm:w-auto lg:min-h-[44px]">
+                          <MessageCircle className="h-4 w-4 shrink-0 text-[#15803D]" aria-hidden="true" />
+                          <span>{resolvedPrimaryCta.text}</span>
+                        </span>
+                      )}
+
+                      {resolvedSecondaryCta.kind === "link" &&
+                        (resolvedSecondaryCta.isExternal ? (
+                          <a
+                            href={resolvedSecondaryCta.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#C23B1A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#992B11] active:bg-[#7F230D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto lg:min-h-[44px] lg:px-4 lg:py-2.5 lg:focus-visible:outline-[#0F1F17]"
+                          >
+                            {secondaryCta.target.type === "whatsapp" ? (
+                              <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            ) : (
+                              <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            )}
+                            <span>{secondaryCta.label}</span>
+                            <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          </a>
+                        ) : (
+                          <Link
+                            href={resolvedSecondaryCta.href}
+                            className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#C23B1A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#992B11] active:bg-[#7F230D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto lg:min-h-[44px] lg:px-4 lg:py-2.5 lg:focus-visible:outline-[#0F1F17]"
+                          >
+                            <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <span>{secondaryCta.label}</span>
+                            {resolveHeroCtaIcon(secondaryCta) === "arrow-down" ? (
+                              <ArrowDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            ) : (
+                              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            )}
+                          </Link>
+                        ))}
+                      {resolvedSecondaryCta.kind === "whatsapp-placeholder" && (
+                        <span className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-[#CBD8D0] bg-white px-4 py-2.5 text-sm font-semibold text-[#33473D] sm:w-auto lg:min-h-[44px]">
+                          <MessageCircle className="h-4 w-4 shrink-0 text-[#15803D]" aria-hidden="true" />
+                          <span>{resolvedSecondaryCta.text}</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Compact Horizontal Trust Pill Bar (Background photo ends 28px below this row on mobile) */}
+                  <div
+                    data-testid="hero-trust-row"
+                    className="hero-enter-5 mt-4 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl border border-white/20 bg-[#0A2617]/85 px-3.5 py-2 text-xs font-semibold text-[#E6F4EC] sm:rounded-full sm:py-1.5 lg:mt-3.5 lg:border-[#D5E6DA] lg:bg-[#EFF6F1] lg:text-[#1F4B33]"
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <ShieldCheck
+                        className="h-3.5 w-3.5 text-[#6EE7B7] lg:text-[#15803D]"
+                        aria-hidden="true"
+                      />
+                      <span>Kualitas Terjamin</span>
+                    </span>
+                    <span aria-hidden="true" className="text-[#84A993]">
+                      •
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Leaf
+                        className="h-3.5 w-3.5 text-[#6EE7B7] lg:text-[#15803D]"
+                        aria-hidden="true"
+                      />
+                      <span>Ramah Lingkungan</span>
+                    </span>
+                    <span aria-hidden="true" className="text-[#84A993]">
+                      •
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <PackageCheck
+                        className="h-3.5 w-3.5 text-[#6EE7B7] lg:text-[#15803D]"
+                        aria-hidden="true"
+                      />
+                      <span>Kemasan 500gr &amp; 1kg</span>
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* 2-Column Bento Quick-Access Dock */}
-              <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-3 lg:max-w-[94.5%]">
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:mt-3.5 lg:max-w-[94.5%]">
                 {/* Card 1: Toko Resmi Tani InD® */}
-                <div className="flex flex-col justify-between rounded-2xl border border-[#BFE3CC] bg-[#D8EFE0] p-3.5 shadow-2xs transition-colors hover:border-[#8CC9A3]">
+                <div className="flex flex-col justify-between rounded-2xl border border-[#BFE3CC] bg-[#D8EFE0]/95 p-3.5 shadow-2xs transition-colors hover:border-[#8CC9A3] lg:bg-[#D8EFE0]">
                   <div className="flex items-start gap-2.5">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#15803D]/15 text-[#14532D]">
                       <ShoppingBag className="h-4 w-4" aria-hidden="true" />
@@ -352,18 +375,18 @@ export default async function HomePage() {
                       <h2 className="font-display text-xs sm:text-[13px] font-bold leading-snug text-[#0E291B]">
                         Toko Resmi Tani InD®
                       </h2>
-                      <p className="mt-1 text-[11px] leading-relaxed text-[#254231]">
+                      <p className="mt-1 text-xs lg:text-[11px] leading-relaxed text-[#254231]">
                         Tani InD® Shopee Official Store yang mendukung
                         produktivitas tanaman.
                       </p>
                     </div>
                   </div>
-                  <div className="mt-2.5 pl-10">
+                  <div className="mt-1.5 pl-10 lg:mt-2.5">
                     <a
                       href={shopeeStoreUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0E291B] hover:text-[#15803D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      className="inline-flex min-h-[44px] items-center gap-1.5 text-xs font-bold text-[#0E291B] hover:text-[#15803D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17] lg:min-h-0"
                     >
                       <span>Kunjungi Toko</span>
                       <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -372,7 +395,7 @@ export default async function HomePage() {
                 </div>
 
                 {/* Card 2: Konsultasi Budidaya via WhatsApp */}
-                <div className="flex flex-col justify-between rounded-2xl border border-[#6E9E81] bg-[#F7FBF8] p-3.5 shadow-2xs transition-colors hover:border-[#15803D]">
+                <div className="flex flex-col justify-between rounded-2xl border border-[#6E9E81] bg-[#F7FBF8]/95 p-3.5 shadow-2xs transition-colors hover:border-[#15803D] lg:bg-[#F7FBF8]">
                   <div className="flex items-start gap-2.5">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#E3F2E8] text-[#15803D]">
                       <MessageCircle className="h-4 w-4" aria-hidden="true" />
@@ -381,15 +404,15 @@ export default async function HomePage() {
                       <h2 className="font-display text-xs sm:text-[13px] font-bold leading-snug text-[#0E291B]">
                         Konsultasi Budidaya via WhatsApp
                       </h2>
-                      <p className="mt-1 text-[11px] leading-relaxed text-[#2C4737]">
+                      <p className="mt-1 text-xs lg:text-[11px] leading-relaxed text-[#2C4737]">
                         Tanya rekomendasi produk &amp; dosis dari tim kami.
                       </p>
                     </div>
                   </div>
-                  <div className="mt-2.5 pl-10">
+                  <div className="mt-1.5 pl-10 lg:mt-2.5">
                     <Link
                       href="/#konsultasi-whatsapp"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0E291B] hover:text-[#15803D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      className="inline-flex min-h-[44px] items-center gap-1.5 text-xs font-bold text-[#0E291B] hover:text-[#15803D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17] lg:min-h-0"
                     >
                       <span>Chat WhatsApp</span>
                       <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -479,21 +502,8 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* ── Mobile/Tablet photo (below 1024px) ── */}
-            <div className="relative mt-6 h-[340px] sm:h-[400px] w-full overflow-hidden rounded-2xl lg:hidden">
-              <ResilientImage
-                src={siteData.hero.imageSrc}
-                fallbackSrc="/images/hero-agriculture.jpg"
-                alt={siteData.hero.imageAlt}
-                fill
-                priority
-                sizes="(min-width: 1024px) 52vw, calc(100vw - 64px)"
-                className="object-cover object-center"
-              />
-            </div>
-
-            {/* ── Dark-Green Dual Badge (mobile/tablet: in-flow) ── */}
-            <div className="lg:hidden mt-4">
+            {/* ── Dark-Green Dual Badge (mobile/tablet: in-flow over background hero) ── */}
+            <div className="lg:hidden mt-3.5">
               <div
                 data-testid="hero-dark-badge-mobile"
                 style={{ backgroundColor: "rgba(18, 49, 32, 0.94)" }}
@@ -569,12 +579,12 @@ export default async function HomePage() {
                     </p>
                   </div>
 
-                  <div className="mt-5 pt-2">
+                  <div className="mt-4 pt-1 lg:mt-5 lg:pt-2">
                     <a
                       href={shopeeStoreUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0E291B] underline decoration-[#84A993] underline-offset-4 transition-colors hover:text-[#15803D] hover:decoration-[#15803D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17]"
+                      className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-bold text-[#0E291B] underline decoration-[#84A993] underline-offset-4 transition-colors hover:text-[#15803D] hover:decoration-[#15803D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F1F17] lg:min-h-0"
                     >
                       <span>{siteData.categoryShowcase.ctaLabel}</span>
                       <ArrowUpRight
@@ -583,10 +593,108 @@ export default async function HomePage() {
                       />
                     </a>
                   </div>
+
+                  {/* Mobile (<768px) horizontally scrollable quick category chips */}
+                  {categories.length > 0 && (
+                    <div
+                      role="navigation"
+                      aria-label="Pintasan kategori produk"
+                      className="mt-3 flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:hidden"
+                    >
+                      {categories.map((cat, idx) => {
+                        const ChipIcon = CATEGORY_ICONS[idx] ?? Sprout;
+                        return (
+                          <a
+                            key={`chip-${cat.id}`}
+                            href={cat.href || shopeeStoreUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#BFE3CC] bg-white px-3.5 py-2 text-xs font-semibold text-[#143D29] shadow-2xs transition-colors hover:bg-[#EAF3EE] active:bg-[#DCECE2]"
+                          >
+                            <ChipIcon
+                              className="h-3.5 w-3.5 shrink-0 text-[#15803D]"
+                              aria-hidden="true"
+                            />
+                            <span>{cat.name}</span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
-                {/* 4 Tall Visual Bento Cards (9 cols on lg) */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:col-span-9 lg:grid-cols-4">
+                {/* Mobile (<768px): Horizontal Snap Carousel of Category Cards */}
+                <div className="md:hidden">
+                  <MobileSnapRow
+                    ariaLabel="Daftar kategori produk"
+                    itemCount={categories.length}
+                    edgeBleed={false}
+                  >
+                    {categories.map((cat, idx) => {
+                      const IconComponent = CATEGORY_ICONS[idx] ?? Sprout;
+                      return (
+                        <a
+                          key={`mob-${cat.id}`}
+                          href={cat.href || shopeeStoreUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${cat.name} di Shopee`}
+                          className={`group relative flex flex-col overflow-hidden rounded-2xl border border-[#D5E4DA] bg-[#E3EDE7] shadow-xs transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29] ${
+                            categories.length > 2
+                              ? "w-[84%] max-w-[300px] shrink-0 snap-start"
+                              : "w-full"
+                          }`}
+                        >
+                          <div className="relative h-36 w-full overflow-hidden bg-[#E3EDE7]">
+                            <ResilientImage
+                              src={cat.image}
+                              fallbackSrc={
+                                productCategories[idx]?.image ??
+                                "/images/hero-agriculture.jpg"
+                              }
+                              alt={cat.alt}
+                              fill
+                              sizes="(max-width: 767px) 84vw, 240px"
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="-mt-[1px] relative z-10 flex flex-1 flex-col justify-between bg-[#E3EDE7] p-4 pt-0 min-w-0">
+                            <div>
+                              <div className="relative z-20 -mt-5 mb-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#D5E4DA] bg-white text-[#15803D] shadow-xs">
+                                <IconComponent
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                              </div>
+                              <div className="flex items-start justify-between gap-1.5">
+                                <h3 className="font-display text-[15px] font-bold leading-snug text-[#0E291B]">
+                                  {cat.name}
+                                </h3>
+                                <ArrowUpRight
+                                  className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#43594D]"
+                                  aria-hidden="true"
+                                />
+                              </div>
+                              <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-[#2C4235]">
+                                {cat.description}
+                              </p>
+                            </div>
+                            <div className="mt-3.5 flex items-center gap-1.5 border-t border-[#C8DBD0] pt-2.5 text-xs font-bold text-[#14532D]">
+                              <span>Lihat Katalog</span>
+                              <ArrowUpRight
+                                className="h-3.5 w-3.5 shrink-0"
+                                aria-hidden="true"
+                              />
+                            </div>
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </MobileSnapRow>
+                </div>
+
+                {/* Tablet (2 cols) & Desktop (4 Tall Visual Bento Cards, 9 cols on lg) */}
+                <div className="hidden md:grid md:grid-cols-2 md:gap-4 lg:col-span-9 lg:grid-cols-4">
                   {categories.map((cat, idx) => {
                     const IconComponent = CATEGORY_ICONS[idx] ?? Sprout;
                     return (
@@ -608,7 +716,6 @@ export default async function HomePage() {
                             }
                             alt={cat.alt}
                             fill
-                            loading={idx === 0 ? "eager" : undefined}
                             sizes="(max-width: 767px) calc(100vw - 64px), (max-width: 1023px) 44vw, 240px"
                             className="object-cover transition-transform duration-500 group-hover:scale-105 [backface-visibility:hidden] [transform:translateZ(0)]"
                           />

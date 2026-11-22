@@ -89,7 +89,7 @@ export function TikTokPlayerDialog({
 
   return createPortal(
     <div
-      className={`fixed inset-0 ${MODAL_Z_INDEX_CLASS} pointer-events-auto flex max-h-dvh items-center justify-center overflow-y-auto bg-[#071D11]/80 p-3 backdrop-blur-xs transition-opacity duration-200 motion-reduce:transition-none sm:p-4`}
+      className={`fixed inset-0 ${MODAL_Z_INDEX_CLASS} pointer-events-auto flex max-h-dvh items-end justify-center overflow-y-auto bg-[#071D11]/80 p-0 backdrop-blur-xs transition-opacity duration-200 motion-reduce:transition-none sm:items-center sm:p-4`}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -101,9 +101,9 @@ export function TikTokPlayerDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="tiktok-player-title"
-        className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-[392px] flex-col overflow-hidden rounded-3xl border border-[#2B6244] bg-[#0E2F1D] p-4 text-white shadow-2xl"
+        className="flex max-h-[94dvh] w-full max-w-[420px] flex-col overflow-hidden rounded-t-3xl border border-[#2B6244] bg-[#0E2F1D] px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-white shadow-2xl sm:max-h-[calc(100dvh-2rem)] sm:max-w-[392px] sm:rounded-3xl sm:p-4"
       >
-        <div className="mb-3 flex shrink-0 items-start justify-between gap-3">
+        <div className="mb-3 flex shrink-0 items-center justify-between gap-3">
           <h2
             id="tiktok-player-title"
             className="line-clamp-2 font-display text-sm font-bold leading-snug text-white sm:text-base"
@@ -115,7 +115,7 @@ export function TikTokPlayerDialog({
             type="button"
             onClick={onClose}
             aria-label="Tutup pemutar video"
-            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none"
+            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition-colors hover:bg-white/20 active:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none lg:h-9 lg:w-9"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -159,7 +159,7 @@ export function TikTokPlayerDialog({
             href={video.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 font-semibold text-[#86EFAC] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="inline-flex min-h-[44px] items-center gap-1.5 font-semibold text-[#86EFAC] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:min-h-0"
           >
             <span>Buka di TikTok</span>
             <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />

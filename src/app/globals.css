@@ -28,7 +28,8 @@
   --deco-sage: #83a183;
   --leaf-opacity: 1;
   --leaf-width: clamp(140px, 16vw, 300px);
-  --section-gap: 3.5rem;
+  --section-gap: 2.75rem;
+  --mobile-bar-h: calc(68px + env(safe-area-inset-bottom, 0px));
   --brand-youtube: #ff0000;
   --brand-youtube-text: #b91c1c;
   --brand-tiktok-bg: #111111;
@@ -40,6 +41,7 @@
 @media (min-width: 1024px) {
   :root {
     --section-gap: 6rem;
+    --mobile-bar-h: 0px;
   }
 }
 
@@ -47,6 +49,7 @@
   :root {
     --leaf-opacity: 0.7;
     --leaf-width: clamp(140px, 16vw, 240px);
+    --section-gap: 3rem;
   }
 }
 
@@ -54,6 +57,7 @@
   :root {
     --leaf-opacity: 0.5;
     --leaf-width: clamp(120px, 20vw, 160px);
+    --section-gap: 2.5rem;
   }
 }
 
@@ -69,8 +73,42 @@
   width: 100%;
   overflow-x: clip;
   background-color: transparent;
-  min-height: 0 !important;
-  height: auto !important;
+}
+
+@media (min-width: 1024px) {
+  [data-testid="hero-section"] {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  html,
+  body {
+    overflow-x: clip;
+    -webkit-tap-highlight-color: rgba(20, 61, 41, 0.14);
+  }
+
+  body {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 @layer base {

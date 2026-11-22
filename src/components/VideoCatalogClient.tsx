@@ -250,6 +250,21 @@ export function VideoCatalogClient({
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [activeTikTokVideo, setActiveTikTokVideo] =
     useState<PublicVideoItem | null>(null);
+  const listTopRef = React.useRef<HTMLDivElement | null>(null);
+  const prevPageRef = React.useRef<number>(currentPage);
+
+  React.useEffect(() => {
+    if (prevPageRef.current !== currentPage) {
+      prevPageRef.current = currentPage;
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      listTopRef.current?.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    }
+  }, [currentPage]);
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const handlePlayYouTube = (id: string) => {
@@ -293,13 +308,13 @@ export function VideoCatalogClient({
   ];
 
   return (
-    <div className="mt-7 space-y-7">
-      {/* Filter Chips & Search */}
-      <div className="flex flex-col gap-3.5 rounded-3xl border border-[#DCE8DF] bg-white/95 p-3.5 shadow-sm sm:p-4 md:flex-row md:items-center md:justify-between">
+    <div ref={listTopRef} className="mt-7 scroll-mt-24 space-y-7">
+      {/* Sticky Filter Chips & Search under Navbar on mobile */}
+      <div className="sticky top-[64px] z-30 flex flex-col gap-3 rounded-2xl border border-[#DCE8DF] bg-white/95 p-3 shadow-sm backdrop-blur-md sm:rounded-3xl sm:p-4 md:static md:flex-row md:items-center md:justify-between">
         <div
           role="navigation"
           aria-label="Filter platform video"
-          className="inline-flex flex-wrap items-center gap-1.5 rounded-2xl border border-[#E1EDE5] bg-[#F2F7F4] p-1.5"
+          className="flex w-full flex-nowrap items-center gap-1.5 overflow-x-auto overscroll-x-contain rounded-2xl border border-[#E1EDE5] bg-[#F2F7F4] p-1.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:inline-flex md:w-auto md:flex-wrap"
         >
           {chips.map((chip) => {
             const isActive = activePlatform === chip.key;
@@ -307,7 +322,7 @@ export function VideoCatalogClient({
               <Link
                 key={chip.key}
                 href={buildHref({ platform: chip.key, page: 1 })}
-                className={`inline-flex min-h-[36px] items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29] ${
+                className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29] lg:min-h-[36px] ${
                   isActive
                     ? "bg-[#143D29] text-white shadow-xs"
                     : "bg-transparent text-[#143D29] hover:bg-white hover:shadow-2xs"
@@ -352,12 +367,12 @@ export function VideoCatalogClient({
               defaultValue={searchQuery}
               placeholder={pageData.searchPlaceholder}
               aria-label={pageData.searchPlaceholder}
-              className="min-h-[36px] w-full bg-transparent pl-8 pr-2 py-1 text-sm text-[#0F1F17] placeholder:text-[#587063] focus:outline-none"
+              className="min-h-[44px] w-full bg-transparent pl-8 pr-2 py-1 text-base text-[#0F1F17] placeholder:text-[#587063] focus:outline-none lg:min-h-[36px] lg:text-sm"
             />
           </div>
           <button
             type="submit"
-            className="min-h-[36px] shrink-0 cursor-pointer rounded-xl bg-[#143D29] px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#0E2B1D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29]"
+            className="min-h-[44px] shrink-0 cursor-pointer rounded-xl bg-[#143D29] px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#0E2B1D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29] lg:min-h-[36px]"
           >
             Cari
           </button>
@@ -392,7 +407,7 @@ export function VideoCatalogClient({
           </p>
           <Link
             href="/video"
-            className="mt-4 inline-flex min-h-[40px] items-center rounded-xl border border-[#CBD8D0] bg-[#F8FBF9] px-4 py-2 text-xs font-semibold text-[#143D29] hover:bg-[#EAF3EE]"
+            className="mt-4 inline-flex min-h-[44px] items-center rounded-xl border border-[#CBD8D0] bg-[#F8FBF9] px-4 py-2 text-xs font-semibold text-[#143D29] hover:bg-[#EAF3EE] lg:min-h-[40px]"
           >
             Reset Filter
           </Link>
@@ -409,7 +424,7 @@ export function VideoCatalogClient({
           ) : null}
 
           {gridItems.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 min-[430px]:grid-cols-2 md:grid-cols-3 lg:gap-5 xl:grid-cols-4">
               {gridItems.map((video) => (
                 <VideoCard
                   key={video.id}
@@ -436,7 +451,7 @@ export function VideoCatalogClient({
                 {currentPage > 1 ? (
                   <Link
                     href={buildHref({ page: currentPage - 1 })}
-                    className="inline-flex min-h-[36px] items-center gap-1 rounded-xl border border-[#CBD8D0] bg-[#F8FBF9] px-3 py-1.5 font-semibold text-[#143D29] hover:bg-[#EAF3EE]"
+                    className="inline-flex min-h-[44px] items-center gap-1 rounded-xl border border-[#CBD8D0] bg-[#F8FBF9] px-3 py-1.5 font-semibold text-[#143D29] hover:bg-[#EAF3EE] lg:min-h-[36px]"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>Sebelumnya</span>
@@ -445,7 +460,7 @@ export function VideoCatalogClient({
                 {currentPage < totalPages ? (
                   <Link
                     href={buildHref({ page: currentPage + 1 })}
-                    className="inline-flex min-h-[36px] items-center gap-1 rounded-xl border border-[#CBD8D0] bg-[#F8FBF9] px-3 py-1.5 font-semibold text-[#143D29] hover:bg-[#EAF3EE]"
+                    className="inline-flex min-h-[44px] items-center gap-1 rounded-xl border border-[#CBD8D0] bg-[#F8FBF9] px-3 py-1.5 font-semibold text-[#143D29] hover:bg-[#EAF3EE] lg:min-h-[36px]"
                   >
                     <span>Berikutnya</span>
                     <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />

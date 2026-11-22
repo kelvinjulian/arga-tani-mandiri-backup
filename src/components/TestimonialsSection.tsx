@@ -9,6 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import { CarouselControls } from "@/components/CarouselControls";
+import { MobileSnapRow } from "@/components/MobileSnapRow";
 import { HOME_SECTION_IDS } from "@/lib/site-content/hero-cta";
 import {
   cloneTestimonialsDefaults,
@@ -337,18 +338,20 @@ function SummaryStatsStrip({
 
   const colsClass =
     stats.length === 1
-      ? "sm:grid-cols-1"
+      ? "grid-cols-1"
       : stats.length === 2
-        ? "sm:grid-cols-2 sm:divide-x sm:divide-y-0"
-        : stats.length >= 4
-          ? "sm:grid-cols-2 lg:grid-cols-4 lg:divide-x sm:divide-y-0"
-          : "sm:grid-cols-3 sm:divide-x sm:divide-y-0";
+        ? "grid-cols-2"
+        : stats.length === 3
+          ? "grid-cols-2 sm:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1"
+          : stats.length === 4
+            ? "grid-cols-2 lg:grid-cols-4"
+            : "grid-cols-2 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1";
 
   return (
     <div
       ref={stripRef}
       aria-label="Ringkasan ulasan pelanggan"
-      className={`mt-6 grid grid-cols-1 divide-y divide-[#DCE8DF] overflow-hidden rounded-2xl border border-[#CFE3D6] bg-gradient-to-r from-[#F6FBF7] via-white to-[#F6FBF7] shadow-xs ${colsClass}`}
+      className={`mt-6 grid gap-px overflow-hidden rounded-2xl border border-[#CFE3D6] bg-[#DCE8DF] shadow-xs ${colsClass}`}
     >
       {stats.map((stat, idx) => {
         const parsed = parseStatValue(stat.value);
@@ -360,13 +363,13 @@ function SummaryStatsStrip({
         return (
           <div
             key={stat.id}
-            className="flex items-center gap-3.5 px-4 py-3 sm:px-5 sm:py-3.5"
+            className="flex items-center gap-3 bg-gradient-to-r from-[#F6FBF7] via-white to-[#F6FBF7] px-3.5 py-3 sm:gap-3.5 sm:px-5 sm:py-3.5"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E3F3E8] ring-1 ring-[#C5E3CE]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E3F3E8] ring-1 ring-[#C5E3CE] sm:h-10 sm:w-10">
               <StatIcon index={idx} />
             </span>
             <div className="min-w-0">
-              <p className="font-display text-2xl leading-none font-bold tracking-tight tabular-nums text-[#143D29] sm:text-3xl">
+              <p className="font-display text-xl leading-none font-bold tracking-tight tabular-nums text-[#143D29] sm:text-3xl">
                 <span className="relative inline-block">
                   <span className="invisible" aria-hidden="true">
                     {stat.value}
@@ -490,8 +493,79 @@ export function TestimonialsSection({
           <SummaryStatsStrip stats={data.stats} />
         ) : null}
 
-        {/* Interactive Layout: Fixed-height Featured Column + Fixed 2x2 Grid */}
-        <div className="mt-7 grid grid-cols-1 gap-6 md:grid-cols-12 md:items-start">
+        {/* Mobile (<768px): Snap Row of Full-Width-ish Testimonial Cards with Counter & Progress Synced to Scroll */}
+        <div className="mt-6 md:hidden">
+          <MobileSnapRow
+            ariaLabel="Daftar testimoni pelanggan"
+            itemCount={total}
+            activeIndex={safeIndex}
+            onActiveIndexChange={(idx) => setActiveIndex(idx)}
+          >
+            {items.map((item, idx) => {
+              const meta = [item.role, item.location]
+                .filter(Boolean)
+                .join(" • ");
+              return (
+                <article
+                  key={item.id}
+                  className={`relative flex h-[24rem] flex-col overflow-hidden rounded-tl-[40px] rounded-tr-2xl rounded-br-[40px] rounded-bl-2xl border border-[#1E4F34] bg-[#0E2F1D] p-5 text-white shadow-lg ${
+                    total > 2 ? "w-[86%] shrink-0 snap-start" : "w-full"
+                  }`}
+                >
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-3 right-4 opacity-40"
+                  >
+                    <Quote className="h-16 w-16 text-[#2B6644]" />
+                  </div>
+                  <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+                    <div className="flex min-h-[1.75rem] shrink-0 flex-wrap items-center gap-2">
+                      {item.tag ? (
+                        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-[#86EFAC]">
+                          {item.tag}
+                        </span>
+                      ) : null}
+                      {item.isSample && data.showSampleLabel ? (
+                        <span className="rounded-full border border-white/25 bg-white/10 px-2.5 py-0.5 text-xs font-medium text-[#D9F0E3]">
+                          Contoh
+                        </span>
+                      ) : null}
+                    </div>
+                    {data.showRatings && item.rating !== null ? (
+                      <div className="mt-2.5 flex h-5 shrink-0 items-center">
+                        <RatingStars rating={item.rating} dark />
+                      </div>
+                    ) : null}
+                    <div className="mt-3 min-h-0 flex-1 overflow-hidden">
+                      <blockquote className="line-clamp-7 font-display text-base leading-relaxed font-semibold text-white">
+                        &ldquo;{item.quote}&rdquo;
+                      </blockquote>
+                    </div>
+                    <div className="mt-auto flex shrink-0 items-center gap-3 border-t border-white/15 pt-3.5">
+                      <TestimonialAvatar
+                        item={item}
+                        index={idx}
+                        size="md"
+                        dark
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate font-display text-sm font-bold text-white">
+                          {item.name}
+                        </p>
+                        <p className="min-h-[1rem] truncate text-xs text-[#C6E2D1]">
+                          {meta}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </MobileSnapRow>
+        </div>
+
+        {/* Tablet & Desktop (>=768px): Fixed-height Featured Column + Fixed 2x2 Grid */}
+        <div className="mt-7 hidden gap-6 md:grid md:grid-cols-12 md:items-start">
           {/* Left Column: Featured Card (fixed 27rem mobile / 29rem desktop) + Control Row (fixed 3.75rem) */}
           <div
             onKeyDown={handleFeaturedKeyDown}
@@ -592,38 +666,6 @@ export function TestimonialsSection({
             </div>
           ) : null}
         </div>
-
-        {/* Mobile (<768px): Horizontal scroll-snap strip for remaining items with equal fixed height */}
-        {circularOthers.length > 0 ? (
-          <div className="mt-5 md:hidden">
-            <div className="relative">
-              <div
-                role="region"
-                aria-label="Daftar testimoni lainnya"
-                tabIndex={0}
-                className="flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-3 pr-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29]"
-              >
-                {circularOthers.map(({ item, originalIndex }) => (
-                  <div
-                    key={item.id}
-                    className="h-[15.5rem] w-[84vw] max-w-[330px] shrink-0 snap-center"
-                  >
-                    <SmallTestimonialButton
-                      item={item}
-                      originalIndex={originalIndex}
-                      showRatings={data.showRatings}
-                      onSelect={selectIndex}
-                    />
-                  </div>
-                ))}
-              </div>
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#F7FBF8] to-transparent"
-              />
-            </div>
-          </div>
-        ) : null}
 
         {/* Single Section-level Sample Note */}
         {showSampleNotice ? (

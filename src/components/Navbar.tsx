@@ -210,6 +210,9 @@ export function Navbar({
   const isClickScrollingRef = useRef(false);
   const clickScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pendingScrollTargetRef = useRef<string | null>(null);
+  const drawerRef = useRef<HTMLElement | null>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
   // Calculate active href based strictly on scroll position (HOME ROUTE ONLY)
   const getActiveHrefFromScroll = useCallback((): string => {
@@ -380,15 +383,55 @@ export function Navbar({
     };
   }, []);
 
-  // Escape key handler for mobile drawer
+  // Body scroll lock, focus trap, and Escape key handler for mobile drawer
   useEffect(() => {
+    document.documentElement.dataset.mobileMenuOpen = mobileMenuOpen
+      ? "true"
+      : "false";
+
+    if (!mobileMenuOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const raf = requestAnimationFrame(() => {
+      closeBtnRef.current?.focus();
+    });
+
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && mobileMenuOpen) {
+      if (event.key === "Escape") {
+        event.preventDefault();
         setMobileMenuOpen(false);
+        menuTriggerRef.current?.focus();
+        return;
+      }
+
+      if (event.key === "Tab" && drawerRef.current) {
+        const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.body.style.overflow = previousOverflow;
+      document.documentElement.dataset.mobileMenuOpen = "false";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [mobileMenuOpen]);
 
   // Click sets active item immediately and smooth-scrolls
@@ -470,14 +513,14 @@ export function Navbar({
         />
       )}
 
-      <header className="sticky top-0 z-50 w-full min-h-[76px] sm:min-h-[84px] flex items-center py-2">
+      <header className="sticky top-0 z-50 flex min-h-[60px] w-full items-center py-1.5 lg:min-h-[84px] lg:py-2">
         <Container className="relative w-full">
           {/* Outer Floating Glassmorphic Dock Container (morphs from full-width rounded-2xl dock at top to compact centered rounded-full capsule on scroll) */}
           <div
-            className={`mx-auto flex items-center justify-between backdrop-blur-xl border transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            className={`mx-auto flex items-center justify-between backdrop-blur-xl border transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
               isScrolled
-                ? "max-w-[1140px] rounded-full bg-white/95 border-[#BBD4C4] px-4 sm:px-5 py-2 shadow-[0_14px_36px_rgba(14,47,29,0.12)] ring-1 ring-[#0E2F1D]/5"
-                : "max-w-full rounded-2xl bg-white/85 border-[#DCE8DF] px-4 sm:px-6 py-2.5 sm:py-3 shadow-[0_8px_30px_rgb(14,47,29,0.06)]"
+                ? "max-w-[1140px] rounded-full bg-white/95 border-[#BBD4C4] px-3.5 sm:px-5 py-1.5 lg:py-2 shadow-[0_14px_36px_rgba(14,47,29,0.12)] ring-1 ring-[#0E2F1D]/5"
+                : "max-w-full rounded-2xl bg-white/95 lg:bg-white/85 border-[#DCE8DF] px-3.5 sm:px-6 py-2 lg:py-3 shadow-[0_8px_30px_rgb(14,47,29,0.06)]"
             }`}
           >
             {/* Left: Brand Identity */}
@@ -720,219 +763,286 @@ export function Navbar({
 
             {/* Mobile & Tablet Closed Right Controls (< lg) */}
             <div className="flex items-center gap-2 lg:hidden">
-              <a
-                href={shopeeStoreUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-[#C84B28] hover:bg-[#B03E1E] text-white text-xs font-semibold px-3 py-1.5 rounded-full inline-flex items-center gap-1 shadow-2xs transition-colors"
-              >
-                <ShoppingBag className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span>Shopee</span>
-              </a>
-
               <button
+                ref={menuTriggerRef}
                 type="button"
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
                 aria-expanded={mobileMenuOpen}
                 aria-controls="mobile-bento-drawer"
-                aria-label={mobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
-                className={`bg-[#EAF3EE] hover:bg-[#DCECE2] text-[#0E2F1D] border border-[#CDE2D4] w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all duration-500 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] ${
+                aria-label={
+                  mobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"
+                }
+                className={`inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center gap-2 border border-[#CDE2D4] bg-[#EAF3EE] px-3.5 py-2 text-xs font-bold text-[#0E2F1D] transition-colors duration-200 hover:bg-[#DCECE2] active:bg-[#CFE4D7] outline-none focus-visible:ring-2 focus-visible:ring-[#143D29] motion-reduce:transition-none ${
                   isScrolled ? "rounded-full" : "rounded-xl"
                 }`}
               >
                 {mobileMenuOpen ? (
-                  <X className="h-5 w-5" aria-hidden="true" />
+                  <>
+                    <X className="h-5 w-5 shrink-0" aria-hidden="true" />
+                    <span>Tutup</span>
+                  </>
                 ) : (
-                  <Menu className="h-5 w-5" aria-hidden="true" />
+                  <>
+                    <Menu className="h-5 w-5 shrink-0" aria-hidden="true" />
+                    <span>Menu</span>
+                  </>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Mobile Open State: Floating Bento Sheet Dropdown (< lg) */}
+          {/* Mobile Open State: Full-Height Drawer Sheet (< lg) */}
           {mobileMenuOpen && (
             <nav
+              ref={drawerRef}
               id="mobile-bento-drawer"
+              role="dialog"
+              aria-modal="true"
               aria-label="Navigasi seluler"
-              className="bg-white/95 backdrop-blur-xl border border-[#DCE8DF] rounded-3xl p-5 mt-2 shadow-2xl relative z-50 lg:hidden transition-all duration-300 origin-top animate-in fade-in slide-in-from-top-2"
+              className="fixed inset-0 z-50 flex h-[100dvh] w-full flex-col justify-between overflow-y-auto bg-white px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl transition-opacity duration-200 ease-out motion-reduce:transition-none lg:hidden"
             >
-              {/* 1. Navigation List */}
-              {linkItems.length > 0 && (
-                <ul className="flex flex-col gap-1">
-                  {linkItems.map((item) => {
-                    const IconComponent = getMobileNavIcon(item);
-                    const canBeActive =
-                      item.targetType === "section" || item.targetType === "page";
-                    const isActive = !canBeActive
-                      ? false
-                      : item.anchorId === "artikel-edukasi" &&
-                          pathname.startsWith("/artikel")
-                        ? true
-                        : item.targetType === "page" &&
-                            item.href !== "/" &&
-                            (pathname === item.href ||
-                              pathname.startsWith(`${item.href}/`))
+              <div>
+                {/* Drawer Header */}
+                <div className="mb-4 flex items-center justify-between gap-3 border-b border-[#E4EFE8] pb-3.5">
+                  <Link
+                    href="/"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="inline-flex min-h-[44px] items-center gap-2.5 rounded-xl text-[#0E291B] outline-none focus-visible:ring-2 focus-visible:ring-[#143D29]"
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#CDE2D4] bg-[#EAF3EE] p-1.5">
+                      <Image
+                        src={effectiveLogoSrc}
+                        alt={effectiveLogoAlt}
+                        width={24}
+                        height={24}
+                        unoptimized={effectiveLogoSrc.startsWith("http")}
+                        className="h-6 w-6 object-contain"
+                      />
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="font-display text-base font-bold leading-tight text-[#0E291B]">
+                        {effectiveBrandTitle}
+                      </span>
+                      {effectiveBrandSubtitle && (
+                        <span className="mt-0.5 text-xs font-medium text-[#526458]">
+                          {effectiveBrandSubtitle}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+
+                  <button
+                    ref={closeBtnRef}
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      menuTriggerRef.current?.focus();
+                    }}
+                    aria-label="Tutup menu navigasi"
+                    className="inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#CDE2D4] bg-[#EAF3EE] px-3.5 py-2 text-xs font-bold text-[#0E2F1D] transition-colors hover:bg-[#DCECE2] active:bg-[#CFE4D7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29]"
+                  >
+                    <X className="h-5 w-5 shrink-0" aria-hidden="true" />
+                    <span>Tutup</span>
+                  </button>
+                </div>
+
+                {/* 1. Navigation List */}
+                {linkItems.length > 0 && (
+                  <ul className="flex flex-col gap-1.5">
+                    {linkItems.map((item) => {
+                      const IconComponent = getMobileNavIcon(item);
+                      const canBeActive =
+                        item.targetType === "section" ||
+                        item.targetType === "page";
+                      const isActive = !canBeActive
+                        ? false
+                        : item.anchorId === "artikel-edukasi" &&
+                            pathname.startsWith("/artikel")
                           ? true
-                          : activeHref === item.href;
+                          : item.targetType === "page" &&
+                              item.href !== "/" &&
+                              (pathname === item.href ||
+                                pathname.startsWith(`${item.href}/`))
+                            ? true
+                            : activeHref === item.href;
 
-                    const isExternalNav =
-                      item.targetType === "external" ||
-                      item.targetType === "whatsapp" ||
-                      item.openInNewTab;
+                      const isExternalNav =
+                        item.targetType === "external" ||
+                        item.targetType === "whatsapp" ||
+                        item.openInNewTab;
 
-                    const itemClass = `flex items-center justify-between px-4 py-3 rounded-2xl text-base font-semibold transition-colors ${
-                      isActive
-                        ? "bg-[#EAF3EE] text-[#0E2F1D]"
-                        : "text-[#384E40] hover:bg-[#F4F8F5] hover:text-[#0E2F1D]"
-                    }`;
+                      const itemClass = `flex min-h-[48px] items-center justify-between px-4 py-3 rounded-2xl text-base font-semibold transition-colors ${
+                        isActive
+                          ? "bg-[#EAF3EE] text-[#0E2F1D]"
+                          : "text-[#384E40] hover:bg-[#F4F8F5] hover:text-[#0E2F1D] active:bg-[#EAF3EE]"
+                      }`;
 
-                    return (
-                      <li key={item.id}>
-                        {isExternalNav ? (
+                      return (
+                        <li key={item.id}>
+                          {isExternalNav ? (
+                            <a
+                              href={item.href}
+                              target={item.openInNewTab ? "_blank" : undefined}
+                              rel={
+                                item.openInNewTab
+                                  ? "noopener noreferrer"
+                                  : undefined
+                              }
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={itemClass}
+                            >
+                              <span className="flex items-center gap-2.5">
+                                <span>{item.label}</span>
+                              </span>
+                              <IconComponent
+                                className="h-4 w-4 shrink-0 text-[#687D70]"
+                                aria-hidden="true"
+                              />
+                            </a>
+                          ) : (
+                            <Link
+                              href={item.href}
+                              onClick={(e) => {
+                                setMobileMenuOpen(false);
+                                handleNavClick(e, item);
+                              }}
+                              aria-current={isActive ? "true" : undefined}
+                              className={itemClass}
+                            >
+                              <span className="flex items-center gap-2.5">
+                                {isActive && (
+                                  <span
+                                    aria-hidden="true"
+                                    className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"
+                                  />
+                                )}
+                                <span>{item.label}</span>
+                              </span>
+                              <IconComponent
+                                className={`h-4 w-4 shrink-0 ${
+                                  isActive ? "text-[#15803D]" : "text-[#687D70]"
+                                }`}
+                                aria-hidden="true"
+                              />
+                            </Link>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              <div className="mt-6 border-t border-[#E4EFE8] pt-4">
+                {/* 2. Embedded Mini Product Spotlight Card */}
+                <Link
+                  href="/#produk"
+                  onClick={(e) =>
+                    handleAnchorShortcut(e, "produk", "/#produk")
+                  }
+                  className="flex min-h-[56px] items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-[#0B2E1B] to-[#124028] p-3.5 text-white shadow-sm transition-transform active:scale-[0.99] motion-reduce:transition-none"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 text-emerald-300">
+                      <Sprout className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate font-display text-sm font-bold text-white">
+                        Produk Unggulan: Tamatric
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-[#D9F0E3]">
+                        Asam Humat &amp; Trichoderma
+                      </p>
+                    </div>
+                  </div>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
+                    <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </Link>
+
+                {/* 3. Bottom Prominent CTA Grid */}
+                {actionItems.length > 0 && (
+                  <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    {actionItems.map((item) => {
+                      const isPrimary = item.style === "button-primary";
+                      const isWaAction =
+                        item.targetType === "whatsapp" ||
+                        item.anchorId === "konsultasi-whatsapp";
+                      const isShopeeAction =
+                        item.id === "toko-shopee" ||
+                        item.href.includes("shopee") ||
+                        item.href.includes("shp.ee");
+                      const mobileLabel =
+                        item.id === "chat-wa" && item.label === "Chat WA"
+                          ? "Konsultasi WhatsApp"
+                          : item.id === "toko-shopee" &&
+                              item.label === "Toko Shopee"
+                            ? "Toko Resmi Shopee"
+                            : item.label;
+                      const ctaClass = isPrimary
+                        ? "bg-[#C84B28] hover:bg-[#B03E1E] active:bg-[#963317] text-white rounded-xl min-h-[48px] py-3 px-4 text-sm font-bold text-center flex items-center justify-center gap-2 transition-colors"
+                        : "bg-[#15803D] hover:bg-[#116932] active:bg-[#0E5629] text-white rounded-xl min-h-[48px] py-3 px-4 text-sm font-bold text-center flex items-center justify-center gap-2 transition-colors";
+
+                      const inner = (
+                        <>
+                          {isWaAction ? (
+                            <MessageCircle
+                              className="h-4 w-4 shrink-0"
+                              aria-hidden="true"
+                            />
+                          ) : isShopeeAction ? (
+                            <ShoppingBag
+                              className="h-4 w-4 shrink-0"
+                              aria-hidden="true"
+                            />
+                          ) : null}
+                          <span>{mobileLabel}</span>
+                        </>
+                      );
+
+                      if (
+                        item.targetType === "external" ||
+                        item.targetType === "whatsapp" ||
+                        item.openInNewTab
+                      ) {
+                        return (
                           <a
+                            key={item.id}
                             href={item.href}
                             target={item.openInNewTab ? "_blank" : undefined}
-                            rel={item.openInNewTab ? "noopener noreferrer" : undefined}
+                            rel={
+                              item.openInNewTab
+                                ? "noopener noreferrer"
+                                : undefined
+                            }
                             onClick={() => setMobileMenuOpen(false)}
-                            className={itemClass}
+                            className={ctaClass}
                           >
-                            <span className="flex items-center gap-2.5">
-                              <span>{item.label}</span>
-                            </span>
-                            <IconComponent
-                              className="h-4 w-4 shrink-0 text-[#687D70]"
-                              aria-hidden="true"
-                            />
+                            {inner}
                           </a>
-                        ) : (
-                          <Link
-                            href={item.href}
-                            onClick={(e) => {
-                              setMobileMenuOpen(false);
-                              handleNavClick(e, item);
-                            }}
-                            aria-current={isActive ? "true" : undefined}
-                            className={itemClass}
-                          >
-                            <span className="flex items-center gap-2.5">
-                              {isActive && (
-                                <span
-                                  aria-hidden="true"
-                                  className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"
-                                />
-                              )}
-                              <span>{item.label}</span>
-                            </span>
-                            <IconComponent
-                              className={`h-4 w-4 shrink-0 ${
-                                isActive ? "text-[#15803D]" : "text-[#687D70]"
-                              }`}
-                              aria-hidden="true"
-                            />
-                          </Link>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+                        );
+                      }
 
-              {/* 2. Embedded Mini Product Spotlight Card */}
-              <Link
-                href="/#produk"
-                onClick={(e) => handleAnchorShortcut(e, "produk", "/#produk")}
-                className="bg-gradient-to-r from-[#0B2E1B] to-[#124028] text-white p-3.5 rounded-2xl mt-3 flex items-center justify-between border border-white/10 shadow-sm transition-transform active:scale-[0.99]"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">
-                    <Sprout className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-display text-xs sm:text-sm font-bold text-white truncate">
-                      Produk Unggulan: Tamatric
-                    </p>
-                    <p className="text-[11px] text-[#D9F0E3] truncate mt-0.5">
-                      Asam Humat &amp; Trichoderma
-                    </p>
-                  </div>
-                </div>
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
-                  <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-                </span>
-              </Link>
-
-              {/* 3. Bottom Side-by-Side CTA Grid */}
-              {actionItems.length > 0 && (
-                <div className="grid grid-cols-2 gap-2.5 mt-3">
-                  {actionItems.map((item) => {
-                    const isPrimary = item.style === "button-primary";
-                    const isWaAction =
-                      item.targetType === "whatsapp" ||
-                      item.anchorId === "konsultasi-whatsapp";
-                    const isShopeeAction =
-                      item.id === "toko-shopee" ||
-                      item.href.includes("shopee") ||
-                      item.href.includes("shp.ee");
-                    const mobileLabel =
-                      item.id === "chat-wa" && item.label === "Chat WA"
-                        ? "Konsultasi WhatsApp"
-                        : item.id === "toko-shopee" &&
-                            item.label === "Toko Shopee"
-                          ? "Toko Resmi Shopee"
-                          : item.label;
-                    const ctaClass = isPrimary
-                      ? "bg-[#C84B28] hover:bg-[#B03E1E] text-white rounded-xl py-3 px-3 text-xs font-semibold text-center flex items-center justify-center gap-1.5 transition-colors"
-                      : "bg-[#15803D] hover:bg-[#116932] text-white rounded-xl py-3 px-3 text-xs font-semibold text-center flex items-center justify-center gap-1.5 transition-colors";
-
-                    const inner = (
-                      <>
-                        {isWaAction ? (
-                          <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        ) : isShopeeAction ? (
-                          <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        ) : null}
-                        <span>{mobileLabel}</span>
-                      </>
-                    );
-
-                    if (
-                      item.targetType === "external" ||
-                      item.targetType === "whatsapp" ||
-                      item.openInNewTab
-                    ) {
                       return (
-                        <a
+                        <Link
                           key={item.id}
                           href={item.href}
-                          target={item.openInNewTab ? "_blank" : undefined}
-                          rel={item.openInNewTab ? "noopener noreferrer" : undefined}
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={(e) => {
+                            if (item.anchorId) {
+                              handleAnchorShortcut(e, item.anchorId, item.href);
+                            } else {
+                              setMobileMenuOpen(false);
+                            }
+                          }}
                           className={ctaClass}
                         >
                           {inner}
-                        </a>
+                        </Link>
                       );
-                    }
-
-                    return (
-                      <Link
-                        key={item.id}
-                        href={item.href}
-                        onClick={(e) => {
-                          if (item.anchorId) {
-                            handleAnchorShortcut(e, item.anchorId, item.href);
-                          } else {
-                            setMobileMenuOpen(false);
-                          }
-                        }}
-                        className={ctaClass}
-                      >
-                        {inner}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+                    })}
+                  </div>
+                )}
+              </div>
             </nav>
           )}
         </Container>

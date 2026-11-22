@@ -33,7 +33,7 @@ export function CarouselControls({
         type="button"
         onClick={onPrev}
         aria-label={prevLabel}
-        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#CBD8D0] bg-[#F8FBF9] text-[#143D29] transition-colors hover:bg-[#EAF3EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29]"
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#CBD8D0] bg-[#F8FBF9] text-[#143D29] transition-colors hover:bg-[#EAF3EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29] lg:h-10 lg:w-10"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
       </button>
@@ -57,7 +57,7 @@ export function CarouselControls({
         type="button"
         onClick={onNext}
         aria-label={nextLabel}
-        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#CBD8D0] bg-[#F8FBF9] text-[#143D29] transition-colors hover:bg-[#EAF3EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29]"
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#CBD8D0] bg-[#F8FBF9] text-[#143D29] transition-colors hover:bg-[#EAF3EE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#143D29] lg:h-10 lg:w-10"
       >
         <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </button>

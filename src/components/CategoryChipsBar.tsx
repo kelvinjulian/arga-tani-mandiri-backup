@@ -76,13 +76,13 @@ export function CategoryChipsBar({
 
   const chipClass = (isActive: boolean) => {
     if (variant === "dock") {
-      return `shrink-0 whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D] ${
+      return `inline-flex min-h-[44px] items-center shrink-0 whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D] lg:min-h-0 ${
         isActive
           ? "bg-[#0E2F1D] text-white shadow-sm"
           : "text-[#2C4235] hover:bg-white hover:text-[#0E2F1D]"
       }`;
     }
-    return `shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D] ${
+    return `inline-flex min-h-[44px] items-center shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D] lg:min-h-0 ${
       isActive
         ? "bg-[#0E2F1D] text-white shadow-sm"
         : "border border-[#D5E4DA] bg-white text-[#234232] hover:border-[#0E2F1D] hover:bg-[#EAF3EE]"
@@ -111,12 +111,12 @@ export function CategoryChipsBar({
 
   return (
     <div ref={containerRef} className={`relative ${wrapperBase}`}>
-      {/* Mobile (<640px): always single-line horizontal scroll with right fade */}
-      <div className="relative sm:hidden">
+      {/* Mobile (<768px): always single-line horizontal scroll with right fade */}
+      <div className="relative md:hidden">
         <div
           role="group"
           aria-label={ariaLabel}
-          className="flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-1 pr-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex flex-nowrap items-center gap-1.5 overflow-x-auto overscroll-x-contain pb-1 pr-6 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <button
             type="button"
@@ -148,9 +148,9 @@ export function CategoryChipsBar({
         />
       </div>
 
-      {/* Tablet/Desktop (>=640px): scroll mode or menu mode */}
+      {/* Tablet/Desktop (>=768px): scroll mode or menu mode */}
       {config.overflowMode === "scroll" ? (
-        <div className="relative hidden sm:block">
+        <div className="relative hidden md:block">
           <div
             role="group"
             aria-label={ariaLabel}
@@ -189,7 +189,7 @@ export function CategoryChipsBar({
         <div
           role="group"
           aria-label={ariaLabel}
-          className="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-1.5"
+          className="hidden md:flex md:flex-wrap md:items-center md:gap-1.5"
         >
           <button
             type="button"

@@ -6,6 +6,7 @@ import { ResilientImage } from "@/components/ResilientImage";
 import { SHOPEE_STORE_URL } from "@/data/categories";
 import { SITE_DATA, type SiteData } from "@/data/site";
 import { Container } from "@/components/Container";
+import { MobileSnapRow } from "@/components/MobileSnapRow";
 import { HOME_SECTION_IDS } from "@/lib/site-content/hero-cta";
 import { SupportedIcon, type SupportedIconName } from "@/lib/site-content/icons";
 import {
@@ -213,6 +214,8 @@ export function AboutSection({
                 alt={imageAlt}
                 width={2268}
                 height={1987}
+                loading="lazy"
+                sizes="(max-width: 1023px) 100vw, 45vw"
                 unoptimized
                 className="w-full lg:w-[115%] lg:-ml-4 max-w-none h-auto object-contain select-none drop-shadow-xl"
               />
@@ -550,8 +553,54 @@ export function AboutSection({
             </a>
           </div>
 
-          {/* 4 Bento Cards */}
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-8">
+          {/* 4 Bento Cards: MobileSnapRow on <768px, 2-col on tablet, 4-col on desktop */}
+          <div className="relative z-10 mt-6 md:hidden">
+            <MobileSnapRow
+              ariaLabel="Alasan memilih produk kami"
+              itemCount={aboutData.whyChooseUs.length}
+              edgeBleed={false}
+            >
+              {aboutData.whyChooseUs.map((item, idx) => {
+                const iconName = (item as { icon?: unknown }).icon;
+                const numberLabel = String(idx + 1).padStart(2, "0");
+                return (
+                  <div
+                    key={`mob-why-${item.id || numberLabel}`}
+                    className={`bg-white/[0.05] border border-white/10 rounded-2xl p-5 relative shadow-sm flex flex-col min-w-0 ${
+                      aboutData.whyChooseUs.length > 2
+                        ? "w-[84%] max-w-[290px] shrink-0 snap-start"
+                        : "w-full"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                      <span className="w-11 h-11 rounded-full bg-white/[0.1] text-emerald-400 flex items-center justify-center font-bold shrink-0">
+                        <SupportedIcon
+                          name={iconName}
+                          fallback={WHY_DEFAULT_ICONS[idx] ?? "FlaskConical"}
+                          className="h-5 w-5"
+                        />
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="text-white/15 text-3xl font-bold font-mono select-none"
+                      >
+                        {numberLabel}
+                      </span>
+                    </div>
+
+                    <h4 className="font-display font-bold text-lg text-white mb-2 leading-snug">
+                      {item.title}
+                    </h4>
+                    <p className="text-sm text-[#C4D9CC] leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </MobileSnapRow>
+          </div>
+
+          <div className="relative z-10 mt-8 hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-4">
             {aboutData.whyChooseUs.map((item, idx) => {
               const iconName = (item as { icon?: unknown }).icon;
               const numberLabel = String(idx + 1).padStart(2, "0");

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { FloatingWhatsAppButton } from "@/components/WhatsAppCTA";
+import { MobileActionBar } from "@/components/MobileActionBar";
 import { Decor } from "@/components/Decor";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { getArticles, getCategories, getSiteContent } from "@/lib/content";
@@ -27,7 +28,7 @@ export default async function SiteLayout({
       </a>
       <Decor />
       <ScrollReveal />
-      <div className="relative z-[1] flex w-full flex-1 flex-col">
+      <div className="relative z-[1] flex w-full flex-1 flex-col pb-[var(--mobile-bar-h)] lg:pb-0">
         <Navbar
           companyName={siteData.companyName}
           shopeeStoreUrl={siteData.officialStore.url}
@@ -48,6 +49,10 @@ export default async function SiteLayout({
           articles={articles}
         />
       </div>
+      <MobileActionBar
+        whatsappNumber={siteData.whatsappNumber}
+        shopeeStoreUrl={siteData.officialStore.url}
+      />
       <FloatingWhatsAppButton whatsappNumber={siteData.whatsappNumber} />
     </div>
   );

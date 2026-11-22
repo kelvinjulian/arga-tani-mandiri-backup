@@ -149,8 +149,8 @@ export function ArticleCatalogClient({
 
   return (
     <div>
-      {/* A. Floating Search & Category Filter Dock */}
-      <div className="mt-8 flex flex-col items-stretch justify-between gap-3 rounded-2xl border border-[#DCE8DF] bg-white/90 p-2.5 shadow-md backdrop-blur-md lg:flex-row lg:items-center">
+      {/* A. Sticky Search & Category Filter Dock on mobile, floating dock on desktop */}
+      <div className="sticky top-[64px] z-30 mt-8 flex flex-col items-stretch justify-between gap-2.5 rounded-2xl border border-[#DCE8DF] bg-white/95 p-2.5 shadow-md backdrop-blur-md lg:static lg:flex-row lg:items-center lg:gap-3">
         {/* Left: Sleek Search Input */}
         <div className="relative flex-1">
           <label htmlFor="article-search-input" className="sr-only">
@@ -278,7 +278,7 @@ export function ArticleCatalogClient({
               <button
                 type="button"
                 onClick={() => setSelectedTag(null)}
-                className="font-bold text-[#15803D] hover:underline"
+                className="inline-flex min-h-[44px] items-center px-2 font-bold text-[#15803D] hover:underline lg:min-h-0 lg:px-0"
               >
                 Tampilkan Semua
               </button>

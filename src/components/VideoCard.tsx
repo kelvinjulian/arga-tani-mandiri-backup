@@ -101,10 +101,12 @@ function BrandedPlaceholder({
   platform,
   isTikTok = false,
   showTikTokLabel = false,
+  largePlay = false,
 }: {
   platform: "youtube" | "tiktok";
   isTikTok?: boolean;
   showTikTokLabel?: boolean;
+  largePlay?: boolean;
 }) {
   return (
     <div
@@ -120,13 +122,20 @@ function BrandedPlaceholder({
       />
       <div className="relative z-10 flex flex-col items-center">
         <span
-          className={`flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-[#0E2F1D]/80 text-[#86EFAC] ring-4 ring-white/10 ${
+          className={`flex items-center justify-center rounded-full border border-white/30 bg-[#0E2F1D]/80 text-[#86EFAC] ring-4 ring-white/10 ${
+            largePlay ? "h-14 w-14" : "h-11 w-11"
+          } ${
             platform === "tiktok"
               ? "shadow-[-2px_0_0_rgba(37,244,238,0.55),2px_0_0_rgba(254,44,85,0.55)]"
               : ""
           }`}
         >
-          <Play className="ml-0.5 h-4 w-4 fill-current" aria-hidden="true" />
+          <Play
+            className={`ml-0.5 fill-current ${
+              largePlay ? "h-6 w-6" : "h-4 w-4"
+            }`}
+            aria-hidden="true"
+          />
         </span>
         {platform === "tiktok" ? (
           showTikTokLabel ? (
@@ -420,6 +429,7 @@ export function VideoCard({
               platform={video.platform}
               isTikTok={!isYouTube}
               showTikTokLabel={isFeatured && !isYouTube && !hasTikTokEmbedId}
+              largePlay={isFeatured}
             />
           )}
 

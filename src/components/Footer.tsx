@@ -245,101 +245,105 @@ export function Footer({
               )}
             </div>
 
-            {/* Column 2 (lg:col-span-2): Navigasi & Kategori */}
-            <div className="lg:col-span-2">
-              {footer.linkColumns.map((col, colIdx) => (
-                <div
-                  key={`${colIdx}-${col.heading}`}
-                  className={colIdx > 0 ? "mt-6" : undefined}
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-4 w-1 rounded-full bg-emerald-400"
-                      aria-hidden="true"
-                    />
-                    <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
-                      {col.heading}
-                    </h2>
-                  </div>
-
-                  <ul className="mt-4 space-y-2.5 text-sm">
-                    {col.links.map((lnk, lnkIdx) => {
-                      const resolved = resolveHeroCta(
-                        {
-                          enabled: true,
-                          label: lnk.label,
-                          target: lnk.target,
-                        },
-                        companyCtx,
-                        {
-                          enabled: true,
-                          label: lnk.label,
-                          target: { type: "page", value: "/" },
-                        }
-                      );
-                      if (resolved.kind !== "link") return null;
-                      return (
-                        <li key={`${lnkIdx}-${lnk.label}`}>
-                          {resolved.isExternal ? (
-                            <a
-                              href={resolved.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-[#C6E2D1] transition-colors hover:text-white"
-                            >
-                              <ChevronRight
-                                className="h-3.5 w-3.5 text-emerald-400/70"
-                                aria-hidden="true"
-                              />
-                              <span>{lnk.label}</span>
-                            </a>
-                          ) : (
-                            <Link
-                              href={resolved.href}
-                              className="inline-flex items-center gap-1.5 text-[#C6E2D1] transition-colors hover:text-white"
-                            >
-                              <ChevronRight
-                                className="h-3.5 w-3.5 text-emerald-400/70"
-                                aria-hidden="true"
-                              />
-                              <span>{lnk.label}</span>
-                            </Link>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
-
-              <div className="mt-6 flex items-center gap-2">
-                <span
-                  className="h-4 w-1 rounded-full bg-emerald-400"
-                  aria-hidden="true"
-                />
-                <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
-                  {footer.productCategoriesHeading}
-                </h2>
-              </div>
-
-              <ul className="mt-3 space-y-2 text-xs">
-                {categoryList.map((cat) => (
-                  <li key={cat.name}>
-                    <a
-                      href={cat.href || siteData.officialStore.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-[#B8D8C5] transition-colors hover:text-emerald-300"
-                    >
-                      <span>{cat.name}</span>
-                      <ExternalLink
-                        className="h-3 w-3 shrink-0 opacity-75"
+            {/* Column 2 (lg:col-span-2): Navigasi & Kategori (side-by-side 2 columns on mobile <1024px, stacked on desktop) */}
+            <div className="grid grid-cols-2 gap-x-5 gap-y-6 lg:col-span-2 lg:block">
+              <div className="min-w-0">
+                {footer.linkColumns.map((col, colIdx) => (
+                  <div
+                    key={`${colIdx}-${col.heading}`}
+                    className={colIdx > 0 ? "mt-6" : undefined}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-4 w-1 shrink-0 rounded-full bg-emerald-400"
                         aria-hidden="true"
                       />
-                    </a>
-                  </li>
+                      <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
+                        {col.heading}
+                      </h2>
+                    </div>
+
+                    <ul className="mt-3 space-y-0.5 text-sm lg:mt-4 lg:space-y-2.5">
+                      {col.links.map((lnk, lnkIdx) => {
+                        const resolved = resolveHeroCta(
+                          {
+                            enabled: true,
+                            label: lnk.label,
+                            target: lnk.target,
+                          },
+                          companyCtx,
+                          {
+                            enabled: true,
+                            label: lnk.label,
+                            target: { type: "page", value: "/" },
+                          }
+                        );
+                        if (resolved.kind !== "link") return null;
+                        return (
+                          <li key={`${lnkIdx}-${lnk.label}`}>
+                            {resolved.isExternal ? (
+                              <a
+                                href={resolved.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex min-h-[44px] items-center gap-1.5 py-1.5 text-[#C6E2D1] transition-colors hover:text-white lg:min-h-0 lg:py-0"
+                              >
+                                <ChevronRight
+                                  className="h-3.5 w-3.5 shrink-0 text-emerald-400/70"
+                                  aria-hidden="true"
+                                />
+                                <span className="break-words">{lnk.label}</span>
+                              </a>
+                            ) : (
+                              <Link
+                                href={resolved.href}
+                                className="inline-flex min-h-[44px] items-center gap-1.5 py-1.5 text-[#C6E2D1] transition-colors hover:text-white lg:min-h-0 lg:py-0"
+                              >
+                                <ChevronRight
+                                  className="h-3.5 w-3.5 shrink-0 text-emerald-400/70"
+                                  aria-hidden="true"
+                                />
+                                <span className="break-words">{lnk.label}</span>
+                              </Link>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </div>
+
+              <div className="min-w-0 lg:mt-6">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-4 w-1 shrink-0 rounded-full bg-emerald-400"
+                    aria-hidden="true"
+                  />
+                  <h2 className="font-display text-xs font-bold uppercase tracking-wider text-white">
+                    {footer.productCategoriesHeading}
+                  </h2>
+                </div>
+
+                <ul className="mt-3 space-y-0.5 text-xs lg:space-y-2">
+                  {categoryList.map((cat) => (
+                    <li key={cat.name}>
+                      <a
+                        href={cat.href || siteData.officialStore.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-[44px] items-center gap-1.5 py-1.5 text-[#B8D8C5] transition-colors hover:text-emerald-300 lg:min-h-0 lg:py-0"
+                      >
+                        <span className="break-words">{cat.name}</span>
+                        <ExternalLink
+                          className="h-3 w-3 shrink-0 opacity-75"
+                          aria-hidden="true"
+                        />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             {/* Column 3 (lg:col-span-3): Panduan Tani Pilihan */}
@@ -406,7 +410,7 @@ export function Footer({
                     href={siteData.officialStore.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-3 inline-flex w-full items-center justify-between rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-xs font-bold text-white transition-all hover:border-[#C84B28] hover:bg-[#C84B28]"
+                    className="mt-3 inline-flex min-h-[44px] w-full items-center justify-between rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-xs font-bold text-white transition-all hover:border-[#C84B28] hover:bg-[#C84B28] lg:min-h-0"
                   >
                     <span className="inline-flex items-center gap-2">
                       <ShoppingBag
@@ -432,7 +436,7 @@ export function Footer({
                       href={whatsappHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-3 inline-flex w-full items-center justify-between rounded-xl border border-emerald-400/30 bg-[#143D29]/80 px-3.5 py-2.5 text-xs font-bold text-emerald-200 transition-all hover:bg-emerald-600 hover:text-white"
+                      className="mt-3 inline-flex min-h-[44px] w-full items-center justify-between rounded-xl border border-emerald-400/30 bg-[#143D29]/80 px-3.5 py-2.5 text-xs font-bold text-emerald-200 transition-all hover:bg-emerald-600 hover:text-white lg:min-h-0"
                     >
                       <span className="inline-flex items-center gap-2">
                         <MessageCircle className="h-4 w-4" aria-hidden="true" />
@@ -441,7 +445,7 @@ export function Footer({
                       <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                     </a>
                   ) : (
-                    <span className="mt-3 inline-flex w-full items-center justify-between rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-xs font-semibold text-emerald-200">
+                    <span className="mt-3 inline-flex min-h-[44px] w-full items-center justify-between rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-xs font-semibold text-emerald-200 lg:min-h-0">
                       <span className="inline-flex items-center gap-2">
                         <MessageCircle className="h-4 w-4" aria-hidden="true" />
                         <span>{WHATSAPP_PLACEHOLDER_TEXT}</span>
@@ -458,15 +462,41 @@ export function Footer({
                     <ul className="mt-2.5 space-y-2 text-xs leading-relaxed text-[#B8D8C5]">
                       {contactItems.map((item) => {
                         const ContactIcon = item.icon;
+                        const phoneMatch =
+                          item.key === "phone"
+                            ? item.text.match(/\+?\d[\d\s-]{7,}\d/)
+                            : null;
+                        const emailMatch =
+                          item.key === "email"
+                            ? item.text.match(
+                                /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+                              )
+                            : null;
                         return (
                           <li key={item.key} className="flex items-start gap-2">
                             <ContactIcon
                               className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300"
                               aria-hidden="true"
                             />
-                            <span className="min-w-0 break-words">
-                              {item.text}
-                            </span>
+                            {phoneMatch ? (
+                              <a
+                                href={`tel:${phoneMatch[0].replace(/[\s-]/g, "")}`}
+                                className="min-w-0 break-words underline decoration-emerald-400/50 underline-offset-4 hover:text-white"
+                              >
+                                {item.text}
+                              </a>
+                            ) : emailMatch ? (
+                              <a
+                                href={`mailto:${emailMatch[0]}`}
+                                className="min-w-0 break-words underline decoration-emerald-400/50 underline-offset-4 hover:text-white"
+                              >
+                                {item.text}
+                              </a>
+                            ) : (
+                              <span className="min-w-0 break-words">
+                                {item.text}
+                              </span>
+                            )}
                           </li>
                         );
                       })}
@@ -483,7 +513,7 @@ export function Footer({
                           href={soc.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-emerald-200 transition-colors hover:border-emerald-400/40 hover:text-white"
+                          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-1.5 text-xs font-semibold text-emerald-200 transition-colors hover:border-emerald-400/40 hover:text-white lg:min-h-0 lg:px-3 lg:py-1"
                         >
                           <span>{soc.platform}</span>
                           <ExternalLink

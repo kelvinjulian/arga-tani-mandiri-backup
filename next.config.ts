@@ -23,6 +23,8 @@ function getSupabaseMediaRemotePatterns(): RemotePattern[] {
 }
 
 const nextConfig: NextConfig = {
+  // Laptop's Wi-Fi IPv4 for phone testing on local network (may change when the network changes)
+  allowedDevOrigins: ["192.168.18.84"],
   images: {
     remotePatterns: getSupabaseMediaRemotePatterns(),
   },

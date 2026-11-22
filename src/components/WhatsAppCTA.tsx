@@ -125,7 +125,7 @@ export function FloatingWhatsAppButton({
   return (
     <div
       aria-label="Pintasan WhatsApp"
-      className="fixed right-4 bottom-4 z-40 sm:right-6 sm:bottom-6"
+      className="fixed right-4 bottom-4 z-40 hidden lg:block sm:right-6 sm:bottom-6"
     >
       {whatsappHref ? (
         <a

@@ -12,6 +12,7 @@ import {
 import type { PublicVideoItem } from "@/lib/videos/content";
 import { CarouselControls } from "@/components/CarouselControls";
 import { Container } from "@/components/Container";
+import { MobileSnapRow } from "@/components/MobileSnapRow";
 import { TikTokPlayerDialog } from "@/components/TikTokPlayerDialog";
 import { sanitizeDisplayTitle, VideoCard } from "@/components/VideoCard";
 
@@ -196,7 +197,7 @@ export function VideoSection({ videos, videoSection }: VideoSectionProps) {
             <div className="mt-4 lg:hidden">
               <Link
                 href="/video"
-                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#C5E3CE] bg-white px-5 py-2.5 text-xs font-bold text-[#0E2F1D] shadow-xs transition-all duration-200 hover:border-[#0E2F1D] hover:bg-[#0E2F1D] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D]"
+                className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-[#C5E3CE] bg-white px-5 py-3 text-sm font-bold text-[#0E2F1D] shadow-xs transition-all duration-200 hover:border-[#0E2F1D] hover:bg-[#0E2F1D] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0E2F1D] sm:w-auto sm:rounded-full"
               >
                 <Film className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>{data.ctaLabel}</span>
@@ -301,35 +302,88 @@ export function VideoSection({ videos, videoSection }: VideoSectionProps) {
             ) : null}
           </div>
 
-          <CarouselControls
-            currentIndex={safeIndex}
-            total={total}
-            onPrev={goPrev}
-            onNext={goNext}
-            prevLabel="Video sebelumnya"
-            nextLabel="Video berikutnya"
-          />
+          {/* Tablet (768-1023px): Featured video carousel controls; on mobile (<768px) the MobileSnapRow provides its own synced swipe controls */}
+          <div className="hidden md:block">
+            <CarouselControls
+              currentIndex={safeIndex}
+              total={total}
+              onPrev={goPrev}
+              onNext={goNext}
+              prevLabel="Video sebelumnya"
+              nextLabel="Video berikutnya"
+            />
+          </div>
 
-          {hasSecondary
-            ? hasRealVideos
-              ? circularRealOthers.map(({ item, originalIndex }, slotIdx) => (
-                  <VideoCard
-                    key={`mobile-slot-${slotIdx}`}
-                    video={item}
-                    variant="compact"
-                    onActivateCompact={(v) =>
-                      handleActivateCompact(v, originalIndex)
-                    }
-                  />
-                ))
-              : circularSampleOthers.map(({ item }, slotIdx) => (
-                  <VideoCard
-                    key={`mobile-sample-${slotIdx}`}
-                    sample={item}
-                    variant="compact"
-                  />
-                ))
-            : null}
+          {hasSecondary ? (
+            <>
+              {/* Mobile (<768px): Horizontal Snap Row of compact video cards with synced counter/progress/arrows */}
+              <div className="md:hidden">
+                <MobileSnapRow
+                  ariaLabel="Daftar video lainnya"
+                  itemCount={circularOthersCount}
+                  showControls={true}
+                >
+                  {hasRealVideos
+                    ? circularRealOthers.map(
+                        ({ item, originalIndex }, slotIdx) => (
+                          <div
+                            key={`mobile-slot-${slotIdx}`}
+                            className={
+                              circularOthersCount > 2
+                                ? "w-[85%] max-w-[340px] shrink-0 snap-start"
+                                : "w-full"
+                            }
+                          >
+                            <VideoCard
+                              video={item}
+                              variant="compact"
+                              onActivateCompact={(v) =>
+                                handleActivateCompact(v, originalIndex)
+                              }
+                            />
+                          </div>
+                        )
+                      )
+                    : circularSampleOthers.map(({ item }, slotIdx) => (
+                        <div
+                          key={`mobile-sample-${slotIdx}`}
+                          className={
+                            circularOthersCount > 2
+                              ? "w-[85%] max-w-[340px] shrink-0 snap-start"
+                              : "w-full"
+                          }
+                        >
+                          <VideoCard sample={item} variant="compact" />
+                        </div>
+                      ))}
+                </MobileSnapRow>
+              </div>
+
+              {/* Tablet (768-1023px): 2-column grid of compact video cards */}
+              <div className="hidden md:grid md:grid-cols-2 md:gap-3.5">
+                {hasRealVideos
+                  ? circularRealOthers.map(
+                      ({ item, originalIndex }, slotIdx) => (
+                        <VideoCard
+                          key={`tab-slot-${slotIdx}`}
+                          video={item}
+                          variant="compact"
+                          onActivateCompact={(v) =>
+                            handleActivateCompact(v, originalIndex)
+                          }
+                        />
+                      )
+                    )
+                  : circularSampleOthers.map(({ item }, slotIdx) => (
+                      <VideoCard
+                        key={`tab-sample-${slotIdx}`}
+                        sample={item}
+                        variant="compact"
+                      />
+                    ))}
+              </div>
+            </>
+          ) : null}
         </div>
       </Container>
 
